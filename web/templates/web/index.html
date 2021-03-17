@@ -1,0 +1,172 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block content %}
+{% comment %}
+	GALERIA DE IMAGENES ------------------------------------------------------
+{% endcomment %}
+<div id="index_slide">
+	<div id="carousel-index" class="carousel slide" data-ride="carousel">
+	  <!-- Indicators -->
+	  <ol class="carousel-indicators">
+		 <li data-target="#carousel-index" data-slide-to="0" class="active"></li>
+		 <li data-target="#carousel-index" data-slide-to="1"></li>
+	  </ol>
+
+	  <!-- Wrapper for slides -->
+	  <div class="carousel-inner">
+		 <div class="item active">
+			<img src="{{ STATIC_URL }}images/web/dance1.jpg" alt="">
+			<div class="carousel-caption">
+				<h3> DBCrew </h3>
+				<p> El futuro del baile urbano </p>
+			</div>
+		 </div>
+		 <div class="item">
+			<img src="{{ STATIC_URL }}images/web/dance2.jpg" alt="">
+			<div class="carousel-caption">
+				<h3> FFCREW </h3>
+				<p> Mucho mas que un grupo de competición </p>
+			</div>
+		 </div>
+
+	  </div>
+
+	  <!-- Controls -->
+	  <a class="left carousel-control" href="#carousel-index" data-slide="prev">
+		 <span class="glyphicon glyphicon-chevron-left"></span>
+	  </a>
+	  <a class="right carousel-control" href="#carousel-index" data-slide="next">
+		 <span class="glyphicon glyphicon-chevron-right"></span>
+	  </a>
+	</div>
+</div>
+<script>
+$('.carousel').carousel()
+
+</script>
+
+{% comment %}
+	LAST NEWS --------------
+
+{% endcomment %}
+
+<div id="last_news" class="row">
+	<h2 class="title2"> Últimas Noticias </h2>
+	<div class="container">
+    <div class="row">
+        <div class="col-sm-4 col-md-4">
+            <div class="post">
+                <div class="post-img-content">
+                    <img src="{{ STATIC_URL }}images/web/dance3.jpg" class="img-responsive" />
+                  {% comment %}
+					<span class="post-title"><b>Make a Image Blur Effects With</b><br />
+                        <b>CSS3 Blur</b></span>
+						{% endcomment %}
+                </div>
+                <div class="content">
+                    <div class="author">
+                        <span class="glyphicon glyphicon-user"></span> <b>Bhaumik</b> |
+                        <time datetime="2014-01-20">January 20th, 2014</time>
+                    </div>
+                    <p>
+                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+                        Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                        unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </p>
+                    <div>
+                        <a href="http://www.jquery2dotnet.com/2014/01/jquery-highlight-table-row-and-column.html" class="btn btn-warning btn-sm">Read more</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4 col-md-4">
+            <div class="post">
+                <div class="post-img-content">
+                    <img src="{{ STATIC_URL }}images/web/dance4.jpg" class="img-responsive" />
+                </div>
+                <div class="content">
+                    <div class="author">
+                        <span class="glyphicon glyphicon-user"></span> <b>Bhaumik</b> |
+                        <time datetime="2014-01-20">January 20th, 2014</time>
+                    </div>
+                    <p>
+                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+                        Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                        unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </p>
+                    <div>
+                        <a href="http://www.jquery2dotnet.com/2013/11/share-social-media-round-buttons.html" class="btn btn-primary btn-sm">Read more</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4 col-md-4">
+            <div class="post">
+                <div class="post-img-content">
+                    <img src="{{ STATIC_URL }}images/web/dance5.jpg" class="img-responsive" />
+                </div>
+                <div class="content">
+                    <div class="author">
+                        <span class="glyphicon glyphicon-user"></span> <b>Bhaumik</b> |
+                        <time datetime="2014-01-20">January 20th, 2014</time>
+                    </div>
+                    <p>
+                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+                        Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                        unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </p>
+                    <div>
+                        <a href="http://www.jquery2dotnet.com/2013/07/cool-social-sharing-button-using-css3.html" class="btn btn-success btn-sm">Read more</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+	
+</div>
+
+<div id="about_us">
+	<h2 class="title2"> Nuestro Equipo  </h2>
+	<div class="row">
+	<div class="col-md-1 col-xs-12"></div>
+	<div class="col-md-3 col-xs-12 card_container ">
+		<h3> Jacobo Pérez </h3>
+		<div class="teacher_img_container first">
+			<img src="{{ STATIC_URL }}images/web/test1.jpg" class="img-circle teacher_img"/>
+		</div>
+		<p>
+			<span class="dance_title"> Lorem Ipsum </span>
+			 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+          Ipsum has been the industry's standard dummy text ever since the 1500s,
+		</p>
+	</div>
+		<div class="col-md-3 col-xs-12 card_container middle">
+		<h3> Zeben Pérez </h3>
+		<div class="teacher_img_container">
+			<img src="{{ STATIC_URL }}images/web/test1.jpg" class="img-circle teacher_img"/>
+		</div>
+		<p>
+			<span class="dance_title"> Lorem Ipsum </span>
+			 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+          Ipsum has been the industry's standard dummy text ever since the 1500s,
+		</p>
+	</div>
+		<div class="col-md-3 col-xs-12 card_container last ">
+		<h3> Sonia Alonso </h3>
+		<div class="teacher_img_container">
+			<img src="{{ STATIC_URL }}images/web/test1.jpg" class="img-circle teacher_img"/>
+		</div>
+		<p>
+			<span class="dance_title"> Lorem Ipsum </span>
+			 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+          Ipsum has been the industry's standard dummy text ever since the 1500s,
+		</p>
+	</div>
+
+	</div>
+
+
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% load i18n utils_tags %}
+{% for e in enrolment_list %}
+	<form method='post' action='{% url "student_profile" %}' class="form-horizontal" id="student_profile" enctype="multipart/form-data">  
+		{% csrf_token %}
+		<div class="modal fade" tabindex="-1" role="dialog" id="studentModal_{{e.id}}">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">{% trans "Datos del usuario" %} {{e.student.name}}</h4>
+					</div>
+					<div class="modal-body">
+						{% if msg == "OK" %}
+							<div class="alert alert-success">
+								<span class="glyphicon glyphicon-ok"></span>
+								{#{{ message|safe }} <br> #}
+								{% trans "Los cambios se han guardado con éxito" %}
+							</div>
+						{% elif msg %}
+							<div class="alert alert-danger">
+								<span class="glyphicon glyphicon-remove"></span>
+								{% trans "Ha habido un problema al guardar los datos" %}
+								<br/>
+								{{msg}}
+							</div>
+						{% endif %}
+
+						<input type="hidden" name="enrolment" value="{{e.id}}" />				
+						
+						<div class="row">
+							<div class="col-md-5" style="margin-top:5%">
+								<div class="form-group text-center">
+									<img src="{% if e.student.picture %}{{ e.student.picture.url }}{%endif%}" alt="Foto" width="300"/> 
+									<br/><br/>
+									<div style="margin-left:5%">
+										<input type="file" id="id_picture" name="picture" class="form-control_"/>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-7">
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{% trans "Código" %}</label>
+									<div class="col-sm-4"> 
+										<input type="text" class="form-control" id="code" name="code" value="{{e.student.code}}" readonly/>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{% trans "PIN" %}</label>
+									<div class="col-sm-4"> 
+										<input type="text" class="form-control" id="pin" name="pin" value="{{e.student.pin}}" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{% trans "Fecha de nacimiento" %}</label>
+									<div class="col-sm-4"> 
+										<input type="text" class="form-control" id="born_date" name="born_date" value="{{e.student.born_date|date:"d-m-Y"}}" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{% trans "Teléfono" %}</label>
+									<div class="col-sm-4"> 
+										<input type="text" class="form-control" id="phone" name="phone" value="{{e.student.phone}}" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{% trans "Correo electrónico" %}</label>
+									<div class="col-sm-4"> 
+										<input type="text" class="form-control" id="email" name="email" value="{{e.student.email}}" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						<input type="submit" class="btn btn-primary" value="Guardar cambios" />
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+	</form>
+{% endfor %}
+
+<script>
+	$('#born_date').datepicker({dateFormat: 'dd-mm-yy'});
+	{% if msg %}
+		$('#studentModal_{{current_enrol}}').modal('show');
+	{% endif %}
+</script>

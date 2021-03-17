@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% load i18n static %}
+
+{% block content %}
+	<form method="post" action="{% url "teachers" %}" name="teacher_search" id="teacher_search" class="form-inline">
+		{% csrf_token %}
+		<div class="row list-group-item list-group-item-info text-center">
+			<div class="col-md-4"><label for="name">{% trans "Profesor" %}:</label></div>
+			<div class="col-md-4"><label for="ini_date">{% trans "Inicio" %}:</label></div>
+			<div class="col-md-4"><label for="end_date">{% trans "Fin" %}:</label></div>
+		</div>
+		<div class="row list-group-item text-center">
+			<div class="col-md-4">
+				{#<input type="text" name="name" id="name" value="{{ name }}" class="input-small"/>#}
+				<select name="name" id="name" class="form-control">
+					<option value=""> --- </option>
+					{% for teacher in teacher_list_search %}
+						<option value="{{ teacher.id }}" {% if current_teacher|add:0 == teacher.id %} selected="selected" {% endif %}> {{ teacher.name }}</option>
+					{% endfor %}
+				</select>
+
+			</div>
+			<div class="col-md-4"><input type="text" name="ini_date" id="ini_date" value="{{ ini_date|date:"d-m-Y" }}" class="input-small"/></div>
+			<div class="col-md-4"><input type="text" name="end_date" id="end_date" value="{{ end_date|date:"d-m-Y" }}" class="input-small"/></div>
+		</div>
+		<div class="row list-group-item text-center">
+			<input type="submit" value="Search" class="btn btn-info" />
+		</div>
+	</form>
+
+	<br/>
+
+	<div class="panel panel-default">
+		<div class="panel-body">
+			{% if teacher_list %}
+				<table class="table table-hover">
+					<thead>
+						<tr><th>Nombre</th><th>Pagos</th><th>Profesor</th><th>Estudio</th><th>Pagado</th><th>Pendiente de pago</th><th></th></tr>
+					</thead>
+					<tbody>
+					{% for st in teacher_list %}
+						<tr>
+							<td>{{ st.teacher.name }}</td>
+							{% comment %}	
+							<td>
+								{% for p in st.payments %}
+									{{ p.amount }} - {{ p.date|date:"d-m-Y"}} 
+									<a href="{% url "delete_teacher_payment" p.id %}"><img src="{% static "images/delete.png" %}" alt="Borrar" title="Borrar"></a>
+									<br/>
+								{% endfor %}
+							</td>
+							{% endcomment %}	
+							<td>{{ st.total_amount }}</td>
+							<td>{{ st.total_teacher }}</td>
+							<td>{{ st.total_studio }}</td>
+							<td>{{ st.total_payments }}</td>
+							<td>{{ st.diff}}</td>
+							<td>
+								<a style="display:inline" id="id_pay" class="btn btn-success open-Pay" data-id="{{st.teacher.id}}" data-toggle="modal" data-target="#payModal_{{st.teacher.id}}"><span class="glyphicon glyphicon-euro"> </span></a>
+								<a style="display:inline" id="id_payments" class="btn btn-primary open-Payments" data-id="{{st.teacher.id}}" data-toggle="modal" data-target="#paymentsModal_{{st.teacher.id}}"><span class="glyphicon glyphicon-plus"> </span></a>
+							</td>
+						</tr>
+					{% endfor %}
+					</tbody>
+				</table>
+			{% else %}
+				<p>No teachers are available.</p>
+			{%	endif %}
+		</div>
+	</div>
+	
+	{% include "teachers/teachers_pay.html" %}
+
+	{% include "teachers/teachers_payments.html" %}
+
+	<script>
+		//$('#id_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#ini_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#end_date').datepicker({dateFormat: 'dd-mm-yy'});
+
+		{% if current_teacher_id %}
+			$('#payModal_{{current_teacher_id}}').modal('show');
+		{% endif %}
+
+		$(document).on("click", ".open-Pay", function () {
+			var teacherId = $(this).data('id');
+			$(".modal-body #teacher_id").val(teacherId);
+		});
+
+		$(document).on("click", ".open-Payments", function () {
+			var teacherId = $(this).data('id');
+			$("tr[class^='tr_']").show()
+			setTotals(teacherId);
+		});
+
+		$("td[class^='group_']").each(function(){
+			teacher_id = $(this).attr("class").split("_")[1];
+			group_id = $(this).attr("class").split("_")[2];
+			group = $(this).attr("class").split("_")[3];
+			if ($("#groups_"+teacher_id+" option[value='"+group_id+"']").length == 0)
+				$("#groups_"+teacher_id).append("<option value='"+group_id+"'>"+group+"</option>");
+		});
+
+		$("select[id^='groups_']").change(function(){
+			teacher_id = $(this)[0].id.split("_")[1];
+			value = $("option:selected", this).val();
+			if (value == "")
+				$("tr[class^='tr_']").show();
+			else
+			{
+				$("tr[class^='tr_']").hide();
+				$(".tr_"+value).show();
+			}
+
+			count = $('table[id^="table_'+teacher_id+'"] tr:visible').length;
+			$(".total_student_"+teacher_id).html(count - 1);	
+
+			var amount = 0;
+			count = $('table[id^="table_'+teacher_id+'"] tr:visible').each(function(){
+				value = $(this).find(".td_pay_"+teacher_id).html();
+				if (value != undefined)
+					amount = amount + parseInt(value);
+			});
+			$(".total_amount_"+teacher_id).html(amount + " €");	
+		});
+
+		function setTotals(teacher_id)
+		{
+			var table = $("table[id^='table_"+teacher_id+"']").attr("id");
+			count = table.split("_")[2];
+			$(".total_student_"+teacher_id).html(count);	
+		
+			var amount = 0;
+			$(".td_pay_"+teacher_id).each(function(){
+				amount = amount + parseInt($(this).html());
+			});
+			$(".total_amount_"+teacher_id).html(amount + " €");	
+		}
+	</script>
+{% endblock %}

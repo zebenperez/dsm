@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+ 
+{% load i18n widget_tweaks %}
+
+{% block head_tag %}
+	<style>
+		.cash_table td {
+			max-width: 4em!important;	
+		}
+		.cash_table thead
+		{
+			font-color: black;
+			font-weight: bolder;
+		}
+
+		.cash_table
+		{
+			background-color:#eee;
+
+			border: 1px solid silver;
+		}
+		.cash_table input
+		{
+			max-width: 4em;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	{% if msg %}
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="alert alert-danger">
+					{#{{ msg|safe }}#}
+					{% trans "Ha habído un problema al guardar la caja. Revise que ha introducido los datos correctamente." %}
+				</div>
+			</div>
+		</div>
+	{% endif %}
+
+	<div class="row">
+		<div class="col-md-12">
+			<div>
+				<form action="{% url "save_cash" cash.id %}" method="post" id="cash_form" class="form-inline">
+					{% csrf_token %}
+					{{ form.non_field_errors }}
+					{{form.date.as_hidden}}
+
+					<div class="row">
+						<div class="col-md-10">
+							<div class="current_date_container input-group">
+								<span class="glyphicon glyphicon-calendar icon_graybox input-group-addon" style=""></span>  <input type="text" class="form-control" style="display:inline; max-width:80%"  name="current_date_cash" id="current_date_cash" value="{{ current_date|date:"d-m-Y" }}"/>
+							</div>
+						</div>
+						<div class="col-md-2">
+							<button type="submit" class="btn btn-lg btn-success">Send</button>
+						</div>
+					</div>
+					<br/>
+					<div class="row">
+						<div class="col-md-12">
+							<div class="row list-group-item">
+								<div class="col-md-4"> Dinero en Caja (Apertura)</div>
+								<div class="col-md-2">
+									<span id="spanInitialTotal">{{ cash.i_total|default:"0" }}</span>
+									<input type="hidden" name="i_total" id="InitialTotal" value="{{ cash.i_total|default:"0" }}"/>
+								</div>
+								<div class="col-md-4">Dinero en Caja (Cierre)</div>
+								<div class="col-md-2">
+									<span id="spanFinalCash">{{ cash.e_total|default:"0" }}</span>
+									<input type="hidden" name="e_total" id="FinalTotal" value="{{ cash.e_total|default:"0" }}"/>
+								</div>
+							</div>
+							<div class="row list-group-item">
+								<div class="col-md-4">
+									Dinero facturado (Ingresos=<span style="color:#225500"> {{ amounts_positive }} </span> Gastos=<span style="color:#ff0000"> {{ amounts_negative }} </span>)
+								</div>
+								<div class="col-md-2">
+									{{ total_billing }}<input type="hidden" name="amount" id="amount" value="{{ total_billing }}" />
+								</div>
+								<div class="col-md-4">Pagos con tarjeta</div>
+								<div class="col-md-2"><span id="spanFinalCard">{{ cash.e_card|default:"0" }}</span></div>
+							</div>
+							{% comment %}
+							<div class="row list-group-item">
+								<div class="col-md-4">Pagos con tarjeta facturados</div>
+								<div class="col-md-2"> 
+									{{ billing_card }}  <input type="hidden" name="tpvcard" id="tpvcard" value="{{ billing_card|default:"0" }}" class="form-control"/>
+								</div>
+								<div class="col-md-4">Pagos con tarjeta</div>
+								<div class="col-md-2"><span id="spanFinalCard">{{ cash.e_card|default:"0" }}</span></div>
+							</div>
+							{% endcomment %}
+							<div class="row list-group-item list-group-item-success">
+								<div class="col-md-4">Total</div>
+								<div class="col-md-2"> <span id="spanTotalBill"> {{ total|default:"0" }} </span> </div>
+								<div class="col-md-4">Total</div>
+								<div class="col-md-2"> <span id="spanFinalTotal"> {{ total_cash|default:"0" }} </span> </div>
+							</div>
+							<div class="row list-group-item list-group-item-success">
+								<div class="col-md-10">Diferencia</div>
+								<div class="col-md-2"> <span id="spanDiff"> {{ diff|default:"0" }} </span> </div>
+							</div>
+						</div>
+					</div>
+
+					<br/>
+					<div class="row list-group-item list-group-item-info text-center">
+						Apertura de caja
+					</div>
+					<div class="row list-group-item list-group-item-warning">
+						<div class="col-md-1 col-md-offset-1 text-center"> 100 €</div>
+						<div class="col-md-1 text-center"> 50 €</div>
+						<div class="col-md-1 text-center"> 20 €</div>
+						<div class="col-md-1 text-center"> 10 €</div>
+						<div class="col-md-1 text-center"> 5 €</div>
+						<div class="col-md-1 text-center"> 2 €</div>
+						<div class="col-md-1 text-center"> 1 €</div>
+						<div class="col-md-1 text-center"> 0.5 €</div>
+						<div class="col-md-1 text-center"> 0.2 €</div>
+						<div class="col-md-1 text-center"> 0.1 €</div>
+					</div>
+					<div class="row list-group-item">
+						<div class="col-md-1 col-md-offset-1 text-center"> 
+							<input id="id_i_10000" name="i_10000" class="form-control" value="{% if cash.i_10000 %}{{cash.i_10000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_05000" name="i_05000" class="form-control" value="{% if cash.i_05000 %}{{cash.i_05000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_02000" name="i_02000" class="form-control" value="{% if cash.i_02000 %}{{cash.i_02000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_01000" name="i_01000" class="form-control" value="{% if cash.i_01000 %}{{cash.i_01000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_00500" name="i_00500" class="form-control" value="{% if cash.i_00500 %}{{cash.i_00500}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_00200" name="i_00200" class="form-control" value="{% if cash.i_00200 %}{{cash.i_00200}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_00100" name="i_00100" class="form-control" value="{% if cash.i_00100 %}{{cash.i_00100}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_00050" name="i_00050" class="form-control" value="{% if cash.i_00050 %}{{cash.i_00050}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_00020" name="i_00020" class="form-control" value="{% if cash.i_00020 %}{{cash.i_00020}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center"> 
+							<input id="id_i_00010" name="i_00010" class="form-control" value="{% if cash.i_00010 %}{{cash.i_00010}} {% endif %}" size="2"/> 
+						</div>
+					</div>
+					<div class="row list-group-item">
+						<div class="col-md-10 col-md-offset-1 text-center"> 
+							{% render_field form.i_note class+=" form-control" rows="1" cols="105" placeholder="Notas"%}
+						</div>
+					</div>
+
+					<div class="row list-group-item list-group-item-info text-center">
+						Cierre de caja
+					</div>
+					<div class="row list-group-item list-group-item-warning">
+						<div class="col-md-1 text-center"> 100 €</div>
+						<div class="col-md-1 text-center"> 50 €</div>
+						<div class="col-md-1 text-center"> 20 €</div>
+						<div class="col-md-1 text-center"> 10 €</div>
+						<div class="col-md-1 text-center"> 5 €</div>
+						<div class="col-md-1 text-center"> 2 €</div>
+						<div class="col-md-1 text-center"> 1 €</div>
+						<div class="col-md-1 text-center"> 0.5 €</div>
+						<div class="col-md-1 text-center"> 0.2 €</div>
+						<div class="col-md-1 text-center"> 0.1 €</div>
+						<div class="col-md-2 text-center"> Tarjeta</div>
+					</div>
+					<div class="row list-group-item">
+						<div class="col-md-1 text-center">
+							<input id="id_e_10000" name="e_10000" class="form-control" value="{% if cash.e_10000 %}{{cash.e_10000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_05000" name="e_05000" class="form-control" value="{% if cash.e_05000 %}{{cash.e_05000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_02000" name="e_02000" class="form-control" value="{% if cash.e_02000 %}{{cash.e_02000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_01000" name="e_01000" class="form-control" value="{% if cash.e_01000 %}{{cash.e_01000}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_00500" name="e_00500" class="form-control" value="{% if cash.e_00500 %}{{cash.e_00500}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_00200" name="e_00200" class="form-control" value="{% if cash.e_00200 %}{{cash.e_00200}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_00100" name="e_00100" class="form-control" value="{% if cash.e_00100 %}{{cash.e_00100}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_00050" name="e_00050" class="form-control" value="{% if cash.e_00050 %}{{cash.e_00050}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_00020" name="e_00020" class="form-control" value="{% if cash.e_00020 %}{{cash.e_00020}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-1 text-center">
+							<input id="id_e_00010" name="e_00010" class="form-control" value="{% if cash.e_00010 %}{{cash.e_00010}} {% endif %}" size="2"/> 
+						</div>
+						<div class="col-md-2 text-center">
+							<input id="id_e_card" name="e_card" class="form-control" value="{% if cash.e_card %}{{cash.e_card}} {% endif %}" size="4"/> 
+						</div>
+					</div>
+
+					<div class="row list-group-item">
+						<div class="col-md-10 col-md-offset-1 text-center">
+							{% render_field form.e_note class+="form-control" rows="1" cols="105" placeholder="Notas"%}
+						</div>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+
+<script>
+	$('#current_date_cash').change(function() {
+		var url = "/studio/cash/"+$('#current_date_cash').val();    
+		$(location).attr('href',url);
+	});
+
+	function setInitialTotal()
+	{
+		if ($('#amount').length > 0)
+		{
+			$('#amount').val($('#amount').val().replace(",","."));
+			//$('#tpvcard').val($('#tpvcard').val().replace(",","."));
+			var total = sumValues('id_i_');
+			//var total2 = Number(total) + Number($('#amount').val()) + Number($('#tpvcard').val()); 
+			var total2 = Number(total) + Number($('#amount').val()); 
+			var diff = getDifference();
+
+			$('#InitialTotal').val(total);
+
+			$('#spanInitialTotal').html(total);
+			$('#spanTotalBill').html(total2);
+			$('#spanDiff').html(diff);
+		}
+	}
+
+	function setFinalTotal()
+	{
+		if ($('#amount').length > 0)
+		{
+			var total = sumValues('id_e_');
+			var e_card = $('#id_e_card').val();
+			//var e_card= 0;//  jQuery('input[id="tpvcard"]').val();
+			//alert('e_Card :'+e_card+'\n total:'+ total);
+			
+			var total2 = Number(total) + Number(e_card.replace(',','.')); 
+			var diff = getDifference();
+			
+			$('#FinalTotal').val(total.replace(',','.'));
+			$('#spanFinalCash').html(total.replace(',','.'));
+			$('#spanFinalCard').html(e_card.replace(',','.'));
+			$('#spanFinalTotal').html(total2);
+			$('#spanDiff').html(diff);
+		}
+	}
+
+	jQuery(document).ready(function() {
+		/* Cash OPEN functions */
+		$('input[id^="id_i_"]').change(function() {
+			$(this).val($.trim($(this).val()));
+			setInitialTotal();
+		});
+
+		/* Cash CLOSE functions */
+		$('input[id^="id_e_"]').change(function() {
+			$(this).val($.trim($(this).val()));
+			setFinalTotal();
+		});
+
+
+		/*jQuery('input[id^="item_FinalCard"]').keyup(function() {
+			var total = Number(jQuery('input[id="item_FinalCard"]').val());
+			var diff = getDifference();
+
+			jQuery('#spanFinalCard').html(total);
+			jQuery('#spanDiff').html(diff);
+		});*/
+	});
+
+	function sumValues(prefix)
+	{
+		var sum = 0;
+
+		$('input[id^="' + prefix + '"]').each(function() {
+			var attr = $(this).attr("id").split("_")[2];
+
+			if (attr >= 0)
+			{
+				sum += Number(Number($(this).val().replace(',','.')) * attr * Number(0.01));
+				sum = round(sum * 100) / 100;
+			}
+		});
+
+		var str = sum + '';
+
+		return str;
+	};
+
+	function getDifference()
+	{
+		var openValues = sumValues('id_i_');
+		var closeValues = sumValues('id_e_');
+		//var cardValue = "0";
+		var cardValue = $('#id_e_card').val(); 
+		var billValue = Number($('#amount').val()); 
+		var tpvCardValue = "0"; //Number(jQuery('input[id="tpvcard"]').val())
+		var diff = Number((Number(closeValues) + Number(cardValue))) - Number((Number(openValues) + Number(billValue) + Number(tpvCardValue)));
+
+		return round(diff,4);
+	}
+	
+	function round(value)
+	{
+		return round(value,2);
+	}
+
+	function round(value, decimals)
+	{
+		if(!parseInt(decimals))
+			var decimals=0;
+		if(!parseFloat(value))
+			return 0;
+		return Math.round(value*Math.pow(10,decimals))/Math.pow(10,decimals);
+	}
+
+	setInitialTotal();
+	setFinalTotal();
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% load i18n apptags static %}
+
+{% if enrolment_list %}
+	<form method="post" action="{% url "assistances_save" %}" name="assistances_save" id="assistances_save" class="form-inline">
+		{% csrf_token %}
+		<div class="row list-group-item">
+			<div class="col-md-8" style="padding-top:7px">
+				<strong>{% get_group_name current_group %}</strong>
+			</div>
+			<div class="col-md-4 text-right">
+				<input type="submit" value="Guardar" class="btn btn-success" />
+			</div>
+		</div>
+		{% if current_assistance != "" %}
+			<input type="hidden" id="assistance_id" name="assistance_id" value="{{current_assistance.id}}" />
+		{% endif %}
+		<input type="hidden" id="new_date" name="new_date" value="{{date|date:"d-m-Y"}}" />
+		<input type="hidden" id="new_group" name="new_group" value="{{current_group}}" />
+		{% for st in enrolment_list %}
+			<input type="hidden" id="check_{{st.id}}" name="check_{{st.id}}" value="{% check_assistance st current_assistance %}" />
+			<div id="row_{{st.id}}" class="row list-group-item {% check_assistance_class st current_assistance %}">
+				<div class="col-md-2">
+					{% if st.student.picture %}
+						<img src="{{st.student.picture.url}}" alt="foto" style="width: 100px"/>
+					{% endif %}
+				</div>
+				<div class="col-md-8">
+					{{ st.student.name }}
+				</div>
+			</div>
+		{% endfor %}
+	</form>
+{% endif %}
+
+<script type="text/javascript">
+	$('div[id^="row_"]').click(function() {
+		id = $(this).attr('id').split('_')[1];
+		//if ($("#check_"+id).is(':checked'))
+		if ($("#row_"+id).hasClass("list-group-item-success"))
+		{
+			$("#row_"+id).removeClass("list-group-item-success");
+			//$("#check_"+id).attr('checked', false);
+			$("#check_"+id).val("0");
+		}
+		else
+		{
+			$("#row_"+id).addClass("list-group-item-success");
+			//$("#check_"+id).prop('checked', true);
+			$("#check_"+id).val("1");
+		}
+	});
+</script>

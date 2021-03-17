@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% load i18n apptags static %}
+
+{% block content %}
+	<form method="post" action="{% url "notification_add" %}" name="notification_add" id="notification_add" class=" form form-inline">
+		{% csrf_token %}
+		<div class="row list-group-item list-group-item-info text-center">
+			<div class="col-md-4"> <label for="code">{% trans "Profesor" %}:</label> </div>
+			<div class="col-md-4"> <label for="name">{% trans "Grupo" %}:</label> </div>
+		</div>
+		<div class="row list-group-item text-center">
+			<div class="col-md-4">
+				<select name="teacher" id="teacher" class="form-control">
+					<option value=""> --- </option>
+					{% for teacher in teacher_list %}
+						<option value="{{ teacher.id }}" {% if current_teacher|add:0 == teacher.id %} selected="selected" {% endif %}> {{ teacher.name }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-md-4">
+				<select id="group" name="group" class="form-control">
+					<option value=""> --- </option>
+					{% for group in group_list %}
+						<option value="{{ group.id }}" class="gr_{{group.teacher.id}}" {% if current_group|add:0 == group.id%} selected {% endif %}> {{ group }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-md-2">
+				<input type="submit" value="Buscar" class="btn btn-info" />
+			</div>
+		</div>
+	</form>
+
+	<br/>
+	{% include "notifications/notification_form.html"%}
+
+
+	<script type="text/javascript">
+		$('#teacher').change(function(e){
+			set_select_group();
+			$('#group option:eq(0)').prop('selected', true);
+		});
+	
+		function set_select_group()
+		{
+			id = ".gr_" + $('#teacher option:selected').val();
+			if (id == ".gr_")
+				$('option[class^="gr_"]').show();
+			else
+			{
+				$('option[class^="gr_"]').hide();
+				$(id).show();
+			}
+		}
+	
+		set_select_group();
+	</script>
+{% endblock %}

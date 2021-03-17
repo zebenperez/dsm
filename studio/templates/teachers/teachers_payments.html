@@ -1,0 +1,58 @@
+{% load i18n %}
+
+{% for st in teacher_list %}
+	<div class="modal fade" tabindex="-1" role="dialog" id="paymentsModal_{{st.teacher.id}}">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title">{% trans "Alumnos del profesor/a" %} {{st.teacher.name}}</h4>
+				</div>
+				<div class="modal-body">
+					<div class="text-center">
+						<select id="groups_{{st.teacher.id}}" name="groups">
+							<option value=""> </option>
+						</select>
+					</div>
+					<br/>
+					<table class="table" style="width:50%; margin-left:25%">
+						<tbody>
+							<tr>
+								<th class="text-center">Total alumnos</th><th class="total_student_{{st.teacher.id}}"></th>
+								<th class="text-center">Total pagos</th><th class="total_amount_{{st.teacher.id}}"></th>
+							</tr>
+						</tbody>
+					</table>
+	
+					<table class="table" id="table_{{st.teacher.id}}_{{st.student_payments|length}}">
+						<thead>
+							<tr>
+								<th>Alumno</th>
+								<th>Grupo</th>
+								<th>Pagado</th>
+								<th>Caduca</th>
+								<th>Cantidad</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for pay in st.student_payments %}
+								<tr class="tr_{{pay.enrolment.group.id}}">
+									<td>{{pay.student.name}}</td>
+									<td class="group_{{st.teacher.id}}_{{pay.enrolment.group.id}}_{{pay.enrolment.group}}">{{pay.enrolment.group}}</td>
+									<td>{{pay.pay_date|date:"d-m-Y"}}</td>
+									<td>{{pay.expire_date|date:"d-m-Y"}}</td>
+									<td class="td_pay_{{st.teacher.id}}">{{pay.amount}}</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+{% endfor %}
+
+

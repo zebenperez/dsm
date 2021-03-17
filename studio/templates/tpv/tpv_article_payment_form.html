@@ -1,0 +1,34 @@
+<br/>
+<div class="row-fluid">
+	<div class="span12 text-center">
+		<div>
+			<table class="table">
+				<thead>
+					<tr> <th> Name </th> <th> Concepto </th> <th> Pvp </th> <th> Notas </th> </tr>
+				</thead>
+				{% for a in article_list %}
+					<form method='post' action='{% url "article_pay" %}' role="form"> 
+						{% csrf_token %}
+						<input type='hidden' name='article_id' value='{{ a.id }}'/>
+						<tbody>
+							<tr>
+								<td>{{ a.name }}</td>
+								<td>
+									<select name='concept' class="form-control">
+										{% for c in concept_list %}
+											<option value='{{ c.code }}' {% if c.code == "art" %} selected {% endif %}> {{ c.name }} </option>
+										{% endfor %}
+									</select>
+								</td>
+								<td><input type='text' name='amount' value='{{ a.pvp }}' class="input-xs form-control"/></td>
+								<td><input type='text' name='note' value='' class="form-control"/></td>
+								{#<td><input type='checkbox' name='card'/></td>#}
+								<td><button type="submit" class="btn btn-success">Pagar</button></td>
+							</tr>
+						</tbody>
+					</form> 
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+</div>

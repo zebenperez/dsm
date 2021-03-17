@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% load i18n apptags static %}
+
+{% block content %}
+	<form method="post" action="{% url "notifications" %}" name="notifications" id="notifications" class=" form form-inline">
+		{% csrf_token %}
+		<div class="row list-group-item list-group-item-info text-center">
+			<div class="col-md-2"> <label for="ini_date">{% trans "Fecha inicial" %}:</label> </div>
+			<div class="col-md-2">
+				<input type="text" name="ini_date" id="ini_date" value="{{ini_date|date:"d-m-Y"}}" class="form-control" size="8"/>
+			</div>
+			<div class="col-md-2"> <label for="ini_date">{% trans "Fecha final" %}:</label> </div>
+			<div class="col-md-2">
+				<input type="text" name="end_date" id="end_date" value="{{end_date|date:"d-m-Y"}}" class="form-control" size="8"/>
+			</div>
+			<div class="col-md-2">
+				<input type="submit" value="Buscar" class="btn btn-info" />
+			</div>
+			<div class="col-md-2">
+				<a href="{% url "notification_add" %}" class="btn btn-success"> Nueva Notificación</a>
+			</div>
+		</div>
+	</form>
+
+	<br/>
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<strong>{% trans "Notificaciones" %}</strong>
+		</div>
+		<div class="panel-body">
+			{% if notification_list %}
+				{% for st in notification_list %}
+					<div class="row list-group-item">
+						<div class="col-md-2">
+							{{st.date|date:"d-m-Y"}}
+						</div>
+						<div class="col-md-8">
+							{{st.msg|safe}}
+						</div>
+						<div class="col-md-2">
+							<a href="#" data-href="{% url "notification_send" st.id %}" class="btn btn-success btn-xs" title="send" data-toggle="modal" data-target="#confirm-send" style="margin-right:10px"> <span class="glyphicon glyphicon-send" title="send"></span> </a>
+							<a id="id_students" class="btn btn-primary btn-xs open-students" data-id="{{st.id}}" data-toggle="modal" data-target="#studentsModal_{{st.id}}" style="margin-right:10px"><span class="glyphicon glyphicon-plus"> </span></a>  
+							<a href="#" data-href="{% url "notification_delete" st.id %}" class="btn btn-danger btn-xs" title="delete" data-toggle="modal" data-target="#confirm-delete"> <span class="glyphicon glyphicon-trash" title="delete"></span> </a>
+						</div>
+					</div>
+				{% endfor %}
+			{% else %}
+				<p>No notifications are available.</p>
+			{%	endif %}
+		</div>
+	</div>
+
+	{% include "notifications/notification_students.html" %}
+
+	<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					Borrar notificación
+				</div>
+				<div class="modal-body">
+					Está seguro que desea borrar esta notificación?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+					<a class="btn btn-danger btn-ok">Borrar</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="confirm-send" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					Enviar notificación
+				</div>
+				<div class="modal-body">
+					Está seguro que desea enviar esta notificación?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+					<a class="btn btn-danger btn-ok">Enviar</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$('#ini_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#end_date').datepicker({dateFormat: 'dd-mm-yy'});
+
+		$('#confirm-delete').on('show.bs.modal', function(e) {
+			$(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+		});
+		$('#confirm-send').on('show.bs.modal', function(e) {
+			$(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+		});
+	</script>
+{% endblock %}

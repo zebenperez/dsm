@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% load i18n apptags static %}
+
+{% block content %}
+	<form method="post" action="{% url "bad_debt" %}" name="payment_search" id="payment_search" class=" form form-inline">
+		{% csrf_token %}
+		<div class="row list-group-item list-group-item-info text-center">
+			<div class="col-md-2"> <label for="ini_date">{% trans "Inicio" %}:</label> </div>
+			<div class="col-md-2">
+				<input type="text" name="ini_date" id="ini_date" value="{{ini_date|date:"d-m-Y"}}" class="form-control" size="8"/>
+			</div>
+			<div class="col-md-2"> <label for="end_date">{% trans "Fin" %}:</label> </div>
+			<div class="col-md-2">
+				<input type="text" name="end_date" id="end_date" value="{{end_date|date:"d-m-Y"}}" class="form-control" size="8"/>
+			</div>
+			<div class="col-md-4">
+				<input type="submit" value="Search" class="btn btn-info" />
+			</div>
+		</div>
+	</form>
+
+	<br/>
+	<div class="panel panel-danger">
+		<div class="panel-heading">
+			<div class="row">
+				<div class="col-md-4">
+					<strong> Periodo: {{ini_date|date:"d-m-Y"}} - {{end_date|date:"d-m-Y"}} </strong>
+				</div>
+				<div class="col-md-3 col-md-offset-1">
+					<strong>Registros: {{enrolment_list|length}} </strong>
+				</div>
+				<div class="col-md-3 col-md-offset-1">
+					<strong>Total: {{total_amount}} €</strong>
+				</div>
+			</div>
+		</div>
+		<div class="panel-body">
+			{% if enrolment_list %}
+
+				<form method="post" action="{% url "notification_save" %}" name="notification_save" id="notification_save" class="form-inline" onsubmit="return confirm('Esta seguro de que desea crear el mensaje?');">
+					{% csrf_token %}
+					<div class="text-right">
+						<input type="submit" value="Crear mensaje" class="btn btn-primary" />
+
+						<span id="select_all">
+							<a href="#" class="btn btn-success" onclick="selectAll()"> Seleccionar todos </a>
+						</span>
+						<span id="unselect_all" style="display:none">
+							<a href="#" class="btn btn-info" onclick="unSelectAll()"> Deseleccionar todos </a>
+						</span>
+					</div>
+					<br/>
+
+					<textarea id="msg" name="msg" cols="140">5db Informa: Ha habido una incidencia con su pago del mes de {{ini_date|date:"M"}}, por favor pase por recepción para regularizar su situación. </textarea>
+					<br/>
+					<br/>
+					{% for st in enrolment_list %}
+						<input type="hidden" id="check_{{st.student.id}}" name="check_{{st.student.id}}" value="0"/>
+						<div id="row_{{st.student.id}}" class="row list-group-item">
+							<div class="col-md-1">{{ st.student.code }} </div>
+							<div class="col-md-3">{{ st.student.name }} </div>
+							<div class="col-md-4">{{ st.group }} </div>
+							<div class="col-md-2">{{ st.student.phone }} </div>
+							<div class="col-md-2">{{ st.price }} € </div>
+						</div>
+					{% endfor %}
+
+				{% comment %}
+				<table class="table table-hover">
+					<thead>
+						<tr> <th>Codigo</th> <th>Nombre</th> <th>Grupo</th> <th>Teléfono</th> <th>Importe pendiente</th></tr>
+					</thead>
+					<tbody>
+						{% for st in enrolment_list %}
+							<tr>
+								<td>{{ st.student.code }}</td>
+								<td>{{ st.student.name }}</td>
+								<td>{{ st.group }}</td>
+								<td>{{ st.student.phone }}</td>
+								<td class="text-center">{{ st.price }} €</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table> 
+				{% endcomment %}
+			{% else %}
+				<p>No enrolment are available.</p>
+			{%	endif %}
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$('#ini_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#end_date').datepicker({dateFormat: 'dd-mm-yy'});
+
+		$('div[id^="row_"]').click(function() {
+			id = $(this).attr('id').split('_')[1];
+			//if ($("#check_"+id).is(':checked'))
+			if ($("#row_"+id).hasClass("list-group-item-success"))
+			{
+				$("#row_"+id).removeClass("list-group-item-success");
+				//$("#check_"+id).attr('checked', false);
+				$("#check_"+id).val("0");
+			}
+			else
+			{
+				$("#row_"+id).addClass("list-group-item-success");
+				//$("#check_"+id).prop('checked', true);
+				$("#check_"+id).val("1");
+			}
+		});
+
+		function selectAll()
+		{
+			$("div[id^='row_']").addClass("list-group-item-success");
+			$("input[id^='check_'").val("1");
+			$("#select_all").hide();
+			$("#unselect_all").show();
+		}
+
+		function unSelectAll()
+		{
+			$("div[id^='row_']").removeClass("list-group-item-success");
+			$("input[id^='check_'").val("0");
+			$("#unselect_all").hide();
+			$("#select_all").show();
+		}
+</script>
+{% endblock %}

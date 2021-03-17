@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n static utils_tags %}
+
+{% block content %}
+	<div id="tpv">
+		<div class="row">
+			<div class="col-md-2 input-group" id="current_date_container" >
+				<span class="glyphicon glyphicon-calendar icon_graybox input-group-addon"></span> <input type="text" name="current_date" id="current_date" class="form-control" value="{{ current_date|date:"d-m-Y" }}"/>
+			</div>
+		</div>
+
+		<br/>
+		
+		<div class="row">
+			<div class="tabbable top_1"> <!-- Only required for left/right tabs -->
+				<ul class="nav nav-tabs">
+					<li class="{% if not tab == "article" %} active {% endif %}"><a href="#tab1" data-toggle="tab">Alumnos</a></li>
+					<li class="{% if tab == "article" %} active {% endif %}"><a href="#tab2" data-toggle="tab">Artículos</a></li>
+				</ul>
+				<div class="tab-content">
+					{#*********************ALU******************#}
+					<div class="tab-pane  {% if not tab == "article" %} active {% endif %}"   id="tab1">
+						{% include "tpv/tpv_student_tab.html" %}
+					</div>
+					{#*********************ART******************#}
+					<div class="tab-pane {% if tab == "article" %} active {% endif %}" id="tab2">
+						{% include "tpv/tpv_article_tab.html" %}
+					</div>
+				</div>
+			</div>
+		</div>{# row #}
+	</div>{# tpv #}
+
+
+<script>
+	$('#pay_collapse').click(function(e)
+	{
+		e.stopPropagation();
+		e.preventDefault();
+		$('#pay_body').slideToggle('slow',function(e){
+			if ($('#pay_body').css("display")== "none")
+			{
+				$('#pay_collapse span').removeClass('glyphicon-eye-open');
+				$('#pay_collapse span').addClass('glyphicon-eye-close');
+			}
+			else
+			{
+				$('#pay_collapse span').removeClass('glyphicon-eye-close');
+				$('#pay_collapse span').addClass('glyphicon-eye-open');
+
+			}
+		});
+
+	});
+
+</script>
+
+
+{% endblock %}

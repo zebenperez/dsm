@@ -1,0 +1,61 @@
+{% load i18n static %}
+
+{% for st in teacher_list %}
+	<form action="{% url "save_teacher_payment" %}" method="post" id="teacher_payment_form" class="form form-inline">
+	<div class="modal fade" tabindex="-1" role="dialog" id="payModal_{{st.teacher.id}}">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title">{% trans "Nuevo pago para el profesor" %} {{st.teacher.name}}</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table">
+						<thead>
+							<tr><th>Concepto</th><th>Cantidad</th><th>Fecha</th><th>Notas</th><th></th></tr>
+						</thead>
+						<tbody>
+							{% for p in st.payments %}
+								<tr>
+									<td> {{p.concept}} </td>
+									<td> {{p.amount}} </td>
+									<td> {{p.date|date:"d-m-Y"}} </td>
+									<td> {{p.note}} </td>
+									<td>
+										<a href="{% url "delete_teacher_payment" p.id %}" class="btn btn-danger btn-xs" onclick="return confirm('Esta seguro de que desea borrar el pago?')">
+											<span class="glyphicon glyphicon-trash"></span>
+										</a>
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+
+					{% csrf_token %}
+					{{ form.non_field_errors }}
+
+					{% trans "Concepto" %}
+					<select id="id_concept" name="concept" class="form-control">
+						{% for concept in concept_list %}
+							<option value="{{concept.id}}" {% if concept.code == "men" %} selected {% endif %}> {{concept.name}} </option>
+						{% endfor %}
+					</select>
+					{% trans "Cantidad" %} <input type="text" id="id_amount" name="amount" value="" class="form-control" size="4"/>
+					{% trans "Fecha" %} <input type="text" id="id_date" name="date" value="{{today|date:"d-m-Y"}}" class="form-control" size="10"/>
+					{% trans "Notas" %} <input type="text" id="id_note" name="note" value="" class="form-control" size="30"/>
+					<input type="hidden" name="teacher_id" id="teacher_id" value="{{st.teacher.id}}"/>
+
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<input type="submit" class="btn btn-primary" value="Crear pago" />
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+	</form>
+{% endfor %}
+
+<script>
+	$('#id_date').datepicker({dateFormat: 'dd-mm-yy'});
+</script>

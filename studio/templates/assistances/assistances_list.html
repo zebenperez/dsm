@@ -1,0 +1,53 @@
+{% load i18n apptags static %}
+
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<strong>{% trans "Asistencias del día " %}{{date|date:'d-m-Y'}}</strong>
+	</div>
+	<div class="panel-body">
+		{% if assistance_list %}
+			{% for st in assistance_list %}
+				<div class="row list-group-item">
+					<div class="col-md-6">
+						{{st.date}} - {{ st.group }}
+					</div>
+					<div class="col-md-2">
+						<span style="color:green">{% trans "Asistieron:" %} {{ st.enrolments.all|length }}</span>
+					</div>
+					<div class="col-md-2">
+						<span style="color:red">{% trans "No asistieron:" %} {% get_no_assistances st %}</span>
+					</div>
+					<div class="col-md-2">
+						<a href="{% url "assistances" st.id %}" class="btn btn-info btn-xs" title="modify"> <span class="glyphicon glyphicon-pencil" title="modify"></span> </a>
+						<a href="#" data-href="{% url "assistances_delete" st.id %}" class="btn btn-danger btn-xs" title="delete" data-toggle="modal" data-target="#confirm-delete"> <span class="glyphicon glyphicon-trash" title="delete"></span> </a>
+					</div>
+				</div>
+			{% endfor %}
+		{% else %}
+			<p>No assistances are available.</p>
+		{%	endif %}
+	</div>
+</div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				Borrar asistencias
+			</div>
+			<div class="modal-body">
+				Está seguro que desea borrar estas asistencias?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+				<a class="btn btn-danger btn-ok">Borrar</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	$('#confirm-delete').on('show.bs.modal', function(e) {
+		$(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+	});
+</script>

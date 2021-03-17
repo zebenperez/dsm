@@ -1,0 +1,48 @@
+{% load i18n static utils_tags %}
+
+<div id="" class="well">
+	{% include "tpv/tpv_student_search.html" %}
+
+	<h4 class="top_1">{% trans "Matrículas" %} <small><a href="" id="mat_collapse" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-eye-open"></span></a></small></h4>
+	<div class="panel panel-default">
+		<div class="panel-body" id="mat_body">
+			<div id="divStudioStudent" class="top_1">
+				{% if current_code %}
+					{% include "tpv/tpv_student_payment_form.html" with enrolment_list=enrolment_list group_list=group_list %}
+				{% else %}
+					<div class="alert alert-info"> Indique criterios de búsqueda </div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<h4 class="top_1">{% trans "Pagos" %}<small><a href="" id="pay_collapse" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-eye-open"></span></a></small></h4>
+	<div class="panel panel-default">
+		<div class="panel-body" id="pay_body">
+			{% include "tpv/tpv_payments.html" %}
+		</div>
+	</div>
+</div>
+
+<script>
+	$('#mat_collapse').click(function(e)
+	{
+		e.stopPropagation();
+		e.preventDefault();
+		$('#mat_body').slideToggle('slow', function(e){
+			if ($('#mat_body').css("display") == 'none')
+			{
+				$('#mat_collapse span').removeClass('glyphicon-eye-open');
+				$('#mat_collapse span').addClass('glyphicon-eye-close');
+			}
+			else
+			{
+				$('#mat_collapse span').removeClass('glyphicon-eye-close');
+				$('#mat_collapse span').addClass('glyphicon-eye-open');
+			}
+		});
+
+	});
+</script>
+
+

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load i18n staticfiles utils_tags %}
+
+{% comment %}
+{% block head_tag %}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/chosen.jquery.min.js" ></script>
+	<link rel="stylesheet" href="{{ STATIC_URL }}css/chosen.min.css">
+
+{% endblock %}
+{% endcomment %}
+
+{% block content %}
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">{% trans "New Enrolment" %}</h4>
+				</div>
+				<div class="modal-body" style="overflow:hidden;">
+					<iframe src="{% url "add_enrolment" %}" style="border:none; width:100%; min-height:600px; " ></iframe>
+				</div>
+				<div class="modal-footer">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="tpv">
+		<div class="row">
+			<div class="col-md-2 input-group" id="current_date_container" >
+				<span class="glyphicon glyphicon-calendar icon_graybox input-group-addon"></span> <input type="text" name="current_date" id="current_date" class="form-control" value="{{ current_date|date:"d-m-Y" }}"/>
+			</div>
+		</div>
+
+		<br/>
+		
+		<div class="row">
+			<div class="tabbable top_1"> <!-- Only required for left/right tabs -->
+				<ul class="nav nav-tabs">
+					<li class="{% if not tab == "article" %} active {% endif %}"><a href="#tab1" data-toggle="tab">Alumnos</a></li>
+					<li class="{% if tab == "article" %} active {% endif %}"><a href="#tab2" data-toggle="tab">Artículos</a></li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane  {% if not tab == "article" %} active {% endif %}"   id="tab1">
+					{#*********************ALU******************#}
+						<div id="" class="well">
+							{% include "tpv_student_search.html" %}
+
+							<h4 class="top_1">{% trans "Matriculas" %} <small><a href="" id="mat_collapse" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-eye-open"></span></a></small></h4>
+							<div class="panel panel-default">
+								<div class="panel-body" id="mat_body">
+									<div id="divStudioStudent" class="top_1">
+										{% if current_code %}
+											{% include "student_payment_form.html" with enrolment_list=enrolment_list %}
+										{% else %}
+											<div class="alert alert-info"> Indique criterios de busqueda </div>
+										{% endif %}
+									</div>
+								</div>
+							</div>
+
+							<h4 class="top_1">{% trans "Pagos" %}<small><a href="" id="pay_collapse" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-eye-open"></span></a></small></h4>
+							<div class="panel panel-default">
+								<div class="panel-body" id="pay_body">
+									{% include "tpv_payments.html" %}
+								</div>
+							</div>
+						</div>
+					</div>
+				 {#*********************ART******************#}
+					 <div class="tab-pane {% if tab == "article" %} active {% endif %}" id="tab2">
+						<div id="articles" class="well">
+							{% include "tpv_article_search.html"%}
+						
+							<div id="divStudioArticle">
+								{% include "article_payment_form.html"%}
+							</div>
+
+							<hr/>
+							{% include "tpv_article_payments.html"%}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>{# row #}
+	</div>{# tpv #}
+
+<script>
+	
+	$('#mat_collapse').click(function(e)
+	{
+		e.stopPropagation();
+		e.preventDefault();
+		$('#mat_body').slideToggle('slow', function(e){
+			if ($('#mat_body').css("display") == 'none')
+			{
+				$('#mat_collapse span').removeClass('glyphicon-eye-open');
+				$('#mat_collapse span').addClass('glyphicon-eye-close');
+			}
+			else
+			{
+				$('#mat_collapse span').removeClass('glyphicon-eye-close');
+				$('#mat_collapse span').addClass('glyphicon-eye-open');
+			}
+		});
+
+	});
+
+
+	$('#pay_collapse').click(function(e)
+	{
+		e.stopPropagation();
+		e.preventDefault();
+		$('#pay_body').slideToggle('slow',function(e){
+			if ($('#pay_body').css("display")== "none")
+			{
+				$('#pay_collapse span').removeClass('glyphicon-eye-open');
+				$('#pay_collapse span').addClass('glyphicon-eye-close');
+			}
+			else
+			{
+				$('#pay_collapse span').removeClass('glyphicon-eye-close');
+				$('#pay_collapse span').addClass('glyphicon-eye-open');
+
+			}
+		});
+
+	});
+
+</script>
+
+
+{% endblock %}

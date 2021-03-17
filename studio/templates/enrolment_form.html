@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load i18n utils_tags %}
+
+
+{% block title %} {% trans "Add Enrolment" %} {% endblock %}
+{% block header %} {% endblock %}
+{% block head_tag %}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/chosen.jquery.min.js" ></script>
+	<link rel="stylesheet" href="{{ STATIC_URL }}css/chosen.min.css">
+	<style>
+		.chosen-container-single{
+			min-width: 450px!important;
+			display: inline-block;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div id="form_enrolment">
+		<form action="" method="post" class="form-inline" role="form" id="" enctype="multipart/form-data">
+			{% csrf_token %}
+			<div class="well">
+				<label>{{ form_enrolment.group.label_tag }} <span>*</span> </label>
+				<div class="form-group {% if form_enrolment.group.errors %} has-error{% endif %}">
+					{% if form_enrolment.group.errors %}<span class="text-danger">{{ form_enrolment.group.errors }}</span>{% endif %}
+					{{ form_enrolment.group|addcss:"form-control"  }}
+				</div>
+			</div>
+
+			<label>{% trans "Student:" %} <span>*</span> </label>
+			<div class="form-group {% if form_enrolment.student.errors %} has-error{% endif %}" id="student_select">
+				{% if form_enrolment.student.errors %}<span class="text-danger">{{ form_enrolment.student.errors }}</span>{% endif %}
+				<button id="add_student" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
+				{{ form_enrolment.student|addcss:"form-control" }} 
+			</div>
+
+			{# hidden if no new student needs to be created #}
+			<div class="" style="display:none" id="add_student_container">
+				<button id="choose_student" class="btn btn-default"><span class="glyphicon glyphicon-list-alt"></span></button>
+
+				{% include "student_form.html" %}
+
+				{% comment %}
+				<fieldset>
+					<legend> <small>{% trans "New Student" %}</small></legend>
+					{#-- form_student fields #}
+					<div class="form-group {% if form_student.code.errors %} has-error{% endif %}" style="margin-right:20px;">
+						{% if form_student.code.errors %}<span class="text-danger">{{ form_student.code.errors }}</span>{% endif %}
+						<label for="id_code" class="">{{ form_student.code.label_tag }}<span>*</span></label>
+						<input type="text" value="{{ code_default }}" name="code" id="id_code" class="form-control input_xs"/><br/>	
+					</div>
+					<div class="form-group {% if form_student.pin.errors %} has-error{% endif %}" style="margin-right:20px;">
+						{% if form_student.pin.errors %}<span class="text-danger">{{ form_student.pin.errors }}</span>{% endif %}
+						<label for="id_pin" class="">{{ form_student.pin.label_tag }}<span>*</span></label>
+						{{ form_student.pin|addcss:"form-control input_xs" }}
+					</div>
+					<div class="form-group {% if form_student.name.errors %} has-error{% endif %}">
+						{% if form_student.name.errors %}<span class="text-danger">{{ form_student.name.errors }}</span>{% endif %}
+						<label for="id_name" class="">{{ form_student.name.label_tag }}<span>*</span></label>				
+						{{ form_student.name|addcss:"form-control input_lg" }}
+					</div>
+					<br/>
+					<div class="form-group {% if form_student.phone.errors %} has-error{% endif %}" style="margin-right:20px;">
+						{% if form_student.phone.errors %}<span class="text-danger">{{ form_student.phone.errors }}</span>{% endif %}
+						<label for="id_phone" class="">{{ form_student.phone.label_tag }}<span>*</span></label>		
+						{{ form_student.phone|addcss:"form-control" }}			
+					</div>
+					<div class="form-group {% if form_student.email.errors %} has-error{% endif %}">
+						{% if form_student.email.errors %}<span class="text-danger">{{ form_student.email.errors }}</span>{% endif %}
+						<label for="id_email" class="">{{ form_student.email.label_tag }}</label>
+						{{ form_student.email|addcss:"form-control" }}
+					</div>
+					 <br>
+				 </fieldset>
+				{% endcomment %}
+			</div>
+			<br/><br/>
+
+			<div class="well price_block">
+				<div class="form-group {% if form_enrolment.price.errors %} has-error{% endif %}" style="margin-right:20px;">
+					{% if form_enrolment.price.errors %}<span class="text-danger">{{ form_enrolment.price.errors }}</span>{% endif %}
+					<label for="id_price" class="">{{ form_enrolment.price.label_tag }}:<span>*</span></label>
+					{{ form_enrolment.price|addcss:"form-control input_xs"  }}
+				</div>
+				<div class="form-group {% if form_enrolment.percent_studio.errors %} has-error{% endif %}" style="margin-right:20px;">
+					{% if form_enrolment.percent_studio.errors %}<span class="text-danger">{{ form_enrolment.percent_studio.errors }}</span>{% endif %}
+					<label for="id_percent_studio" class="">{{ form_enrolment.percent_studio.label_tag }}:<span>*</span></label>
+					{{ form_enrolment.percent_studio|addcss:"form-control input_xs" }} %
+				</div>
+				<div class="form-group {% if form_enrolment.percent_teacher.errors %} has-error{% endif %}">
+					{% if form_enrolment.percent_teacher.errors %}<span class="text-danger">{{ form_enrolment.percent_teacher.errors }}</span>{% endif %}
+					<label for="id_percent_teacher" class="">{{ form_enrolment.percent_teacher.label_tag }}:<span>*</span></label>
+					{{ form_enrolment.percent_teacher|addcss:"form-control input_xs" }} %
+				</div>
+			</div>
+
+			{{ form_enrolment.active.as_hidden }}
+			{{ form_enrolment.creation_date.as_hidden }}
+			<input type="hidden" name="create_student" value="False" id="id_create_student" class=""/>
+			<div class="text-center">
+				<input type="submit" value="{% trans "Send" %}" name="submit" class="btn btn-success" />
+			</div>
+		</form>
+	</div>
+
+	<script type="text/javascript">
+		$('#add_student').click(function(e){
+			$('#student_select').fadeOut('fast', function(e){
+				$('#add_student_container').fadeIn('slow');
+				$('#id_create_student').val("True");
+			});
+			return false;
+		});
+
+		$('#choose_student').click(function(e){
+			$('#add_student_container').fadeOut('slow');
+			$('#student_select').fadeIn('slow');
+			$('#id_create_student').val("False");
+			return false;
+		});
+
+		//$(".input_xs").width("100px");
+		$('#id_student').chosen();
+		$('#id_group').chosen();
+	</script>
+{% endblock %}
+
+{% block footer %}{% endblock %}

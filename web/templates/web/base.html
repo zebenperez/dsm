@@ -1,0 +1,79 @@
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>{% block title %} {% trans "5db Dance School" %} {% endblock %}</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="Keywords" content="restaurantes, candelaria, dinners, reservations, reservas, cenas, almuerzos, restaurant">
+		<meta name="description" content="{% block description %} {% endblock %}">
+
+		<link rel="stylesheet" href="{{ STATIC_URL }}bootstrap3/css/bootstrap.css" media="screen"/>
+	{#	<link rel="stylesheet" href="{{ STATIC_URL }}css/zebra_bootstrap.css" media="screen"/>#}
+		<link rel="stylesheet" href="{{ STATIC_URL }}css/web.css" />
+		<link href="http://fonts.googleapis.com/css?family=Anton|Medula+One|Open+Sans+Condensed:700|Snippet|Abel|Oswald:400,700,300|Yanone+Kaffeesatz" rel="stylesheet" type="text/css">
+		<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+{#		<script type="text/javascript" src="{{ STATIC_URL }}js/zebra_datepicker.js"></script>#}
+		<script type="text/javascript" src="{{ STATIC_URL }}bootstrap3/js/bootstrap.min.js"></script>
+
+		{% block head_tag %} {% endblock %}
+	</head>
+	<body>
+	<div id="body_wrapper">	
+		<header class="row">
+			{% block header %}
+			<div class="header_row row"></div>
+			<div class="header_logo_row row">
+				<div class="col-md-4 col-md-offset-2">
+					<img src="{{ STATIC_URL }}images/web/logo.png" id="web_head_logo"/>
+				</div>
+				<div class="col-md-3 col-md-offset-1">
+					<img src="{{ STATIC_URL }}images/web/slogan.png" id="web_head_slogan"/>
+				</div>
+			</div>	
+			<div class="col-md-12">
+				{% include "web/main_nav.html" %}
+			</div>
+			{% endblock %}
+		</header>
+		<div class="row">
+			{% block content %}
+
+			{% endblock %}
+		</div>
+		<footer class="row" style="">
+			{% block footer %}
+				<div class="col-md-2"></div>
+				<div class="col-md-2 col-xs-12">
+
+						<h3>CONTACTA</h3>
+						<p>
+						+34 922 618 750<br>
+						Calle Punta Teno. 48<br>
+						Santa Cruz de Tenerife. Tenerife<br>
+						España<br>
+			 			<a href="mailto:info@5db.com">info@5db.com</a>
+					</p>
+				</div>			
+				<div class="col-md-4 col-xs-12 center_footer">
+					<h2>Mucho más que una escuela de baile</h2>
+					<img src="{{ STATIC_URL }}images/web/logo.png" alt="">
+				</div>
+				<div clasS="col-md-2 col-xs-12">
+						<h3>CONTACTA</h3>
+						<p>
+						+34 922 618 750<br>
+						Calle Punta Teno. 48<br>
+						Santa Cruz de Tenerife. Tenerife<br>
+						España<br>
+			 			<a href="mailto:info@5db.com">info@5db.com</a>
+					</p>
+
+				</div>
+				
+			{% endblock %}
+		</footer>
+	</div>	
+	</body>
+</html>
+

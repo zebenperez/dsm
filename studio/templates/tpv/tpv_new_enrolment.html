@@ -1,0 +1,63 @@
+{% load i18n %}
+
+{% for e in enrolment_list %}
+	<form method='post' action='{% url "new_enrolment" %}' class="form-horizontal" id="new_enrolment"> 
+		{% csrf_token %}
+		<div class="modal fade" tabindex="-1" role="dialog" id="altaModal_{{e.id}}">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">{% trans "Nueva matrícula para" %} {{e.student.name}}</h4>
+					</div>
+					<div class="modal-body">
+						<input type="hidden" name="student" value="{{e.student.id}}" />				
+						
+						<div class="form-group">
+							<label class="col-sm-4 control-label">{% trans "Grupo" %}</label>
+							<div class="col-sm-8"> 
+								<select class="form-control" id="group" name="group">
+									{% for group in group_list %}
+										<option value="{{group.id}}"> {{group}} </option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-4 control-label">{% trans "Precio" %}</label>
+							<div class="col-sm-4"> 
+								<div class="input-group">
+									<input type="text" class="form-control" id="price" name="price" value="30" />
+									<span class="input-group-addon">€</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-4 control-label">{% trans "Porcentaje escuela" %}</label>
+							<div class="col-sm-4"> 
+								<div class="input-group">
+									<input type="text" class="form-control" id="studio" name="studio" value="50" size="6"/>
+									<span class="input-group-addon">%</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-4 control-label">{% trans "Porcentaje profesor" %}</label>
+							<div class="col-sm-4"> 
+								<div class="input-group">
+									<input type="text" class="form-control" id="teacher" name="teacher" value="50" size="6"/>
+									<span class="input-group-addon">%</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						<input type="submit" class="btn btn-primary" value="Crear matrícula" />
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+	</form>
+{% endfor %}
+

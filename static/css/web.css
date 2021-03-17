@@ -1,0 +1,248 @@
+/* CSS de la página web */
+
+@font-face {
+	font-family: “BebasNeue”;
+	src: url(../fonts/BebasNeue.otf) format(“opentype”);
+}
+
+body * {
+	font-family: Oswald, BebasNeue, Impact, Times New Roman, sans-serif;	
+	font-weight: 300;
+	font-size : 1.02em;
+}
+
+
+h2.title2
+{
+	display: block;
+	width: 30%;
+	margin: auto;
+	text-align: center;
+	padding-bottom: 1em;
+	font-weight: 400;
+	font-size: 2em;
+	color: #65707b;
+ 	margin-bottom: 2em;	
+	border-bottom: 3px solid rgba(0, 0, 0, 0.08);
+font-family: Oswald, BebasNeue, Impact, Times New Roman, sans-serif;	
+
+}
+
+/*-------------------------------------------------
+WEB HEADER
+-----------------------------------------------*/
+header
+{
+}
+
+
+img#web_head_logo
+{
+	width: 110px;
+	height: 80px;
+}
+
+
+img#web_head_slogan
+{
+	width : 210px;
+	height: 58px;
+	
+}
+
+.header_row
+{
+	height: 1.1em;
+	background-color: #606060; 
+}
+
+.header_logo_row
+{
+	padding-top: 0.3em;
+	padding-bottom: 0.3em;
+	background-image: -webkit-linear-gradient(top, #FF5A00 0%, #FFAE00 100%);
+	background-image: -moz-linear-gradient(top, #FF5A00 0%, #FFAE00 100%);
+	background-image: -ms-linear-gradient(top, #FF5A00 0%, #FFAE00 100%);
+	background-image: -o-linear-gradient(top, #FF5A00 0%, #FFAE00 100%);
+	background-image: linear-gradient(top, #FF5A00 0%, #FFAE00 100%);
+}
+
+
+.dropdown-menu * a
+{
+	font-weight:300;
+}
+
+
+
+
+#carousel-index
+{
+	height: 300px;
+	width : 100%;
+	max-height: 350px;
+	margin-top: -1.3em;
+}
+#carousel-index img
+{
+	width: 100%;
+	height: 300px;
+}
+
+/*------------------------------------------------
+LAST NEWS
+----------------------------------------------------*/
+#last_news 
+{
+	padding-top: 2em;
+	padding-bottom: 2em;
+}
+
+.post
+{
+    background-color: #FFF;
+    overflow: hidden;
+    box-shadow: 0 0 1px #CCC;
+	 -webkit-box-shadow: 1px 1px 10px 0px rgba(50, 50, 50, 0.75);
+-moz-box-shadow:    1px 1px 10px 0px rgba(50, 50, 50, 0.75);
+box-shadow:         1px 1px 10px 0px rgba(50, 50, 50, 0.75);
+
+}
+.post img
+{
+   /* filter: blur(2px);
+    -webkit-filter: blur(2px);
+    -moz-filter: blur(2px);
+    -o-filter: blur(2px);
+    -ms-filter: blur(2px);*/
+}
+.post .content
+{
+    padding: 15px;
+}
+.post .author
+{
+    font-size: 11px;
+    color: #737373;
+    padding: 25px 30px 20px;
+}
+.post .post-img-content
+{
+    height: 196px;
+
+    position: relative;
+}
+.post .post-img-content img
+{
+    position: absolute;
+	 max-height : 225px;
+	 width: 100%;
+
+}
+.post .post-title
+{
+    display: table-cell;
+    vertical-align: bottom;
+    z-index: 2;
+    position: relative;
+}
+.post .post-title b
+{
+    background-color: rgba(51, 51, 51, 0.58);
+    display: inline-block;
+    margin-bottom: 5px;
+    color: #FFF;
+    padding: 10px 15px;
+    margin-top: 5px;
+}
+
+/*---------------------------------------------
+INDEX ABOUT US
+------------------------------------------------*/
+#about_us
+{
+	padding-top: 2em;
+	padding-bottom: 3em;
+}
+
+.card_container 
+{
+    overflow: hidden;
+	 margin-left: 1.1em;
+	 margin-right: 1em;
+
+}
+
+
+
+
+
+.card_container h3
+{
+	font-weight: bolder;
+	color : orange;
+}
+
+.dance_title 
+{
+	display: block;
+	font-weight: bolder;
+	text-decoration underline;
+}
+
+.teacher_img_container
+{
+	text-align: center;
+}
+
+.card_container .teacher_img 
+{
+	max-height: 150px;
+	max-width: 150px;
+	height: 150px;
+	width: 150px;
+	margin: auto;
+	margin-bottom: 1em;
+	margin-top: 1em;
+    box-shadow: 0 0 1px #CCC;
+	 -webkit-box-shadow: 1px 1px 3px 0px rgba(50, 50, 50, 0.75);
+-moz-box-shadow:    1px 1px 3px 0px rgba(50, 50, 50, 0.75);
+box-shadow:         1px 1px 3px 0px rgba(50, 50, 50, 0.75);
+
+}
+
+
+/*-------------------------------------------
+FOOTER
+-------------------------------------------*/
+footer 
+{
+	background-color: #1a171b;
+	color :#999;
+	
+}
+
+footer h3
+{
+	border-bottom : 2px solid silver;
+	font-weight: bolder;
+}
+
+footer img
+{
+	max-height: 200px;
+	max-width: 200px;
+}
+
+footer .center_footer
+{
+	text-align: center;
+}
+
+footer .center_footer h2
+{
+	color: white;
+	font-weight: bolder;
+	font-size: 2em;
+
+}

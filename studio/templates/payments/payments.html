@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% load i18n apptags static %}
+
+{% block content %}
+	<form method="post" action="{% url "payments" %}" name="payment_search" id="payment_search" class=" form form-inline">
+		{% csrf_token %}
+		<div class="row list-group-item list-group-item-info text-center">
+			<div class="col-md-2"> <label for="code">{% trans "Alumno" %}:</label> </div>
+			<div class="col-md-2"> <label for="code">{% trans "Profesor" %}:</label> </div>
+			<div class="col-md-4"> <label for="name">{% trans "Grupo" %}:</label> </div>
+			<div class="col-md-2"> <label for="ini_date">{% trans "Inicio" %}:</label> </div>
+			<div class="col-md-2"> <label for="end_date">{% trans "Fin" %}:</label> </div>
+		</div>
+		<div class="row list-group-item text-center">
+			<div class="col-md-2">
+				<input type="text" name="student" id="student" value="{{current_student}}" class="form-control" size="15"/>
+			</div>
+			<div class="col-md-2">
+				<select name="teacher" id="teacher" class="form-control">
+					<option value=""> --- </option>
+					{% for teacher in teacher_list %}
+						<option value="{{ teacher.id }}" {% if current_teacher|add:0 == teacher.id %} selected="selected" {% endif %}> {{ teacher.name }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-md-4">
+				<select name="group" class="form-control">
+					<option value=""> --- </option>
+					{% for group in group_list %}
+						<option value="{{ group.id }}" class="gr_{{group.teacher.id}}" {% if current_group|add:0 == group.id%} selected {% endif %}> {{ group }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-md-2">
+				<input type="text" name="ini_date" id="ini_date" value="{{ini_date|date:"d-m-Y"}}" class="form-control" size="8"/>
+			</div>
+			<div class="col-md-2">
+				<input type="text" name="end_date" id="end_date" value="{{end_date|date:"d-m-Y"}}" class="form-control" size="8"/>
+			</div>
+		</div>
+		<div class="row list-group-item text-center">
+			<div class="col-md-12">
+				<input type="submit" value="Search" class="btn btn-info" />
+			</div>
+		</div>
+	</form>
+
+	<br/>
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<div class="row">
+				<div class="col-md-3 col-md-offset-1">
+					<strong>Registros: {{payment_list|length}} </strong>
+				</div>
+				<div class="col-md-3 col-md-offset-1">
+					<strong>Profesor: {% get_teacher_amount current_teacher current_group current_student ini_date end_date %}</strong>
+				</div>
+				<div class="col-md-3 col-md-offset-1">
+					<strong>Total: {% get_total_amount payment_list %}</strong>
+				</div>
+			</div>
+		</div>
+		<div class="panel-body">
+			{% if payment_list %}
+				<table class="table table-hover">
+					<thead>
+						<tr> <th>Codigo</th> <th>Nombre</th> <th>Grupo</th> <th>Fecha</th> <th>Pago</th> <th>Caduca</th> <th> Cantidad</th> <th>Teléfono</th></tr>
+					</thead>
+					<tbody>
+						{% for st in payment_list %}
+							<tr>
+								<td>{{ st.student.code }}</td>
+								<td>{{ st.student.name }}</td>
+								<td>{{ st.enrolment.group }}</td>
+								<td>{{ st.date|date:"d-m-Y" }}</td>
+								<td>{{ st.pay_date|date:"d-m-Y" }}</td>
+								<td>{{ st.expire_date|date:"d-m-Y" }}</td>
+								<td>{{ st.amount }}</td>
+								<td>{{ st.student.phone }}</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			{% else %}
+				<p>No payments are available.</p>
+			{%	endif %}
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$('#ini_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#end_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#teacher').change(function(e){
+			id = ".gr_" + $('#teacher option:selected').val();
+			if (id == ".gr_")
+				$('option[class^="gr_"]').show();
+			else
+			{
+				$('option[class^="gr_"]').hide();
+				$(id).show();
+			}
+		});
+	</script>
+{% endblock %}

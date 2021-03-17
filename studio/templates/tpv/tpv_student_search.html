@@ -1,0 +1,14 @@
+{% load i18n static utils_tags %}
+
+<div class="row">
+	<div class="col-md-5">
+		<form method="post" action="{% url "search" %}" name="student_search" id="student_search" class="form-inline" role="form">
+			{% csrf_token %}
+			{#<input type="text" name="code" id="code" class="form-control" placeholder="Code" {% if current_code %} value="{{current_code}}" {% endif %}/>#}
+			<input type="text" name="code" id="code" class="form-control" placeholder="Code" {% if current_code %} value="" {% endif %}/>
+			<input type="text" name="name" id="name" class="form-control" placeholder="Name" />
+			<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
+		</form>
+	</div>
+</div>
+

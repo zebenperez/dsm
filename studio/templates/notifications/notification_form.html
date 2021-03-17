@@ -1,0 +1,71 @@
+{% load i18n apptags static %}
+<script src="//cdn.ckeditor.com/4.5.10/standard/ckeditor.js"></script>
+
+{% if student_list %}
+	<form method="post" action="{% url "notification_save" %}" name="notification_save" id="notification_save" class="form-inline">
+		{% csrf_token %}
+		<div class="row list-group-item">
+			<div class="col-md-8" style="padding-top:7px">
+				<strong>{% get_group_name current_group %}</strong>
+			</div>
+			<div class="col-md-4 text-right">
+				<input type="submit" value="Guardar" class="btn btn-success" />
+			</div>
+		</div>
+		<div class="row list-group-item">
+			<div class="col-md-12">
+				<textarea id="msg" name="msg" cols="133" placeholder="Escribe tu mensaje aquí..."> </textarea>
+			</div>
+		</div>
+		<div class="row list-group-item text-right">
+			<div id="select_all">
+				<a href="#" class="btn btn-success" onclick="selectAll()"> Seleccionar todos </a>
+			</div>
+			<div id="unselect_all" style="display:none">
+				<a href="#" class="btn btn-info" onclick="unSelectAll()"> Deseleccionar todos </a>
+			</div>
+		</div>
+		{% for st in student_list %}
+			<input type="hidden" id="check_{{st.id}}" name="check_{{st.id}}" value="0" />
+			<div id="row_{{st.id}}" class="row list-group-item">
+				<div class="col-md-8">
+					{{ st.name }}
+				</div>
+			</div>
+		{% endfor %}
+	</form>
+{% endif %}
+
+<script type="text/javascript">
+	CKEDITOR.replace( 'msg' );
+
+	$('div[id^="row_"]').click(function() {
+		id = $(this).attr('id').split('_')[1];
+		if ($("#row_"+id).hasClass("list-group-item-success"))
+		{
+			$("#row_"+id).removeClass("list-group-item-success");
+			$("#check_"+id).val("0");
+		}
+		else
+		{
+			$("#row_"+id).addClass("list-group-item-success");
+			$("#check_"+id).val("1");
+		}
+	});
+
+	function selectAll()
+	{
+		$("div[id^='row_']").addClass("list-group-item-success");
+		$("input[id^='check_'").val("1");
+		$("#select_all").hide();
+		$("#unselect_all").show();
+	}
+
+	function unSelectAll()
+	{
+		$("div[id^='row_']").removeClass("list-group-item-success");
+		$("input[id^='check_'").val("0");
+		$("#unselect_all").hide();
+		$("#select_all").show();
+	}
+</script>

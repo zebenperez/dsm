@@ -1,0 +1,106 @@
+{% load i18n static apptags %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{% block title %}Dance Studio Management{% endblock %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="{% static "css/style.css" %}">
+ 
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+ 
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+ 
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+	{% comment %}
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="{{ STATIC_URL }}bootstrap3/css/bootstrap.css" media="screen"/>
+	<!-- Timepicker -->
+	<link rel="stylesheet" href="{% static "tp/include/ui-1.10.0/ui-lightness/jquery-ui-1.10.0.custom.min.css" %}" type="text/css" />
+	<link rel="stylesheet" href="{% static "tp/jquery.ui.timepicker.css" %}" type="text/css" />
+
+	
+	<link rel="stylesheet" href="{% static "css/dsm.css" %}" />
+	<!-- Bootstrap -->
+	<script src="http://code.jquery.com/jquery.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}bootstrap3/js/bootstrap.min.js"></script>
+
+
+	<!-- jQuery -->
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"> </script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+	<!-- Timepicker -->
+	<script type="text/javascript" src="{% static "tp/jquery.ui.timepicker.js" %}"></script>
+   <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+	{% block head_tag %}{% endblock %}
+	{% endcomment %}
+</head>
+
+<body>
+
+	<header>
+		{%block header %}
+			{% include "nav_bar.html" %}
+		{% endblock %}
+	</header>
+
+	<div id="main_content" class="row" style="">
+	{% block content_wrapper %}
+		<div class="col-md-10 col-md-offset-1">
+			{% block content %}{% endblock %}
+		</div>
+	{% endblock %}
+	</div>
+
+	<footer>
+		{% block footer %}
+		<p style="text-align:center">&copy; {{ current_date|date:"Y" }} <a href="http://www.shidix.com"> Shidix Technologies </a></p>
+		{% endblock %}
+	</footer>
+</body>
+</html>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#student_search').submit(function() { // catch the form's submit event
+			$.ajax({ // create an AJAX call...
+				data: $(this).serialize(), // get the form data
+				type: $(this).attr('method'), // GET or POST
+				url: $(this).attr('action'), // the file to call
+				success: function(response) { // on success..
+					$('#divStudioStudent').html(response); // update the DIV
+				}
+			});
+			return false;
+		});
+	});
+
+	$(function() {
+		$('#current_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#current_date_cash').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#ini_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#end_date').datepicker({dateFormat: 'dd-mm-yy'});
+	});
+
+	$('#current_date').change(function() {
+		var url = "/studio/"+$('#current_date').val();    
+		$(location).attr('href',url);
+	});
+
+	$('#article_search').submit(function() { // catch the form's submit event
+		$.ajax({ // create an AJAX call...
+			data: $(this).serialize(), // get the form data
+			type: $(this).attr('method'), // GET or POST
+			url: $(this).attr('action'), // the file to call
+			success: function(response) { // on success..
+				$('#divStudioArticle').html(response); // update the DIV
+			}
+		});
+		return false;
+	});
+</script>
+

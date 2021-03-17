@@ -1,0 +1,63 @@
+{% load i18n static utils_tags %}
+
+{% if payment_list and payment_list|length > 0%}
+	<table class="table table-hover">
+		<thead>
+			<tr> 
+				<th>Código</th> 
+				<th>Nombre</th> 
+				<th>Grupo</th> 
+				<th>Pagado</th> 
+				<th>Caduca</th> 
+				<th> Cantidad</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for st in payment_list %}
+				<tr>
+					<td> {{ st.student.code }} </td> 
+					<td> {{ st.student.name }} </td> 
+					<td> {{ st.enrolment.group }} </td> 
+					<td> {{ st.pay_date|date:"d-m-Y" }} </td> 
+					<td> {{ st.expire_date|date:"d-m-Y" }} </td>
+					<td> {{ st.amount }} </td>
+					<td> 
+						<a href="#" data-href="{% url "delete_payment" st.id %}" class="btn btn-danger btn-xs" title="delete" data-toggle="modal" data-target="#confirm-delete">
+							<span class="glyphicon glyphicon-trash" title="delete"></span>
+						</a>
+						{% comment%}
+						<a href="" class="btn btn-info btn-xs" title="invoice">
+							<span class="glyphicon glyphicon-print" title="invoice"></span>
+						</a>
+						{% endcomment %}
+					</td>
+				</tr>	
+			{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<p class="alert alert-info" ><span class="glyphicon glyphicon-info-sign"></span> &nbsp;No hay pagos para este día </p>
+{% endif %}
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Borrar Pago	
+            </div>
+            <div class="modal-body">
+                Está seguro que desea borrar este pago?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <a class="btn btn-danger btn-ok">Borrar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+	$('#confirm-delete').on('show.bs.modal', function(e) {
+		$(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+	});
+</script>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	{% load staticfiles %}
+	<title>{% block title %}Dance Studio Management{% endblock %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="{% static "css/style.css" %}" />
+	<link rel="stylesheet" href="{% static "css/sticky_footer.css" %}" />
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="{% static "css/bootstrap-glyphicons.css" %}" />
+	<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.min.css" %}" media="screen">
+	<!-- Timepicker -->
+	<link rel="stylesheet" href="{% static "tp/include/ui-1.10.0/ui-lightness/jquery-ui-1.10.0.custom.min.css" %}" type="text/css" />
+	<link rel="stylesheet" href="{% static "tp/jquery.ui.timepicker.css" %}" type="text/css" />
+
+	<!-- Bootstrap -->
+	<script src="http://code.jquery.com/jquery.js"></script>
+	<script src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
+	<!-- jQuery -->
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"> </script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+	<!-- Timepicker -->
+	<script type="text/javascript" src="{% static "tp/jquery.ui.timepicker.js" %}"></script>
+   <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+</head>
+
+<body>
+	{% load i18n %}
+	{% load apptags %}
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container-fluid">
+				<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="brand" href="#">Dance Studio Management</a>
+				<div class="nav-collapse collapse">
+
+					<ul class="nav">
+					{% if user.is_authenticated %}
+							<li {% if "payments"|contains:request.path %} class="active" {% endif %}><a href="{% url "payments" %}">Payments</a></li>
+					{% endif %}
+					{% if user.is_superuser %}
+							<li {% if "tpv"|contains:request.path %} class="active" {% endif %}><a href="{% url "tpv" %}">Tpv</a></li>
+							<li {% if "teachers"|contains:request.path %} class="active" {% endif %}><a href="{% url "teachers" %}">Teachers</a></li>
+							<li {% if "cash"|contains:request.path %} class="active" {% endif %}><a href="{% url "cash" %}">Cash</a></li>
+							<li {% if "article_payments"|contains:request.path %} class="active" {% endif %}><a href="{% url "article_payments" %}">Article Payments</a></li>
+							<li {% if "assistances"|contains:request.path %} class="active" {% endif %}><a href="{% url "assistances" %}">Assistances</a></li>
+							<li {% if "admin"|contains:request.path %} class="active" {% endif %}><a href="{% url 'admin:index' %}">Admin</a></li>
+					{% endif %}
+					</ul>
+
+					{% comment %}
+					<form action="/i18n/setlang/" method="post">
+						{% csrf_token %}
+						<input name="next" type="hidden" value="{{ request.path|slice:"3:" }}" />
+						<select name="language">
+							{% get_language_info_list for LANGUAGES as languages %}
+							{% for language in languages %}
+								{%if LANGUAGE_CODE = language.code %}
+									<option value="{{ language.code }}" selected>{{ language.name_local }} ({{ language.code }})</option>
+								{% else %}
+									<option value="{{ language.code }}">{{ language.name_local }} ({{ language.code }})</option>
+								{% endif %}
+							{% endfor %}
+						</select>
+						<input type="submit" value="Go" />
+					</form>
+
+					<form class="navbar-form pull-right">
+						<input class="span2" type="text" placeholder="Email">
+						<input class="span2" type="password" placeholder="Password">
+						<button type="submit" class="btn">Sign in</button>
+					</form>
+					{% endcomment %}
+
+					<p class="navbar-text pull-right">
+						{% if user.is_authenticated %}	
+							{% trans "Welcome" %} ,<strong> {{ user.username }} </strong>. {% trans "Thanks for logging in" %}. <a href="/logout/"> logout </a>
+						{%	else %}
+							{% trans "Welcome, new user" %}. {% trans "Please" %} <a href="/accounts/login/?next=/"> {% trans "log in" %}. </a>
+						{% endif %}
+					</p>
+				</div><!--/.nav-collapse -->
+			</div>
+		</div>
+	</div>
+
+
+	<div class="container-fluid">
+		<div class="well" style="margin-top: 4em;">
+			{% block content %}{% endblock %}
+		</div>
+	</div>
+
+	<div id="footer">
+		<div class="container-fluid">
+			<p class="muted credit">This is a sticky footer</p>
+		</div>	  
+	</div>
+	{% comment %}
+	<footer>
+		<p>&copy; Shidix Technologies</p>
+	</footer>
+	{% endcomment %}
+</body>
+</html>
+
+<script type="text/javascript">
+	/*<![CDATA[*/
+	$(document).ready(function() {
+		$('#student_search').submit(function() { // catch the form's submit event
+			$.ajax({ // create an AJAX call...
+				data: $(this).serialize(), // get the form data
+				type: $(this).attr('method'), // GET or POST
+				url: $(this).attr('action'), // the file to call
+				success: function(response) { // on success..
+					$('#divStudioStudent').html(response); // update the DIV
+				}
+			});
+			return false;
+		});
+	});
+
+	$(function() {
+		$('#current_date').datepicker({dateFormat: 'dd-mm-yy'});
+		$('#current_date_cash').datepicker({dateFormat: 'dd-mm-yy'});
+	});
+
+	$('#current_date').change(function() {
+		var url = "/studio/"+$('#current_date').val();    
+		$(location).attr('href',url);
+	});
+
+	$('#current_date_cash').change(function() {
+		var url = "/studio/cash/"+$('#current_date_cash').val();    
+		$(location).attr('href',url);
+	});
+
+	$('#article_search').submit(function() { // catch the form's submit event
+			$.ajax({ // create an AJAX call...
+				data: $(this).serialize(), // get the form data
+				type: $(this).attr('method'), // GET or POST
+				url: $(this).attr('action'), // the file to call
+				success: function(response) { // on success..
+					$('#divStudioArticle').html(response); // update the DIV
+				}
+			});
+			return false;
+		});
+
+	//******************* CASH *********************************
+	function setInitialTotal()
+	{
+		if (jQuery('#amount').length > 0)
+		{
+			jQuery('#amount').val(jQuery('#amount').val().replace(",","."));
+			jQuery('#tpvcard').val(jQuery('#tpvcard').val().replace(",","."));
+			var total = sumValues('id_i_');
+			var total2 = Number(total) + Number(jQuery('input[id="amount"]').val()) + Number(jQuery('input[id="tpvcard"]').val()); 
+			var diff = getDifference();
+
+			jQuery('input[id="InitialTotal"]').val(total);
+
+			jQuery('#spanInitialTotal').html(total);
+			jQuery('#spanTotalBill').html(total2);
+			jQuery('#spanDiff').html(diff);
+		}
+	}
+
+	function setFinalTotal()
+	{
+		if (jQuery('#amount').length > 0)
+		{
+			var total = sumValues('id_e_');
+		//	var e_card = jQuery('input[id="id_e_card"]').val();
+			var e_card=  jQuery('input[id="tpvcard"]').val();
+			alert('e_Card :'+e_card+'\n total:'+ total);
+			
+			var total2 = Number(total) + Number(e_card.replace(',','.')); 
+			var diff = getDifference();
+			
+	
+			jQuery('input[id="FinalTotal"]').val(total.replace(',','.'));
+			jQuery('#spanFinalCash').html(total.replace(',','.'));
+			jQuery('#spanFinalTotal').html(total2.replace('.',','));
+			jQuery('#spanDiff').html(diff.replace(',','.'));
+		}
+	}
+
+	jQuery(document).ready(function() {
+		/* Cash OPEN functions */
+		jQuery('input[id^="id_i_"]').change(function() {
+			setInitialTotal();
+		});
+
+		/* Cash CLOSE functions */
+		jQuery('input[id^="id_e_"]').change(function() {
+			setFinalTotal();
+		});
+
+
+		/*jQuery('input[id^="item_FinalCard"]').keyup(function() {
+			var total = Number(jQuery('input[id="item_FinalCard"]').val());
+			var diff = getDifference();
+
+			jQuery('#spanFinalCard').html(total);
+			jQuery('#spanDiff').html(diff);
+		});*/
+	});
+
+	function sumValues(prefix)
+	{
+		var sum = 0;
+
+		jQuery('input[id^="' + prefix + '"]').each(function() {
+			var attr = jQuery(this).attr("id").split("_")[2];
+
+			if (attr >= 0)
+			{
+				sum += Number(Number(jQuery(this).val().replace(',','.')) * attr * Number(0.01));
+				sum = round(sum * 100) / 100;
+			}
+		});
+
+		var str = sum + '';
+
+		return str;
+	};
+
+	function getDifference()
+	{
+		var openValues = sumValues('id_i_');
+		var closeValues = sumValues('id_e_');
+		var cardValue = typeof jQuery('input[id="id_e_card"]').val() != 'undefined': Number(jQuery('input[id="id_e_card"]').val() ) ? 0; 
+		var billValue = Number(jQuery('input[id="amount"]').val()); 
+		var tpvCardValue = Number(jQuery('input[id="tpvcard"]').val())
+		var diff = Number((Number(closeValues) + Number(cardValue))) - Number((Number(openValues) + Number(billValue) + Number(tpvCardValue)));
+
+		return round(diff,4);
+	}
+	
+	function round(value)
+	{
+		return round(value,2);
+	}
+
+	function round(value, decimals)
+	{
+		if(!parseInt(decimals))
+			var decimals=0;
+		if(!parseFloat(value))
+			return 0;
+		return Math.round(value*Math.pow(10,decimals))/Math.pow(10,decimals);
+	}
+
+	setInitialTotal();
+	setFinalTotal();
+
+	/*]]>*/
+</script>
+

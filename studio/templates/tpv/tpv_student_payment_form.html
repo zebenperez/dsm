@@ -1,0 +1,80 @@
+{% load apptags i18n %}
+
+<br/>
+<div class="row">
+	<div class="col-md-12 text-center">
+		<div>
+			{% if enrolment_list|length > 0 %}
+				<div class="row">
+					<div class="col-md-1"><strong>{% trans "Código" %}</strong></div>
+					<div class="col-md-2"><strong>{% trans "Nombre" %}</strong></div>
+					<div class="col-md-2"><strong>{% trans "Grupo" %}</strong></div>
+					<div class="col-md-2"><strong>{% trans "Pagado" %}</strong></div>
+					<div class="col-md-2"><strong>{% trans "Caduca" %}</strong></div>
+					<div class="col-md-1"><strong>{% trans "Importe" %}</strong></div>
+				</div>
+				<hr/>
+				{% for e in enrolment_list %}
+					<div class="row">
+						<form method='post' action='{% url "pay" %}' class="form-inline payment_form top_1 {% if not forloop.counter|divisibleby:"2" %}marked{% endif %}"> 
+							{% csrf_token %}
+							<input type='hidden' name='enrolment_id' value='{{ e.id }}'/>
+							<div class="col-md-1">{{ e.student.code}} </div> 
+							<div class="col-md-2"> {{ e.student}} {% get_student_age e.student.born_date %} - ({{e.student.pin}})</div> 
+							<div class="col-md-2"> {{ e.group}} </div> 
+							<div class="col-md-2"> 
+								<input type="text" name="pay_date" value="{% get_pay_date e %}" class="form-control" style="color: {% get_color e %}" size="10"/> 
+							</div>
+							<div class="col-md-2"> 
+								<input type="text" name="expire_date" value="{% get_expire_date2 e %}" class="form-control" style='color: {% get_color e %}' size="10"/> 
+							</div>
+							<div class="col-md-1"> <input type='text' name='amount' value='{{ e.price }}' class="form-control" size="4"/> </div>
+							<div class="col-md-2">
+								<button style="display:inline;" type="submit" class="btn btn-success"><span class="glyphicon glyphicon-euro"></span></button>
+								<a class='options btn btn-primary' data-placement='top' title="Acciones"><span class="glyphicon glyphicon-plus"></span></a>
+								<div id="popover_content_wrapper" style="display: none">
+										<li class="list-group-item">
+											<a style="display:inline" class="btn btn-primary btn-xs" id="a_{{ e.student.id }}"  data-toggle="modal" data-target="#studentModal_{{e.id}}" onclick="$('.options').popover('hide')">
+												<span id="s_{{e.student.id}}" class="glyphicon glyphicon-user"> </span> {% trans "Editar alumno" %}
+											</a>
+										</li>
+										<li class="list-group-item">
+											<a style="display:inline" class="btn btn-primary btn-xs" id="a_{{ e.id }}" data-toggle="modal" data-target="#paymentsModal_{{e.id}}" onclick="$('.options').popover('hide')">
+												<span id="s_{{e.id}}" class="glyphicon glyphicon-plus"> </span> {% trans "Ver pagos" %}
+											</a>
+										</li>
+										<li class="list-group-item">
+											<a style="display:inline" class="btn btn-danger btn-xs" id="a_{{ e.id }}" data-toggle="modal" data-target="#altaModal_{{e.id}}" onclick="$('.options').popover('hide')">
+												<span id="s_{{e.id}}" class="glyphicon glyphicon-arrow-up"> </span> {% trans "Nueva matrícula" %}
+											</a>
+										</li>
+										<li class="list-group-item">
+											<a style="display:inline" class="btn btn-danger btn-xs" id="a_{{ e.id }}" data-toggle="modal" data-target="#bajaModal_{{e.id}}" onclick="$('.options').popover('hide')">
+												<span id="s_{{e.id}}" class="glyphicon glyphicon-arrow-down"> </span> {% trans "Dar de baja" %}
+											</a>
+										</li>
+								</div>
+							</div>
+						</form>
+					</div>
+				{% endfor %}
+			{% else %}
+				<p class="alert alert-warning"> {% trans "No se han encontrado resultados para su búsqueda" %} </p>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+{% include "tpv/tpv_new_enrolment.html"%}
+{% include "tpv/tpv_baja_enrolment.html"%}
+{% include "tpv/tpv_student_profile.html"%}
+{% include "tpv/tpv_student_payments.html"%}
+
+<script>
+	$('.options').popover({ 
+		html : true,
+		content: function() {
+			return $('#popover_content_wrapper').html();
+		}
+	});
+</script>
