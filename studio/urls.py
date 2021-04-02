@@ -29,9 +29,9 @@ urlpatterns = [
 	## CASH
 	path('cash/', views.cash, name="cash"),
 	path('<int:cash_id>/save_cash/', views.save_cash, name="save_cash"),
-	re_path('(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash),
-	re_path('cash/(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash),
-	re_path('cash/(?P<current_date>\d{2}-\d{2}-\d{4})/(?P<msg>.*)/', views.cash),
+	path('(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash),
+	path('cash/(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash, name="save_cash_date"),
+	path('cash/(?P<current_date>\d{2}-\d{2}-\d{4})/<slug:msg>/', views.cash, name="save_cash_date_msg"),
 	re_path('cash_test/(?P<msg>.*)$', views.cash_test),
 
 	## ENROLMENTS

@@ -20,7 +20,7 @@ class Teacher(models.Model):
 	email = models.EmailField(verbose_name="Correo electrónico", blank=True, null=True)
 	user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE, verbose_name="Usuario", blank=True, null=True)
 
-	def __unicode__(self):
+	def __str__(self):
 		return u"%s" % (self.name)
 
 	class Meta:
@@ -53,7 +53,7 @@ class Student(models.Model):
 	user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE, verbose_name="Usuario", blank=True, null=True)
 	picture = models.ImageField(upload_to=content_file_name, blank = True, null = True, verbose_name='Foto', help_text="Seleccione una foto para subir")
 
-	def __unicode__(self):
+	def __str__(self):
 		#return "%s (%s)"%(self.name, get_year(self))
 		return "%s"%(self.name)
 
@@ -77,7 +77,7 @@ class Group(models.Model):
 	end_time = models.TimeField(verbose_name="Fecha de fin")
 	teacher = models.ForeignKey(Teacher, unique=False, on_delete=models.CASCADE, verbose_name="Profesor")
 
-	def __unicode__(self):
+	def __str__(self):
 		daystr = ""
 		if self.monday :
 			daystr = daystr +"L -"
@@ -130,7 +130,7 @@ class Enrolment(models.Model):
     group = models.ForeignKey(Group, unique=False, on_delete=models.CASCADE, verbose_name="Grupo")
     student = models.ForeignKey(Student, unique=False, on_delete=models.CASCADE, verbose_name="Alumno", related_name="enrolment")
 
-    def __unicode__(self):
+    def __str__(self):
     	#return u'%s - %s' % (self.student, self.group)
     	return u'%s' % (self.group)
 
@@ -274,6 +274,6 @@ class Notification(models.Model):
 		verbose_name='Notificacion'
 		verbose_name_plural='Notificaciones'
 
-	def __unicode__(self):
+	def __str__(self):
 		return "%s" % (self.msg)
 

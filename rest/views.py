@@ -17,7 +17,7 @@ from studio.models import *
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.measure import D
-from django.contrib.gis.geos import fromstr, Point
+#from django.contrib.gis.geos import fromstr, Point
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 #from django.form.fields import email_re

@@ -155,7 +155,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 PREFIX_PATTERN = ''
-LOG_ROOT = ''
 
 try:
 	SETTINGS_LOCAL
@@ -165,7 +164,7 @@ except NameError:
 	except ImportError:
 		pass
 
-LOG_FILENAME = os.path.join(LOG_ROOT, 'logs')
+LOG_FILENAME = os.path.join(BASE_DIR, 'logs')
 LOGIN_URL = "/accounts/login/" 
 
 LOGGING = {

@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.middleware import csrf
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.utils.timezone import utc
 from django.utils.translation import ugettext as _
 from django.utils.html import strip_tags
@@ -69,6 +69,7 @@ def tpv(request, current_date = None, msg = None):
 
 @login_required
 def search(request, code = None):
+	print("--1--")
 	if request.method == 'POST':
 		code = "" if (request.POST["code"] == "") else request.POST["code"]
 		name = "" if (request.POST["name"] == "") else request.POST["name"].lstrip()
@@ -77,7 +78,8 @@ def search(request, code = None):
 	if len(code) > 0:
 		enrolment_list = enrolment_list.filter(student__code = code).filter(active = True)
 	if len(name) > 0:
-		enrolment_list = enrolment_list.filter(student__name__unaccent__icontains = name, active = True)
+		#enrolment_list = enrolment_list.filter(student__name__unaccent__icontains = name, active = True)
+		enrolment_list = enrolment_list.filter(student__name__icontains = name, active = True)
 	
 	group_list = Group.objects.filter(active=True)
     
@@ -332,15 +334,15 @@ def cash(request, current_date = None, msg = None):
 
 @login_required
 def save_cash(request, cash_id):
-	instance = get_object_or_404(Cash, id=cash_id)
-	form = CashForm(request.POST or None, instance=instance)
-	msg = ""
-	if form.is_valid():
-	   form.save()
-	else:
-	   msg = "Post invalid: %s" % (form.errors)
-	d = instance.date.strftime("%d-%m-%Y")
-	return redirect('studio.views.cash', current_date=d, msg=msg)
+    instance = get_object_or_404(Cash, id=cash_id)
+    form = CashForm(request.POST or None, instance=instance)
+    d = instance.date.strftime("%d-%m-%Y")
+    if form.is_valid():
+        form.save()
+        return redirect(reverse('save_cash_date', args=[d]))
+    else:
+        msg = "Post invalid: %s" % (form.errors)
+        return redirect(reverse('save_cash_date_msg', args=[d, msg]))
 
 @login_required
 def cash_test(request, msg):
