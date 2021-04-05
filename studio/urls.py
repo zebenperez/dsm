@@ -3,12 +3,13 @@ from django.views.generic.base import RedirectView
 from studio import views
 
 urlpatterns = [
-	path('', RedirectView.as_view(url='tpv/')),
+	#path('', RedirectView.as_view(url='tpv/')),
+	path('', views.index, name="index"),
 	path('tpv/', views.tpv, name="tpv"),
 	path('search/', views.search, name="search"),
 	path('pay/', views.pay, name="pay"),
 	path('<int:payment_id>/delete_payment/', views.delete_payment, name="delete_payment"),
-	re_path('(?P<current_date>\d{2}-\d{2}-\d{4})/', views.tpv),
+	path('(?P<current_date>\d{2}-\d{2}-\d{4})/', views.tpv),
 	path ('pin/', views.set_pins, name='pins'),
 	path ('new_enrolment/', views.new_enrolment, name='new_enrolment'),
 	path ('baja_enrolment/', views.baja_enrolment, name='baja_enrolment'),

@@ -12,6 +12,19 @@ register = template.Library()
 def contains(value, arg):
     return value in arg
 
+@register.filter
+def in_group(user, group):
+    return user.groups.filter(name=group).exists()
+
+@register.filter
+def concat(str1, str2):
+	return "{}{}".format(str1, str2)
+
+@register.filter()
+def have_file(obj, field_name):
+    attr = getattr(obj, field_name)
+    return attr != "" and attr != None 
+
 @register.simple_tag
 def get_color(enrolment):
     payments = Payment.objects.order_by("-pay_date").filter(enrolment = enrolment)
@@ -153,9 +166,14 @@ def get_group_name(group_id):
 @register.simple_tag
 def get_student_age(born_date):
 	try:
-		print(born_date)
 		res = date.today() - born_date
 		return "(%s años)" % (res.days / 365)
 	except:
 		return ""
+
+@register.simple_tag()
+def get_file_attr(obj, field_name, file_attr):
+    f = getattr(obj, field_name)
+    return getattr(f, file_attr)
+
 
