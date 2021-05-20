@@ -1,0 +1,15 @@
+{% load i18n %}
+<div id="msg-error-exc">
+    <div class="col-xs-12 alert alert-danger">{% trans "Sorry!!!!. We have a problem. Try in a few minutes" %}.{%if err_msg%} {{err_msg}} {%endif%}</div>
+    <span class="separator">&nbsp;</span>
+    <div class="panel panel-danger">
+        <div class="panel-heading">
+            <div class="row">
+                <div class="col-md-11">{% trans 'Problem Description' %}</div>
+                <div class="col-md-1 text-right"><a class="btn btn-sm btn-danger" onclick="$('#msg-error-exc').empty();infoOn();"><i class="fas fa-times"></i></a></div>
+            </div>
+        </div>
+        <div class="panel-body">{{exc}}</div>
+    </div>
+</div>
+
