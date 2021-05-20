@@ -160,6 +160,11 @@ try:
 except Exception:
     pass
 
+try:
+    from .settings_local import *
+except Exception:
+    pass
+
 LOG_FILENAME = os.path.join(BASE_DIR, 'logs')
 LOGIN_URL = "/accounts/login/" 
 
