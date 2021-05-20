@@ -3,7 +3,8 @@ from django.views.generic.base import RedirectView
 from studio import views
 
 urlpatterns = [
-	path('', RedirectView.as_view(url='tpv/')),
+	#path('', RedirectView.as_view(url='tpv/')),
+	path('', views.index, name="index"),
 	path('tpv/', views.tpv, name="tpv"),
 	path('search/', views.search, name="search"),
 	path('pay/', views.pay, name="pay"),

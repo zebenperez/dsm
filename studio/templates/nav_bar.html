@@ -14,21 +14,25 @@
 
 	<div id="navbar" class="collapse navbar-collapse">
 		{% if user.is_authenticated %}
-			<ul class="nav navbar-nav">
-				<li {% if "tpv"|contains:request.path %} class="active" {% endif %}><a href="{% url "tpv" %}">Tpv</a></li>
-				<li {% if "cash"|contains:request.path %} class="active" {% endif %}><a href="{% url "cash" %}">Cash</a></li>
-				<li {% if "teachers"|contains:request.path %} class="active" {% endif %}><a href="{% url "teachers" %}">Teachers</a></li>
-				<li {% if "payments"|contains:request.path %} class="active" {% endif %}><a href="{% url "payments" %}">Payments</a></li>
-				<li {% if "bad_debt"|contains:request.path %} class="active" {% endif %}><a href="{% url "bad_debt" %}">Impagos</a></li>
-				<li {% if "assistances"|contains:request.path %} class="active" {% endif %}><a href="{% url "assistances" %}">Assistances</a></li>
-				<li {% if "no_assistance"|contains:request.path %} class="active" {% endif %}><a href="{% url "no_assistance" %}">No Assistance</a></li>
-				<li {% if "notifications"|contains:request.path %} class="active" {% endif %}><a href="{% url "notifications" %}">Notifications</a></li>
-				<li {% if "admin"|contains:request.path %} class="active" {% endif %}><a href="{% url 'admin:index' %}">Admin</a></li>
-			</ul>
-			<p class="navbar-text pull-right">
-				{% trans "Welcome" %} ,<strong> {{ user.username }} </strong>. {% trans "Thanks for logging in" %}. <a href="/logout/"> logout </a>
-			</p>
-		{% endif %}
+            <ul class="nav navbar-nav">
+                {% if user.is_superuser or user|in_group:"reception" %}
+                    <li {% if "tpv"|contains:request.path %} class="active" {% endif %}><a href="{% url "tpv" %}">Tpv</a></li>
+                    <li {% if "cash"|contains:request.path %} class="active" {% endif %}><a href="{% url "cash" %}">Cash</a></li>
+                    <li {% if "bad_debt"|contains:request.path %} class="active" {% endif %}><a href="{% url "bad_debt" %}">Impagos</a></li>
+                    <li {% if "assistances"|contains:request.path %} class="active" {% endif %}><a href="{% url "assistances" %}">Assistances</a></li>
+                    <li {% if "no_assistance"|contains:request.path %} class="active" {% endif %}><a href="{% url "no_assistance" %}">No Assistance</a></li>
+                    <li {% if "notifications"|contains:request.path %} class="active" {% endif %}><a href="{% url "notifications" %}">Notifications</a></li>
+                    <li {% if "admin"|contains:request.path %} class="active" {% endif %}><a href="{% url 'admin:index' %}">Admin</a></li>
+                {% elif user.is_superuser %}
+                    <li {% if "teachers"|contains:request.path %} class="active" {% endif %}><a href="{% url "teachers" %}">Teachers</a></li>
+                    <li {% if "payments"|contains:request.path %} class="active" {% endif %}><a href="{% url "payments" %}">Payments</a></li>
+                {% elif user|in_group:"student" %}
+                    <li {% if "profile"|contains:request.path %} class="active" {% endif %}><a href="{% url "profile" %}">Mi perfil</a></li>
+                    <li {% if "champs"|contains:request.path %} class="active" {% endif %}><a href="{% url "champs" %}">Mis campeonatos</a></li>
+                {% endif %}
+            </ul>
+            <p class="navbar-text pull-right"> {% trans "Welcome" %} ,<strong> {{ user.username }} </strong>. {% trans "Thanks for logging in" %}. <a href="/logout/"> logout </a> </p>
+        {% endif %}
     </div><!--/.nav-collapse -->
   </div><!-- /.container-fluid -->
 </nav>

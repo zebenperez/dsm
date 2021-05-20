@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+	<div class="panel panel-default">
+		<div class="panel-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr> <th>Nombre</th> <th>Fecha</th> <th></th></tr>
+                </thead>
+                <tbody>
+                    {% for item in champ_list %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.date|date:"d-m-Y" }}</td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+		</div>
+	</div>
+{% endblock %}

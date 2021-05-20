@@ -23,6 +23,8 @@ from dateutil.relativedelta import relativedelta
  
 from django import forms
 from studio.dsm_forms import *
+from studio.decorators import group_required
+from studio.common_lib import get_student
 
 #from push_notifications.models import APNSDevice, GCMDevice
 from fcm_django.models import FCMDevice
@@ -31,41 +33,47 @@ from fcm_django.models import FCMDevice
 	TPV
 '''
 @login_required
+def index(request):
+    if request.user.groups.filter(name="student").exists():
+        return redirect("champs")
+    return redirect("tpv")
+
+@group_required("reception")
 def tpv(request, current_date = None, msg = None):
-	if (current_date == None):
-		current_date = date.today()
-	else: 
-		current_date = datetime.datetime.strptime(current_date, "%d-%m-%Y")
+    if (current_date == None):
+        current_date = date.today()
+    else: 
+        current_date = datetime.datetime.strptime(current_date, "%d-%m-%Y")
 		  
-	tab = request.GET.get('t', 'student')
-	current_code = request.GET.get('current_code')
-	msg = request.GET.get('msg')
-	current_enrol = request.GET.get('current_enrol')
+    tab = request.GET.get('t', 'student')
+    current_code = request.GET.get('current_code')
+    msg = request.GET.get('msg')
+    current_enrol = request.GET.get('current_enrol')
   
-	# Se muestran los pagos del ultimo usuario que haya padado
-	enrolment_list = None
-	if current_code != None:
-		enrolment_list = Enrolment.objects.filter(student__code = current_code, active = True)
+    # Se muestran los pagos del ultimo usuario que haya padado
+    enrolment_list = None
+    if current_code != None:
+        enrolment_list = Enrolment.objects.filter(student__code = current_code, active = True)
     
-	payment_list = Payment.objects.filter(date__gte = current_date).order_by('-id')
-	article_payment_list = ArticlePayment.objects.order_by('-date').filter(date__gte = current_date)
-	article_list = Article.objects.filter(publish=True)
-	group_list = Group.objects.filter(active=True)
-	concept_list = Concept.objects.all()
-	context = {
-		'tab':request.GET.get('t','student'),
-		'payment_list': payment_list, 
-		'article_payment_list': article_payment_list, 
-		'current_date': current_date, 
-		'article_list': article_list, 
-		'concept_list': concept_list, 
-		'enrolment_list': enrolment_list, 
-		'group_list': group_list, 
-		'current_code': current_code,
-		'current_enrol': current_enrol,
-		'msg': msg
-	}
-	return render(request, 'tpv/tpv.html', context)
+    payment_list = Payment.objects.filter(date__gte = current_date).order_by('-id')
+    article_payment_list = ArticlePayment.objects.order_by('-date').filter(date__gte = current_date)
+    article_list = Article.objects.filter(publish=True)
+    group_list = Group.objects.filter(active=True)
+    concept_list = Concept.objects.all()
+    context = {
+        'tab':request.GET.get('t','student'),
+        'payment_list': payment_list, 
+        'article_payment_list': article_payment_list, 
+        'current_date': current_date, 
+        'article_list': article_list, 
+        'concept_list': concept_list, 
+        'enrolment_list': enrolment_list, 
+        'group_list': group_list, 
+        'current_code': current_code,
+        'current_enrol': current_enrol,
+        'msg': msg
+    }
+    return render(request, 'tpv/tpv.html', context)
 
 @login_required
 def search(request, code = None):

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n apptags %}
+
+{% block content %}
+    <h1>{{student.name}}</h1>
+    <hr/>
+    <span id="autosave-alert"></span>
+    <div class="row">
+        <div class="col-md-5">
+            <div class="form-group text-center">
+                {% comment %}
+                <img src="{% if student.picture %}{{ student.picture.url }}{%endif%}" alt="Foto" width="300"/> 
+                <br/><br/>
+                <div style="margin-left:5%">
+                    <input type="file" id="id_picture" name="picture" class="form-control_"/>
+                </div>
+                {% endcomment %}
+
+                <div class="student-picture" id="{{student.pk}}-student-picture">
+                    {% include "profile/file-field.html" with obj=student model_name="studio.student" field="picture" target=student.pk|concat:"-student-picture" classes="" default_img="https://via.placeholder.com/250" id="img__"|concat:student.pk %}
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-7">
+            {% comment %}
+            <div class="row">
+                <label class="col-md-6 control-label">{% trans "Código" %}</label>
+                <div class="col-md-6"> <input type="text" class="form-control" id="code" name="code" value="{{student.code}}" readonly/> </div>
+            </div>
+            {% endcomment %}
+            <div class="row">
+                <label class="col-sm-6 control-label">{% trans "PIN" %}</label>
+                <div class="col-sm-6"> <input type="text" class="form-control" id="pin" name="pin" value="{{student.pin}}" readonly/> </div>
+            </div><br/>
+            <div class="row">
+                <label class="col-sm-6 control-label">{% trans "Fecha de nacimiento" %}</label>
+                <div class="col-sm-6"> 
+                    <input type="date" name="born_date" id="born_date" class="form-control autosave" value="{{student.born_date|date:"Y-m-d"}}" 
+                        data-model-name="studio.student" data-obj-id="{{student.id}}" data-url="{% url "autosave_field" %}" data-target="autosave-alert"/>
+                        <span id="title__msg"></span>
+                </div>
+            </div><br/>
+            <div class="row">
+                <label class="col-sm-6 control-label">{% trans "Teléfono" %}</label>
+                <div class="col-sm-6"> 
+                    <input type="text" name="phone" id="phone" class="form-control autosave" value="{{student.phone}}" data-model-name="studio.student" 
+                        data-obj-id="{{student.id}}" data-url="{% url "autosave_field" %}" data-target="autosave-alert"/> <span id="phone__msg"></span>
+                </div>
+            </div><br/>
+            <div class="row">
+                <label class="col-sm-6 control-label">{% trans "Correo electrónico" %}</label>
+                <div class="col-sm-6"> 
+                    <input type="text" name="email" id="email" class="form-control autosave" value="{{student.email}}" data-model-name="studio.student" 
+                        data-obj-id="{{student.id}}" data-url="{% url "autosave_field" %}" data-target="autosave-alert"/> <span id="email__msg"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

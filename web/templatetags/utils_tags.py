@@ -14,7 +14,6 @@ def render_template(request, template_path, extra_context = {}):
 	c.update(extra_context)
 	return render_to_string(template_path, context_instance=c)
 
-
 @register.filter
 def get_range(limit):
 	return range(1 ,int(limit) +1)

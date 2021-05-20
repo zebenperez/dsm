@@ -1,0 +1,25 @@
+{% load i18n apptags %}
+
+<div class="file-field-container">
+    {% if obj|have_file:field %}
+        <div class="field-img-container div-photo">
+			<img id="{% if id %}{{ id }}{% else%}img__{{obj.pk}}{% endif %}" src="{% get_file_attr obj field "url" %}" 
+                alt="{% get_file_attr obj field "name" %}" class="{{ classes }}" style="width:300px"/>
+        </div>
+	    <div class="btn-container">
+		    <a href="#" style=""  class="btn btn-danger ark file-field-btn" data-url="{% url 'remove_file' %}" data-target="{{target}}" data-model_name="{{model_name}}" 
+                data-obj_id="{{obj.id}}" data-field="{{field}}"> <span class="text">{% trans "Delete" %}</span> <i class="far fa-trash-alt"></i>
+            </a>
+	    </div>
+    {% else %}
+        <div class="field-img-container div-photo">
+			<img  id="{% if id %}{{ id }}{% else %}img__{{obj.pk}}{% endif %}" src="{{ default_img|default:"https://via.placeholder.com/500" }}" 
+                alt="" class="{{ classes }}" style="width:300px"/>
+	    </div>
+	    <div class="btn-contaniner">
+		    <label for="{{field}}__{{obj.pk}}" class="btn btn-primary file-field-btn"><i class="fas fa-upload"></i><span class="text"> {{ label|default:"File"}} </span> </label>
+    	    <input type="file" class="form-control autoupload styled-file-input" name="{{field}}" id="{{field}}__{{obj.pk}}" data-url="{% url "upload_file" %}"
+                data-target="{{target}}" data-model-name="{{model_name}}" data-obj-id="{{obj.id}}" data-field="{{field}}" data-csrf-token="{{csrf_token}}" style="display:none"/>
+	    </div>
+    {% endif %}
+</div>
