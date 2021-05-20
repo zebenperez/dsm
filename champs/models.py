@@ -57,8 +57,8 @@ class ChampFile(models.Model):
     champ = models.ForeignKey(Championship, verbose_name="Campeonato", on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
-        verbose_name = 'Costo Campeonato'
-        verbose_name_plural = 'Costos Campeonatos'
+        verbose_name = 'Documento Campeonato'
+        verbose_name_plural = 'Documentos Campeonatos'
 
 class ChampCategory(models.Model):
     amount = models.DecimalField(max_digits=6, decimal_places=2, verbose_name="Importe", default=0)
