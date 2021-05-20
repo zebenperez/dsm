@@ -167,7 +167,7 @@ def get_group_name(group_id):
 def get_student_age(born_date):
 	try:
 		res = date.today() - born_date
-		return "(%s años)" % (res.days / 365)
+		return "(%.0f años)" % (res.days / 365)
 	except:
 		return ""
 
