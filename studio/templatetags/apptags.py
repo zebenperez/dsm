@@ -155,7 +155,7 @@ def get_student_age(born_date):
 	try:
 		print(born_date)
 		res = date.today() - born_date
-		return "(%s años)" % (res.days / 365)
+		return "(%.0f años)" % (res.days / 365)
 	except:
 		return ""
 

@@ -8,7 +8,7 @@ urlpatterns = [
 	path('search/', views.search, name="search"),
 	path('pay/', views.pay, name="pay"),
 	path('<int:payment_id>/delete_payment/', views.delete_payment, name="delete_payment"),
-	re_path('(?P<current_date>\d{2}-\d{2}-\d{4})/', views.tpv),
+	re_path('tpv/(?P<current_date>\d{2}-\d{2}-\d{4})/', views.tpv),
 	path ('pin/', views.set_pins, name='pins'),
 	path ('new_enrolment/', views.new_enrolment, name='new_enrolment'),
 	path ('baja_enrolment/', views.baja_enrolment, name='baja_enrolment'),
@@ -29,8 +29,8 @@ urlpatterns = [
 	## CASH
 	path('cash/', views.cash, name="cash"),
 	path('<int:cash_id>/save_cash/', views.save_cash, name="save_cash"),
-	path('(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash),
-	path('cash/(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash, name="save_cash_date"),
+	#path('(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash),
+	re_path('cash/(?P<current_date>\d{2}-\d{2}-\d{4})/', views.cash, name="save_cash_date"),
 	path('cash/(?P<current_date>\d{2}-\d{2}-\d{4})/<slug:msg>/', views.cash, name="save_cash_date_msg"),
 	re_path('cash_test/(?P<msg>.*)$', views.cash_test),
 
