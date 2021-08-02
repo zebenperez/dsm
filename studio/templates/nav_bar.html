@@ -21,12 +21,14 @@
                     <li {% if "bad_debt"|contains:request.path %} class="active" {% endif %}><a href="{% url "bad_debt" %}">Impagos</a></li>
                     <li {% if "assistances"|contains:request.path %} class="active" {% endif %}><a href="{% url "assistances" %}">Assistances</a></li>
                     <li {% if "no_assistance"|contains:request.path %} class="active" {% endif %}><a href="{% url "no_assistance" %}">No Assistance</a></li>
+                    {% if user.is_superuser %}
+                        <li {% if "teachers"|contains:request.path %} class="active" {% endif %}><a href="{% url "teachers" %}">Teachers</a></li>
+                        <li {% if "payments"|contains:request.path %} class="active" {% endif %}><a href="{% url "payments" %}">Payments</a></li>
+                    {% endif %}
                     <li {% if "notifications"|contains:request.path %} class="active" {% endif %}><a href="{% url "notifications" %}">Notifications</a></li>
                     <li {% if "admin"|contains:request.path %} class="active" {% endif %}><a href="{% url 'admin:index' %}">Admin</a></li>
-                {% elif user.is_superuser %}
-                    <li {% if "teachers"|contains:request.path %} class="active" {% endif %}><a href="{% url "teachers" %}">Teachers</a></li>
-                    <li {% if "payments"|contains:request.path %} class="active" {% endif %}><a href="{% url "payments" %}">Payments</a></li>
-                {% elif user|in_group:"student" %}
+                {% endif %}
+                {% if user|in_group:"student" %}
                     <li {% if "profile"|contains:request.path %} class="active" {% endif %}><a href="{% url "profile" %}">Mi perfil</a></li>
                     <li {% if "champs"|contains:request.path %} class="active" {% endif %}><a href="{% url "champs" %}">Mis campeonatos</a></li>
                 {% endif %}
