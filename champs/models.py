@@ -1,4 +1,5 @@
 from django.db import models
+from studio.models import Student
 
 import datetime
 
@@ -69,4 +70,27 @@ class ChampCategory(models.Model):
         verbose_name = 'Categoría Campeonato'
         verbose_name_plural = 'Categorías Campeonatos'
 
+class Registration(models.Model):
+    student = models.ForeignKey(Student, verbose_name="Alumno", on_delete=models.SET_NULL, blank=True, null=True)
+    champ = models.ForeignKey(Championship, verbose_name="Campeonato", on_delete=models.CASCADE, blank=True, null=True)
+    categories = models.ManyToManyField(Category, related_name='registrations', blank=True)
+
+    class Meta:
+        verbose_name = 'Inscripción'
+        verbose_name_plural = 'Inscripciones'
+
+def upload_reg_file(instance, filename):
+    ascii_filename = str(filename.encode('ascii', 'ignore'))
+    instance.filename = ascii_filename
+    folder = "regs/files/%s" % (instance.reg.id)
+    return '/'.join(['%s' % (folder), datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ascii_filename])
+
+class RegistrationFile(models.Model):
+    file = models.FileField(upload_to=upload_reg_file, blank=True, verbose_name="Fichero", help_text="Select file to upload")
+    champ_file = models.ForeignKey(ChampFile, verbose_name="Tipo de fichero", on_delete=models.SET_NULL, blank=True, null=True)
+    reg = models.ForeignKey(Registration, verbose_name="Inscripcion", on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Inscripción fichero'
+        verbose_name_plural = 'Inscripciones ficheros'
 

@@ -1,0 +1,13 @@
+.footer {
+  /*position: fixed;*/
+  left: 0;
+  bottom: 0;
+  width: 100%;
+}
+.active{
+	background: #ff8000;
+}
+.pwa-menu{
+	text-decoration:none;
+	color:white;
+}

@@ -1,0 +1,27 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+	<div class="card" style="margin-top:10px">
+		<div class="card-header bg-secondary text-white text-center"> Asistencias del alumno/a <strong>{{student.name}}</strong> </div>
+		<div class="card-body">
+			<table class="table">
+				<thead>
+					<tr>
+						<th scope="col">Fecha</th>
+						<th scope="col">Grupo</th>
+					</tr>
+				</thead>
+
+				<tbody>
+				{% for assistance in assistance_list %}
+					<tr>
+						<td>{{assistance.date|date:"d-m-Y"}}</td>
+						<td>{{assistance.group.get_name}}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock %}

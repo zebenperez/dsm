@@ -17,6 +17,7 @@
             <ul class="nav navbar-nav">
                 {% if user.is_superuser or user|in_group:"reception" %}
                     <li {% if "tpv"|contains:request.path %} class="active" {% endif %}><a href="{% url "tpv" %}">Tpv</a></li>
+                    <li {% if "writstbands"|contains:request.path %} class="active" {% endif %}><a href="{% url "wristbands" %}">Pulseras</a></li>
                     <li {% if "cash"|contains:request.path %} class="active" {% endif %}><a href="{% url "cash" %}">Cash</a></li>
                     <li {% if "bad_debt"|contains:request.path %} class="active" {% endif %}><a href="{% url "bad_debt" %}">Impagos</a></li>
                     <li {% if "assistances"|contains:request.path %} class="active" {% endif %}><a href="{% url "assistances" %}">Assistances</a></li>

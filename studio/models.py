@@ -52,10 +52,19 @@ class Student(models.Model):
 	email = models.EmailField(verbose_name="Correo electrónico", blank=True, null=True)
 	user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE, verbose_name="Usuario", blank=True, null=True)
 	picture = models.ImageField(upload_to=content_file_name, blank = True, null = True, verbose_name='Foto', help_text="Seleccione una foto para subir")
+	band = models.CharField(max_length=15, verbose_name="Pulsera", blank=True, default="")
 
 	def __str__(self):
 		#return "%s (%s)"%(self.name, get_year(self))
 		return "%s"%(self.name)
+
+	def last_payment(self):
+		return Payment.objects.filter(student=self).order_by('-pay_date').first()
+
+	def bad_debt(self):
+		payment = self.last_payment() 
+		today = datetime.datetime.today()
+		return (payment.expire_date.month < today.month and payment.expire_date < today)
 
 	class Meta:
 		verbose_name = "Alumno"
@@ -96,6 +105,24 @@ class Group(models.Model):
 		#return '%s - %s [%s (%s)]'  % (self.teacher.name.encode('utf-8'), self.name.encode('utf-8'), daystr, str(self.ini_time)[:5])
 		return u'%s %s [%s (%s)]' % (self.teacher.name, self.name, daystr, str(self.ini_time)[:5])
 		#return '%s' % (self.teacher)
+
+	def get_name(self):
+		daystr = ""
+		if self.monday :
+			daystr = daystr +"L -"
+		if self.tuesday:
+			daystr = daystr +"M -"
+		if self.wednesday:
+			daystr = daystr +"X -"
+		if self.thursday:
+			daystr = daystr +"J -"
+		if self.friday:
+			daystr = daystr +"V -"
+		if self.saturday:
+			daystr = daystr +"S -"
+		if self.sunday:
+			daystr = daystr +"D"
+		return '%s [%s (%s)]' % (self.name, daystr, str(self.ini_time)[:5])
 
 	def get_full_name(self):
 		daystr = ""

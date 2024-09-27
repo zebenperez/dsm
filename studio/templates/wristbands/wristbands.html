@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% load i18n apptags static %}
+
+{% block content %}
+	<form method="post" action="{% url "wristbands" %}" name="wristbands_search" id="wristbands_search" class="form">
+		{% csrf_token %}
+		<div class="row list-group-item list-group-item-info text-center">
+			<div class="col-md-12"> <label for="code">{% trans "Pulsera" %}:</label> </div>
+		</div>
+		<div class="row list-group-item text-center">
+			<div class="col-md-12">
+				<input type="text" name="band" id="band" value="{{band}}" class="form-control" size=""/>
+			</div>
+		</div>
+	</form>
+
+	{% if student and student != None %}
+		<br/>
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="alert alert-warning text-center"> <strong>Alumno:</strong> {{student}} </div>
+				<br/>
+				<div class="alert {%if student.bad_debt%}alert-danger{%else%}alert-success{%endif%} text-center"> 
+					<strong>Ultimo pago:</strong> {{student.last_payment.pay_date}} </div>
+				<br/>
+				<div class="alert alert-info text-center"> 
+					<strong>Grupos</strong> <br/><br/>
+					{% for item in assistance_list %}
+						{{item.group}} <br/>
+					{% endfor %}
+				</div>
+				<br/>
+
+			</div>
+		</div>
+	{% endif %}
+
+	<script> $("#band").focus(); </script>
+{% endblock %}

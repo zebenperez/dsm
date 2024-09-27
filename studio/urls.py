@@ -61,4 +61,7 @@ urlpatterns = [
 	path ('notification_save/', views.notification_save, name='notification_save'),
 	path ('notification_delete/<int:notification_id>/', views.notification_delete, name='notification_delete'),
 	path ('notification_send/<int:notification_id>/', views.notification_send, name='notification_send'),
+
+	##PULSERAS
+	path ('wristbands/', views.wristbands, name='wristbands'),
 ]

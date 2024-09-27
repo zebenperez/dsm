@@ -15,6 +15,7 @@ urlpatterns = [
 	path('', RedirectView.as_view(url='studio/')),
 	path('studio/', include('studio.urls')),
 	path('champs/', include('champs.urls')),
+	path('app/', include('pwa.urls')),
 	path('rest-api/', include('rest.urls')),
 	#path('accounts/login/$', auth_views.login, {'template_name': 'login.html'}, name="auth_login"),
 	#path('logout/$', auth_views.logout, {'next_page': '/studio/'}),

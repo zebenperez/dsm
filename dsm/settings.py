@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 	'studio',
 	'champs',
 	'web',
+	'pwa',
 ]
 
 MIDDLEWARE = [

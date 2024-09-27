@@ -77,7 +77,6 @@ def tpv(request, current_date = None, msg = None):
 
 @login_required
 def search(request, code = None):
-	print("--1--")
 	if request.method == 'POST':
 		code = "" if (request.POST["code"] == "") else request.POST["code"]
 		name = "" if (request.POST["name"] == "") else request.POST["name"].lstrip()
@@ -253,7 +252,11 @@ def delete_teacher_payment(request, teacher_payment_id):
 @login_required
 def delete_article_payment(request, article_payment_id):
 	a = get_object_or_404(ArticlePayment, pk=article_payment_id)
+	art = a.article
 	a.delete()
+
+	art.stock += 1
+	art.save()
 	return redirect('/studio/tpv/?t=article')
 
 @login_required
@@ -268,37 +271,40 @@ def article_search(request):
 
 @login_required
 def article_pay(request):
-    if request.method == 'POST':
-        a = get_object_or_404(Article, pk=request.POST["article_id"])
-        today = date.today()
-        amount = Decimal(request.POST["amount"].replace(",", "."))
-        concept = Concept.objects.get(code=request.POST["concept"])
-        card = False
-        if 'card' in request.POST:
-            card = True
+	if request.method == 'POST':
+		a = get_object_or_404(Article, pk=request.POST["article_id"])
+		today = date.today()
+		amount = Decimal(request.POST["amount"].replace(",", "."))
+		concept = Concept.objects.get(code=request.POST["concept"])
+		card = False
+		if 'card' in request.POST:
+			card = True
 		
-    article_payment = ArticlePayment(note = request.POST["note"], date = today, amount = amount, article = a, concept = concept, card = card) 
-    article_payment.save()
-    return redirect('/studio/tpv/?t=article')
+	article_payment = ArticlePayment(note = request.POST["note"], date = today, amount = amount, article = a, concept = concept, card = card) 
+	article_payment.save()
+	a.stock -= 1
+	a.save()
+	return redirect('/studio/tpv/?t=article')
 
 '''
 	CASH
 '''
 def calculate_amount(current_date, positive):
-    if positive:
-        pays = Payment.objects.filter(date = current_date).filter(amount__gte = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
-        teacher_pays = TeacherPayment.objects.filter(date = current_date).filter(amount__gte = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
-        article_pays = ArticlePayment.objects.filter(date = current_date).filter(amount__gte = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
-    else:
-        pays = Payment.objects.filter(date = current_date).filter(amount__lt = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
-        teacher_pays = TeacherPayment.objects.filter(date = current_date).filter(amount__lt= 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
-        article_pays = ArticlePayment.objects.filter(date = current_date).filter(amount__lt = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
+	date_min = datetime.datetime.combine(current_date, datetime.time.min)
+	if positive:
+		pays = Payment.objects.filter(date = current_date).filter(amount__gte = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
+		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
+		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
+	else:
+		pays = Payment.objects.filter(date = current_date).filter(amount__lt = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
+		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
+		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
 
-    pay_amounts = pays if pays != None else 0
-    teacher_pay_amounts = teacher_pays if teacher_pays != None else 0
-    article_pay_amounts = article_pays if article_pays != None else 0
+	pay_amounts = pays if pays != None else 0
+	teacher_pay_amounts = teacher_pays if teacher_pays != None else 0
+	article_pay_amounts = article_pays if article_pays != None else 0
 
-    return (pay_amounts + teacher_pay_amounts + article_pay_amounts)
+	return (pay_amounts + teacher_pay_amounts + article_pay_amounts)
 
 def calculate_card(current_date):
 	pays = Payment.objects.filter(date = current_date).filter(card = True).aggregate(Sum('amount'))['amount__sum']
@@ -311,34 +317,34 @@ def calculate_card(current_date):
 
 @login_required
 def cash(request, current_date = None, msg = None):
-    if current_date == None:
-    	current_date = date.today()
-    else: 
-    	current_date = datetime.datetime.strptime(current_date, "%d-%m-%Y")
+	if current_date == None:
+		current_date = date.today()
+	else: 
+		current_date = datetime.datetime.strptime(current_date, "%d-%m-%Y")
 
-    cashs = Cash.objects.order_by("id").filter(date__gte=current_date)
-    #cashs = Cash.objects.order_by("id").filter(date__year=current_date.year, date__month=current_date.month, date__day=current_date.day)
-    if len(cashs) > 0:
-        cash = cashs[0]
-    else:
-        cash = Cash(date = current_date)
-        cash.save()
+	cashs = Cash.objects.order_by("id").filter(date__gte=current_date)
+	#cashs = Cash.objects.order_by("id").filter(date__year=current_date.year, date__month=current_date.month, date__day=current_date.day)
+	if len(cashs) > 0:
+		cash = cashs[0]
+	else:
+		cash = Cash(date = current_date)
+		cash.save()
 
-    billing_positive = calculate_amount(current_date, True)
-    billing_negative = calculate_amount(current_date, False)
-    billing_card = calculate_card(current_date)
+	billing_positive = calculate_amount(current_date, True)
+	billing_negative = calculate_amount(current_date, False)
+	billing_card = calculate_card(current_date)
 
-    i_total = cash.i_total if cash.i_total != None else 0
-    e_total = cash.e_total if cash.e_total != None else 0
-    e_card = cash.e_total if cash.e_total != None else 0
+	i_total = cash.i_total if cash.i_total != None else 0
+	e_total = cash.e_total if cash.e_total != None else 0
+	e_card = cash.e_total if cash.e_total != None else 0
 
-    total_billing = billing_positive + billing_negative
-    total = i_total + billing_positive + billing_negative #Falta por controlar los pagos por tarjeta
-    total_cash = e_total + e_card
-    diff = total - total_cash
+	total_billing = billing_positive + billing_negative
+	total = i_total + billing_positive + billing_negative #Falta por controlar los pagos por tarjeta
+	total_cash = e_total + e_card
+	diff = total - total_cash
 
-    form = CashForm(instance = cash)
-    return render(request, 'cash.html', {'form': form, 'cash': cash, 'current_date': current_date, 'amounts_positive': billing_positive, 'amounts_negative': billing_negative, 'total': total, 'total_cash': total_cash, 'total_billing': total_billing, 'billing_card': billing_card, 'diff': diff, 'msg': msg})
+	form = CashForm(instance = cash)
+	return render(request, 'cash.html', {'form': form, 'cash': cash, 'current_date': current_date, 'amounts_positive': billing_positive, 'amounts_negative': billing_negative, 'total': total, 'total_cash': total_cash, 'total_billing': total_billing, 'billing_card': billing_card, 'diff': diff, 'msg': msg})
 
 @login_required
 def save_cash(request, cash_id):
@@ -740,3 +746,22 @@ def notification_send(request, notification_id):
 		print(e)
 	return redirect('/studio/notifications/')
 
+'''
+    Pulseras
+'''
+@login_required
+def wristbands(request):	
+	student = None
+	assistance_list = []
+	today = datetime.datetime.today()
+	week = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+	if request.POST:
+		student = Student.objects.filter(band=request.POST["band"]).first()
+		for item in student.enrolment.all():
+			#print(getattr(item.group, week[int(now.weekday())]))
+			if getattr(item.group, week[int(today.weekday())]):
+				assistance, created = Assistance.objects.get_or_create(date=today, group=item.group)
+				assistance.enrolments.add(item)
+				assistance_list.append(assistance)
+	return render(request, 'wristbands/wristbands.html', {"student": student, "assistance_list": assistance_list})
+ 
