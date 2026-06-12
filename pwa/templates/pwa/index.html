@@ -1,6 +1,73 @@
 {% extends "pwa/base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block content %}
-	Index
+	<style>
+	.carnet {
+		width: 900px;
+		aspect-ratio: 16 / 10;
+
+		background-image: url("/static/images/fondo-carnet.jpeg");
+		background-size: contain;
+		background-position: center;
+		background-repeat: no-repeat;
+	}
+	.texto{
+		font-size:16px;
+		font-weight:bold;
+		color:black;
+		margin-left:8%;
+		margin-top:15%;
+	}
+	.texto2{
+		font-size:11px;
+		color:black;
+	}
+	.texto3{
+		font-size:12px;
+		color:black;
+		margin-left:75%;
+		margin-top:4.5%;
+	}
+	.photo{
+		position:absolute; 
+        top:142px; 
+        right:40px; 
+        width:95px; 
+        height:110px; 
+	}
+	</style>
+	<div class="carnet" style="margin-top:30px;margin-bottom:30px;">
+		{% if student.picture %} <img src="{{student.picture.url}}" alt="foto" class="photo"/> {% endif %}
+		<div class="texto"> LICENCIA FEDERATIVA </div>
+		<table border="0" style="margin-left:8%; margin-top:2%;">
+			<tr class="texto2">
+				<td> <strong>NOMBRE</strong> </td><td>:</td><td> {{student.get_name}}</td>
+			<tr class="texto2">
+				<td> <strong>APELLIDOS</strong> </td><td>:</td><td> {{student.get_surname}}</td>
+			</tr><tr class="texto2">
+				<td> <strong>Nº LICENCIA</strong> </td><td>:</td><td> {{student.licence}}</td>
+			</tr><tr class="texto2">
+				<td> <strong>TIPO</strong> </td><td>:</td><td> DEPORTISTA</td>
+			</tr><tr class="texto2">
+				<td> <strong>DISCIPLINA</strong> </td><td>:</td><td> Hip Hop</td>
+			</tr><tr class="texto2">
+				<td> <strong>CLUB</strong> </td><td>:</td><td> 5db</td>
+			</tr>
+		</table>
+		<div class="texto3"> 31-12-2026 </div>
+	</div>
+
+
+	<hr/>
+	<form action="{% url "pwa-change-photo" %}" method="POST" enctype="multipart/form-data">
+		{%csrf_token%}
+		<input type="hidden" name="student" value="{{student.id}}" />
+		<div class="row">
+			<div class="col-12 text-center">
+				<input type="file" name="photo" id="photoInput" class="d-none" onchange="this.form.submit()">
+				<label for="photoInput" class="btn btn-warning"> Cambiar foto </label>
+			</div>
+		</div>
+	</form>
 {% endblock %}

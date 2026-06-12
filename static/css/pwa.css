@@ -1,8 +1,11 @@
 .footer {
-  /*position: fixed;*/
-  left: 0;
-  bottom: 0;
-  width: 100%;
+	/*position: fixed;*/
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	position:fixed;
+	bottom:0;
+	display:flex;
 }
 .active{
 	background: #ff8000;

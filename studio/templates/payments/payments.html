@@ -50,13 +50,15 @@
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div class="row">
-				<div class="col-md-3 col-md-offset-1">
+				<div class="col-md-6 col-md-offset-1">
 					<strong>Registros: {{payment_list|length}} </strong>
 				</div>
+{%comment%}
 				<div class="col-md-3 col-md-offset-1">
 					<strong>Profesor: {% get_teacher_amount current_teacher current_group current_student ini_date end_date %}</strong>
 				</div>
-				<div class="col-md-3 col-md-offset-1">
+{%endcomment%}
+				<div class="col-md-6 col-md-offset-1">
 					<strong>Total: {% get_total_amount payment_list %}</strong>
 				</div>
 			</div>

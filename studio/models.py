@@ -49,6 +49,7 @@ class Student(models.Model):
 	pin = models.CharField(verbose_name="Pin", max_length=4, default=my_random_pin, unique=True)
 	name = models.CharField(max_length=200, verbose_name="Nombre completo")
 	phone = models.CharField(max_length=15, verbose_name="Teléfono")
+	licence = models.CharField(max_length=15, verbose_name="Licencia", default="", blank=True)
 	email = models.EmailField(verbose_name="Correo electrónico", blank=True, null=True)
 	user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE, verbose_name="Usuario", blank=True, null=True)
 	picture = models.ImageField(upload_to=content_file_name, blank = True, null = True, verbose_name='Foto', help_text="Seleccione una foto para subir")
@@ -57,6 +58,14 @@ class Student(models.Model):
 	def __str__(self):
 		#return "%s (%s)"%(self.name, get_year(self))
 		return "%s"%(self.name)
+
+	def get_name(self):
+		name = self.name.split(" ")
+		return f'{name[0]} {name[1]}' if len(name) > 3 else name[0]
+
+	def get_surname(self):
+		name = self.name.split(" ")
+		return f'{name[2]} {name[3]}' if len(name) > 3 else f'{name[1]} {name[2]}'
 
 	def last_payment(self):
 		return Payment.objects.filter(student=self).order_by('-pay_date').first()

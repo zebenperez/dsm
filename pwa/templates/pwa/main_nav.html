@@ -2,6 +2,8 @@
 
 <div class="row bg-warning"> 
 	<div class="col"> <a class="" href="#"><img src="{%static "images/logo_5db.png"%}" alt="logo" width="60"/></a> </div>
+	<div class="col text-center {%if "index" in request.path%}active{%endif%}" style="padding-top:10px"> 
+		<a class="pwa-menu" aria-current="page" href="{% url "pwa-index" %}"> Inicio</a> </div>
 	<div class="col text-center {%if "payments" in request.path%}active{%endif%}" style="padding-top:10px"> 
 		<a class="pwa-menu" aria-current="page" href="{% url "pwa-payments" %}"> Pagos</a> </div>
 	<div class="col text-center {%if "assistances" in request.path%}active{%endif%}" style="padding-top:10px"> 
