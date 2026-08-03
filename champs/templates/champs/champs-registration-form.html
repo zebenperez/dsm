@@ -1,0 +1,72 @@
+{% load i18n %}
+
+<div class="row">
+    <div class="col-xs-1 col-xs-offset-11">
+        <button type="button" class="btn btn-sm btn-default" data-dismiss="modal" title="{% trans "Close" %}">
+            <span class="glyphicon glyphicon-remove"></span>
+        </button>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <strong>{% trans "Añadir competidora" %}</strong>
+    </div>
+    <div class="panel-body">
+        <p>
+            <strong>{{ champ.name }}</strong><br>
+            {{ category.name }}
+        </p>
+
+        <div class="form-group">
+            <label for="champ-registration-student">{% trans "Alumna" %}</label>
+            <select id="champ-registration-student" class="form-control champ-registration-required" required>
+                <option value="">{% trans "Selecciona una alumna" %}</option>
+                {% for student in student_list %}
+                    <option value="{{ student.id }}">
+                        {{ student.name }}
+                        {% if student.birth_year %}
+                            - {{ student.birth_year }} ({{ student.current_age }} {% trans "años" %})
+                        {% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+            <span id="champ-registration-student__msg"></span>
+        </div>
+
+        {% if not student_list %}
+            <div class="alert alert-warning">
+                {% trans "No hay alumnas con matrícula abierta disponibles para esta categoría." %}
+            </div>
+        {% endif %}
+    </div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-sm-6 text-center">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">
+                    {% trans "Cancelar" %}
+                </button>
+            </div>
+            <div class="col-sm-6 text-center">
+                <button type="button"
+                        id="add-champ-registration-btn"
+                        class="btn btn-sm btn-success ark-validate"
+                        data-url="{% url "add-champ-registration" %}"
+                        data-target="champ-detail-content"
+                        data-modal="common-modal"
+                        data-validate="champ-registration-required"
+                        data-champ_id="{{ champ.id }}"
+                        data-category_id="{{ category.id }}"
+                        {% if not student_list %}disabled{% endif %}>
+                    {% trans "Guardar" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#add-champ-registration-btn').on('click', function() {
+        $(this).data('value', $('#champ-registration-student').val());
+    });
+</script>

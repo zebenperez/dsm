@@ -1,0 +1,53 @@
+{% load i18n %}
+
+<div class="row">
+    <div class="col-xs-1 col-xs-offset-11">
+        <button type="button" class="btn btn-sm btn-default" data-dismiss="modal" title="{% trans 'Cerrar' %}">
+            <span class="glyphicon glyphicon-remove"></span>
+        </button>
+    </div>
+</div>
+
+<div class="panel panel-success">
+    <div class="panel-heading"><strong>{% trans "Añadir pago" %}</strong></div>
+    <div class="panel-body">
+        {% if registration %}
+            <p><strong>{{ registration.student.name }}</strong></p>
+            <p class="text-muted">{% trans "Pagado actualmente" %}: {{ registration.paid_amount }} €</p>
+            <div class="form-group">
+                <label for="champ-registration-payment-amount">{% trans "Importe del pago" %}</label>
+                <input type="number" step="0.01" min="0.01" id="champ-registration-payment-amount" class="form-control champ-registration-payment-required" required autofocus>
+            </div>
+        {% else %}
+            <p class="text-danger">{% trans "No se ha encontrado la inscripción." %}</p>
+        {% endif %}
+    </div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-sm-6 text-center">
+                <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button>
+            </div>
+            <div class="col-sm-6 text-center">
+                {% if registration %}
+                    <button type="button"
+                            id="add-champ-registration-payment-btn"
+                            class="btn btn-sm btn-success ark-validate"
+                            data-url="{% url 'add-champ-registration-payment' %}"
+                            data-target="champ-detail-content"
+                            data-modal="common-modal"
+                            data-validate="champ-registration-payment-required"
+                            data-champ_id="{{ champ.id }}"
+                            data-registration_id="{{ registration.id }}">
+                        {% trans "Guardar pago" %}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#add-champ-registration-payment-btn').on('click', function() {
+        $(this).data('amount', $('#champ-registration-payment-amount').val());
+    });
+</script>

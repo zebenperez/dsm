@@ -3,7 +3,6 @@
 from dateutil.relativedelta import relativedelta
 from django import template
 from datetime import date, datetime
-from django.utils.timezone import utc
 from studio.models import *
 
 register = template.Library()

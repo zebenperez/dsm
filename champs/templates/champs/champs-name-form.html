@@ -1,0 +1,35 @@
+{% load i18n %}
+
+<div class="panel panel-info">
+    <div class="panel-heading"><strong>{% trans "Editar nombre del campeonato" %}</strong></div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label for="champ-name">{% trans "Nombre" %}</label>
+            <input type="text" id="champ-name" class="form-control" value="{{ champ.name }}" required>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-sm-6 text-center">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">{% trans "Cancelar" %}</button>
+            </div>
+            <div class="col-sm-6 text-center">
+                <button type="button"
+                        id="save-champ-name-btn"
+                        class="btn btn-sm btn-success ark"
+                        data-url="{% url "save-champ-name" %}"
+                        data-target="emp-list"
+                        data-dismiss="modal"
+                        data-champ_id="{{ champ.id }}">
+                    {% trans "Guardar" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#save-champ-name-btn').on('click', function() {
+        $(this).data('name', $('#champ-name').val());
+    });
+</script>

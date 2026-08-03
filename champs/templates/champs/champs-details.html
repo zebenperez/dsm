@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load i18n champ_tags %}
+
+{% block content %}
+    <div id="champ-detail-content">
+        {% include "champs/champs-details-content.html" %}
+    </div>
+
+    {% include "common-modal.html" %}
+{% endblock %}

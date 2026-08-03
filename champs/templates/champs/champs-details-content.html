@@ -1,0 +1,546 @@
+{% load i18n champ_tags %}
+
+<style>
+    .champ-category-toggle {
+        display: flex;
+        align-items: center;
+        margin: -10px -15px;
+        padding: 10px 15px;
+        color: inherit;
+    }
+
+    .champ-category-toggle:hover,
+    .champ-category-toggle:focus {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .champ-category-panel > .panel-heading {
+        background-color: #337ab7;
+        border-color: #337ab7;
+        color: #fff;
+    }
+
+    .champ-category-panel {
+        border-color: #337ab7;
+    }
+
+    .champ-companion-panel {
+        border-color: #5cb85c;
+    }
+
+    .champ-companion-panel > .panel-heading {
+        background-color: #5cb85c;
+        border-color: #5cb85c;
+        color: #fff;
+    }
+
+    .champ-category-cost {
+        font-size: 16px;
+        line-height: 1.3;
+        padding: 5px 8px;
+    }
+
+    .champ-category-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+    }
+
+    .champ-summary-panel {
+        border-color: #3c8dbc;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+    }
+
+    .champ-summary-panel > .panel-heading {
+        padding: 0;
+        background: #3c8dbc;
+        border-color: #3c8dbc;
+    }
+
+    .champ-summary-toggle {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        color: #fff;
+        font-size: 16px;
+    }
+
+    .champ-summary-toggle:hover,
+    .champ-summary-toggle:focus {
+        color: #fff;
+        text-decoration: none;
+        background: #367fa9;
+    }
+
+    .champ-summary-toggle .glyphicon {
+        margin-left: auto;
+    }
+
+    .champ-summary-meta {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .champ-summary-stat {
+        min-height: 92px;
+        margin-bottom: 10px;
+        padding: 14px 10px;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        background: #fafafa;
+    }
+
+    .champ-summary-stat p {
+        margin-bottom: 6px;
+    }
+
+    .champ-summary-stat h3 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .champ-summary-stats {
+        margin-bottom: 20px;
+    }
+
+    .champ-summary-date { background: #f5f5f5; border-color: #ddd; }
+    .champ-summary-categories { background: #d9edf7; border-color: #bce8f1; }
+    .champ-summary-competitors { background: #fcf8e3; border-color: #faebcc; }
+    .champ-summary-total { background: #e8f4fb; border-color: #bce8f1; }
+    .champ-summary-paid { background: #dff0d8; border-color: #d6e9c6; }
+    .champ-summary-pending { background: #f2dede; border-color: #ebccd1; }
+</style>
+
+<div class="page-header">
+    <h1>
+        {{ obj.name }}
+        <small>{% trans "Campeonato" %}</small>
+    </h1>
+</div>
+
+{% if obj %}
+    <div class="champ-summary-stats">
+        <div class="row text-center">
+            <div class="col-lg-2 col-sm-4 col-xs-6">
+                <div class="champ-summary-stat champ-summary-date">
+                    <p class="text-muted">{% trans "Fecha" %}</p>
+                    <h3>{{ obj.date|date:"d-m-Y" }}</h3>
+                </div>
+            </div>
+            <div class="col-lg-2 col-sm-4 col-xs-6">
+                <div class="champ-summary-stat champ-summary-categories">
+                    <p class="text-muted">{% trans "Categorías" %}</p>
+                    <h3>{{ category_list|length }}</h3>
+                </div>
+            </div>
+            <div class="col-lg-2 col-sm-4 col-xs-6">
+                <div class="champ-summary-stat champ-summary-competitors">
+                    <p class="text-muted">{% trans "Competidoras" %}</p>
+                    <h3>{{ registrations_count }}</h3>
+                </div>
+            </div>
+            <div class="col-lg-2 col-sm-4 col-xs-6">
+                <div class="champ-summary-stat champ-summary-total">
+                    <p class="text-muted">{% trans "Coste total" %}</p>
+                    <h3>{{ champ_total_amount }} €</h3>
+                </div>
+            </div>
+            <div class="col-lg-2 col-sm-4 col-xs-6">
+                <div class="champ-summary-stat champ-summary-paid">
+                    <p class="text-muted">{% trans "Total abonado" %}</p>
+                    <h3 class="text-success">{{ champ_paid_amount }} €</h3>
+                </div>
+            </div>
+            <div class="col-lg-2 col-sm-4 col-xs-6">
+                <div class="champ-summary-stat champ-summary-pending">
+                    <p class="text-muted">{% trans "Pendiente" %}</p>
+                    <h3 class="text-danger">{{ champ_pending_amount }} €</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-info champ-summary-panel">
+        <div class="panel-heading" role="tab" id="champ-summary-heading">
+            <a class="champ-summary-toggle"
+               role="button"
+               data-toggle="collapse"
+               href="#champ-summary-content"
+               aria-expanded="true"
+               aria-controls="champ-summary-content">
+                <span>
+                    <strong>{% trans "Resumen del campeonato" %}</strong>
+                    <span class="champ-summary-meta">{{ obj.date|date:"d-m-Y" }} · {{ registrations_count }} {% trans "competidoras" %}</span>
+                </span>
+                <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>
+            </a>
+        </div>
+        <div id="champ-summary-content" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="champ-summary-heading">
+            <div class="panel-body">
+            <div class="clearfix">
+                <p class="text-muted pull-left">{% trans "Información importante" %}</p>
+                <button type="button"
+                        class="btn btn-sm btn-primary pull-right ark"
+                        data-url="{% url "champs-info-form" %}"
+                        data-target-modal="common-modal"
+                        data-champ_id="{{ obj.id }}">
+                    <span class="glyphicon glyphicon-pencil"></span>
+                    {% trans "Editar información" %}
+                </button>
+            </div>
+            <div class="row">
+                <div class="col-sm-3">
+                    <p class="text-muted">{% trans "Fecha de ida" %}</p>
+                    <p>{% if champ_info.outbound_date %}{{ champ_info.outbound_date|date:"d-m-Y" }}{% else %}—{% endif %}</p>
+                </div>
+                <div class="col-sm-3">
+                    <p class="text-muted">{% trans "Fecha de vuelta" %}</p>
+                    <p>{% if champ_info.return_date %}{{ champ_info.return_date|date:"d-m-Y" }}{% else %}—{% endif %}</p>
+                </div>
+                <div class="col-sm-3">
+                    <p class="text-muted">{% trans "Transportista" %}</p>
+                    <p>{% if champ_info.carrier_name %}{{ champ_info.carrier_name }}{% else %}—{% endif %}</p>
+                </div>
+                <div class="col-sm-3">
+                    <p class="text-muted">{% trans "Estancia" %}</p>
+                    <p>{% if champ_info.accommodation_name %}{{ champ_info.accommodation_name }}{% else %}—{% endif %}</p>
+                </div>
+            </div>
+            <p class="text-muted">{% trans "Detalles" %}</p>
+            <p>{% if champ_info.details %}{{ champ_info.details|linebreaksbr }}{% else %}—{% endif %}</p>
+
+            <hr>
+            {% if obj.location %}
+                <p class="text-muted">{% trans "Localización" %}</p>
+                <p>{{ obj.location }}</p>
+                <hr>
+            {% endif %}
+
+            <div class="clearfix">
+                <p class="text-muted pull-left">{% trans "Costes" %}</p>
+                <button type="button"
+                        class="btn btn-sm btn-success pull-right ark"
+                        data-url="{% url "champs-cost-form" %}"
+                        data-target-modal="common-modal"
+                        data-champ_id="{{ obj.id }}">
+                    <span class="glyphicon glyphicon-plus"></span>
+                    {% trans "Añadir coste" %}
+                </button>
+            </div>
+
+            {% if cost_list %}
+                <div class="table-responsive">
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Concepto" %}</th>
+                                <th>{% trans "Aplica a" %}</th>
+                                <th class="text-right">{% trans "Por persona" %}</th>
+                                <th class="text-right">{% trans "Importe total" %}</th>
+                                <th class="text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cost in cost_list %}
+                                <tr>
+                                    <td>{{ cost.cost.name }}</td>
+                                    <td>
+                                        {% if cost.scope == "category" and cost.category %}
+                                            {{ cost.category.category.name }}
+                                        {% elif cost.scope == "companions" %}
+                                            <span class="label label-success">{% trans "Solo acompañantes" %}</span>
+                                        {% else %}
+                                            <span class="label label-info">{% trans "Todos los viajeros" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-right">
+                                        {% if cost.amount_type == "global" %}
+                                            {% if cost.has_global_participants %}
+                                                {% if cost.global_share_min == cost.global_share_max %}
+                                                    {{ cost.global_share_min }} €
+                                                {% else %}
+                                                    {{ cost.global_share_min }}–{{ cost.global_share_max }} €
+                                                {% endif %}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        {% else %}
+                                            {{ cost.per_competitor_amount }} €
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-right">{{ cost.total_part_amount }} €</td>
+                                    <td class="text-right">
+                                        <button type="button"
+                                                class="btn btn-xs btn-primary ark"
+                                                data-url="{% url "champs-cost-form" %}"
+                                                data-target-modal="common-modal"
+                                                data-champ_id="{{ obj.id }}"
+                                                data-champ_cost_id="{{ cost.id }}"
+                                                title="{% trans "Editar" %}">
+                                            <span class="glyphicon glyphicon-pencil"></span>
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-xs btn-danger ark"
+                                                data-url="{% url "champs-cost-delete-form" %}"
+                                                data-target-modal="common-modal"
+                                                data-champ_id="{{ obj.id }}"
+                                                data-champ_cost_id="{{ cost.id }}"
+                                                title="{% trans "Borrar" %}">
+                                            <span class="glyphicon glyphicon-trash"></span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">{% trans "Este campeonato todavía no tiene costes configurados." %}</p>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix">
+        <h3 class="pull-left">{% trans "Categorías e inscripciones" %}</h3>
+        <button type="button"
+                class="btn btn-sm btn-success pull-right ark"
+                data-url="{% url "champs-category-form" %}"
+                data-target-modal="common-modal"
+                data-champ_id="{{ obj.id }}">
+            <span class="glyphicon glyphicon-plus"></span>
+            {% trans "Añadir categoría" %}
+        </button>
+    </div>
+
+    {% if category_list %}
+        <div class="panel-group" id="champ-categories" role="tablist" aria-multiselectable="true">
+            {% for item in category_list %}
+                <div class="panel panel-primary champ-category-panel">
+                    <div class="panel-heading" role="tab" id="category-heading-{{ forloop.counter }}">
+                        <h4 class="panel-title">
+                            <a class="champ-category-toggle"
+                               role="button"
+                               data-toggle="collapse"
+                               data-parent="#champ-categories"
+                               href="#category-{{ forloop.counter }}"
+                               aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                aria-controls="category-{{ forloop.counter }}">
+                                <span>{{ item.category.name|default:"Sin categoría" }}</span>
+                                <span class="champ-category-meta">
+                                    <span class="label label-warning champ-category-cost">
+                                        {% trans "Coste por competidora" %}: {{ item.cost_per_competitor }} €
+                                    </span>
+                                    <span class="badge">{{ item.registrations|length }}</span>
+                                </span>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="category-{{ forloop.counter }}"
+                         class="panel-collapse collapse{% if forloop.first %} in{% endif %}"
+                         role="tabpanel"
+                         aria-labelledby="category-heading-{{ forloop.counter }}">
+                        <div class="panel-body">
+                            {% if item.category %}
+                                <p class="text-right">
+                                    <button type="button"
+                                            class="btn btn-sm btn-primary ark"
+                                            data-url="{% url "champs-category-form" %}"
+                                            data-target-modal="common-modal"
+                                            data-champ_id="{{ obj.id }}"
+                                            data-champ_category_id="{{ item.champ_category.id }}">
+                                        <span class="glyphicon glyphicon-pencil"></span>
+                                        {% trans "Editar categoría" %}
+                                    </button>
+                                    {% if item.can_delete %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger ark"
+                                                data-url="{% url "champs-category-delete-form" %}"
+                                                data-target-modal="common-modal"
+                                                data-champ_id="{{ obj.id }}"
+                                                data-champ_category_id="{{ item.champ_category.id }}"
+                                                title="{% trans "Borrar categoría" %}">
+                                            <span class="glyphicon glyphicon-trash"></span>
+                                            {% trans "Borrar" %}
+                                        </button>
+                                    {% else %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger"
+                                                disabled
+                                                title="{% trans "No se puede borrar porque tiene competidoras o costes asociados" %}">
+                                            <span class="glyphicon glyphicon-trash"></span>
+                                            {% trans "Borrar" %}
+                                        </button>
+                                    {% endif %}
+                                    <button type="button"
+                                            class="btn btn-sm btn-success ark"
+                                            data-url="{% url "champs-registration-form" %}"
+                                            data-target-modal="common-modal"
+                                            data-champ_id="{{ obj.id }}"
+                                            data-category_id="{{ item.category.id }}">
+                                        <span class="glyphicon glyphicon-plus"></span>
+                                        {% trans "Añadir competidora" %}
+                                    </button>
+                                </p>
+                            {% endif %}
+
+                            {% if item.registrations %}
+                                <table class="table table-hover table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "Competidora" %}</th>
+                                            <th>{% trans "Nacimiento" %}</th>
+                                            <th>{% trans "Teléfono" %}</th>
+                                            <th>{% trans "Email" %}</th>
+                                            <th class="text-right">{% trans "Pagado" %}</th>
+                                            <th class="text-right">{% trans "Pendiente" %}</th>
+                                            <th class="text-right">{% trans "Acciones" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for registration in item.registrations %}
+                                            <tr>
+                                                <td>{{ registration.student.name }}</td>
+                                                <td>
+                                                    {% if registration.birth_year %}
+                                                        {{ registration.birth_year }} ({{ registration.current_age }} {% trans "años" %})
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ registration.student.phone|default:"-" }}</td>
+                                                <td>{{ registration.student.email|default:"-" }}</td>
+                                                <td class="text-right">
+                                                    {{ registration.paid_amount }} €
+                                                </td>
+                                                <td class="text-right">
+                                                    <span id="pending-{{ registration.id }}-{{ item.champ_category.id }}">{{ registration.pending_amount }} €</span>
+                                                </td>
+                                                <td class="text-right text-nowrap">
+                                                    <button type="button"
+                                                            class="btn btn-xs btn-success ark"
+                                                            data-url="{% url 'champs-registration-payment-form' %}"
+                                                            data-target-modal="common-modal"
+                                                            data-champ_id="{{ obj.id }}"
+                                                            data-registration_id="{{ registration.id }}"
+                                                            title="{% trans 'Añadir pago' %}">
+                                                        <span class="glyphicon glyphicon-plus"></span>
+                                                        {% trans "Pago" %}
+                                                    </button>
+                                                    <button type="button"
+                                                            class="btn btn-xs btn-danger ark"
+                                                            data-url="{% url 'champs-registration-delete-form' %}"
+                                                            data-target-modal="common-modal"
+                                                            data-champ_id="{{ obj.id }}"
+                                                            data-registration_id="{{ registration.id }}"
+                                                            data-category_id="{{ item.category.id }}"
+                                                            title="{% trans 'Eliminar de la categoría' %}">
+                                                        <span class="glyphicon glyphicon-trash"></span>
+                                                        {% trans "Eliminar" %}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <p class="text-muted">{% trans "No hay competidoras inscritas en esta categoría." %}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">{% trans "Este campeonato todavía no tiene categorías configuradas." %}</p>
+    {% endif %}
+
+    <h3>{% trans "Acompañantes" %}</h3>
+    <div class="panel panel-success champ-companion-panel">
+        <div class="panel-heading" role="tab" id="champ-companions-heading">
+            <h4 class="panel-title">
+                <a class="champ-category-toggle"
+                   role="button"
+                   data-toggle="collapse"
+                   href="#champ-companions-content"
+                   aria-expanded="false"
+                   aria-controls="champ-companions-content">
+                    <span>{% trans "Acompañantes del viaje" %}</span>
+                    <span class="champ-category-meta">
+                        <span class="label label-warning champ-category-cost">
+                            {% trans "Coste total" %}: {{ companion_total_amount }} €
+                        </span>
+                        <span class="badge">{{ companion_list|length }}</span>
+                    </span>
+                </a>
+            </h4>
+        </div>
+        <div id="champ-companions-content" class="panel-collapse collapse" role="tabpanel" aria-labelledby="champ-companions-heading">
+            <div class="panel-body">
+                {% if companion_list %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Nombre completo" %}</th>
+                                    <th>{% trans "Competidora" %}</th>
+                                    <th>{% trans "Residente en Canarias" %}</th>
+                                    <th>{% trans "Municipio" %}</th>
+                                    <th>{% trans "Fecha de nacimiento" %}</th>
+                                    <th>{% trans "DNI" %}</th>
+                                    <th class="text-right">{% trans "Coste" %}</th>
+                                    <th class="text-right">{% trans "Pagado" %}</th>
+                                    <th class="text-right">{% trans "Pendiente" %}</th>
+                                    <th class="text-right">{% trans "Acciones" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for companion in companion_list %}
+                                    <tr>
+                                        <td>{{ companion.full_name }}</td>
+                                        <td>{{ companion.registration.student.name|default:"-" }}</td>
+                                        <td>{% if companion.is_canary_resident %}{% trans "Sí" %}{% else %}{% trans "No" %}{% endif %}</td>
+                                        <td>{{ companion.municipality|default:"-" }}</td>
+                                        <td>{{ companion.birth_date|date:"d-m-Y" }}</td>
+                                        <td>{{ companion.dni }}</td>
+                                        <td class="text-right">{{ companion.total_amount }} €</td>
+                                        <td class="text-right">{{ companion.paid_amount }} €</td>
+                                        <td class="text-right">{{ companion.pending_amount }} €</td>
+                                        <td class="text-right">
+                                            <button type="button"
+                                                    class="btn btn-xs btn-success ark"
+                                                    data-url="{% url 'champs-companion-payment-form' %}"
+                                                    data-target-modal="common-modal"
+                                                    data-champ_id="{{ obj.id }}"
+                                                    data-companion_id="{{ companion.id }}"
+                                                    title="{% trans 'Añadir pago' %}">
+                                                <span class="glyphicon glyphicon-plus"></span>
+                                                {% trans "Pago" %}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">{% trans "No hay acompañantes añadidos a este campeonato." %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-warning">
+        {% trans "No se ha encontrado el campeonato solicitado." %}
+    </div>
+{% endif %}
+
+<script type="text/javascript">
+    $('#champ-summary-content').on('show.bs.collapse', function() {
+        $('#champ-summary-heading .glyphicon').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+    }).on('hide.bs.collapse', function() {
+        $('#champ-summary-heading .glyphicon').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+    });
+</script>

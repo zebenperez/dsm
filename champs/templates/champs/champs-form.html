@@ -1,0 +1,51 @@
+{% load i18n %}
+
+
+<div class="row"><div class="col-1 col-md-offset-11">
+    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal" title="{% trans "Close" %}"> 
+        <i class="fas fa-times"></i></button> 
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading"><strong>{% trans 'Modificar campeonato' %}</strong></div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-8">
+                {% trans "Campeonato" %}
+                <input type="text" class="form-control autosave b-bottom" id="name" name="name" value="{{obj.name}}" 
+                    title="{{obj.name}}" data-model-name="champs.championship" data-obj-id="{{obj.id}}" 
+                    data-url="{%url "autosave_field"%}" data-target="div-notification"/> <span id="name__msg"></span>
+            </div>
+            <div class="col-md-2">
+                {% trans "Fecha" %}
+                <input type="date" class="form-control autosave" id="date" name="date" value="{{date|date:"Y-m-d"}}" 
+                    title="{{obj.date}}" data-model-name="champs.championship" data-obj-id="{{obj.id}}" 
+                    data-url="{%url "autosave_field"%}" data-target="div-notification"/> <span id="date__msg"></span>
+            </div>
+            <div class="col-md-2">
+                {% trans "Publicado" %}
+                <input type="checkbox" class="form-check-input autosave" id="publish" name="publish" title="{{obj.publish}}" 
+                    data-model-name="champs.championship" data-obj-id="{{obj.id}}" data-url="{%url "autosave_field"%}" 
+                    data-bool="True" data-target="div-notification" {%if obj.publish%}checked{%endif%}/> 
+                <span id="publish__msg"></span>
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-md-6 text-center">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">{% trans "Cancelar" %}</button>
+            </div>
+            <div class="col-md-6 text-center">
+            {% if obj %}
+                <button type="button" class="btn btn-sm btn-success ark" data-dismiss="modal" data-url="{% url "champs-list" %}"
+                    data-target="div-container" data-obj_id="{{obj.id}}">{% trans "Guardar" %}</button>
+            {% else %}
+                <button type="button" class="btn btn-sm btn-success ark_new_obj" data-dismiss="modal" data-url="{%url "champs-list"%}"
+                    data-target="emp-list" data-url-save="{% url "autosave_fields" %}" data-args-save="name,date,publish"
+                    data-model-name="champs.championship"> {% trans "Guardar" %}</button>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <section class="pwa-screen-header">
+        <p>{% trans "Campeonatos" %}</p>
+        <h1>{{ student.name }}</h1>
+    </section>
+
+    {% if registration_list %}
+        <div class="pwa-championship-list" id="pwa-championship-list">
+            {% for registration in registration_list %}
+                <article class="pwa-championship-item">
+                    <a class="pwa-championship-link"
+                       href="{% url 'pwa-championship-detail' registration.id %}">
+                        <span class="pwa-list-icon pwa-list-icon-warning"><i class="fas fa-trophy" aria-hidden="true"></i></span>
+                        <span class="pwa-list-body">
+                            <strong>{{ registration.champ.name }}</strong>
+                            <span>{{ registration.champ.date|date:"d M Y" }}</span>
+                        </span>
+                        <span class="pwa-championship-position">
+                            {% if registration.position %}{{ registration.position }}{% else %}{% trans "Pendiente" %}{% endif %}
+                        </span>
+                        <i class="fas fa-chevron-right pwa-championship-chevron" aria-hidden="true"></i>
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="pwa-empty-state">
+            <i class="fas fa-trophy" aria-hidden="true"></i>
+            <p>{% trans "No estás registrada en ningún campeonato." %}</p>
+        </div>
+    {% endif %}
+{% endblock %}

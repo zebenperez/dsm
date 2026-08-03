@@ -131,3 +131,6 @@ dmypy.json
 collect_static**
 logs**
 settings_local.py
+migrations
+champs/migrations/
+champs/migrations/*.py

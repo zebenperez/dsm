@@ -22,7 +22,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 #from django.form.fields import email_re
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 #from push_notifications.models import APNSDevice, GCMDevice
 from fcm_django.models import FCMDevice

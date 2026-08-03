@@ -4,13 +4,10 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin import DateFieldListFilter
-from django.utils.timezone import utc
-from django.utils.translation import ugettext as _  
+from django.utils.translation import gettext_lazy as _
 from django.db.models import Max
 from dateutil.relativedelta import relativedelta
-from datetime import date, datetime
-from django.utils.timezone import utc
-import datetime 
+from datetime import date, datetime, timezone
 import logging
 
 #reload(sys)
@@ -158,7 +155,7 @@ class PaymentAdmin(admin.ModelAdmin):
 	list_display = ('student', 'enrolment', 'pay_date', 'expire_date')
 	list_filter = (('date', DateFieldListFilter),)
 	search_fields = ['student__name', 'student__code']
-	now = datetime.datetime.utcnow().replace(tzinfo=utc)
+	now = datetime.utcnow().replace(tzinfo=timezone.utc)
 
 #    def check_date(self, obj):
 #        return '<div style="color:green">Debtor</div>' if obj.expire_date < datetime.datetime.utcnow().replace(tzinfo=utc) else '<div style="color:green">On date</div>'
@@ -167,7 +164,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
 	def add_view(self, request, form_url="", extra_context=None):
 		data = request.GET.copy()
-		next_month = datetime.datetime.utcnow().replace(tzinfo=utc) + relativedelta(months=+1)
+		next_month = datetime.utcnow().replace(tzinfo=utc) + relativedelta(months=+1)
 		data['expire_date'] = next_month
 		request.GET = data
 		return super(PaymentAdmin, self).add_view(request, form_url="", extra_context=extra_context)

@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<div class="panel panel-danger">
+    <div class="panel-heading"><strong>{% trans "Borrar campeonato" %}</strong></div>
+    <div class="panel-body">
+        {% if can_delete %}
+            <p>{% blocktrans with name=champ.name %}¿Quieres borrar el campeonato "{{ name }}"? Esta acción no se puede deshacer.{% endblocktrans %}</p>
+        {% else %}
+            <p>{% trans "No se puede borrar este campeonato porque tiene datos asociados." %}</p>
+        {% endif %}
+    </div>
+    <div class="panel-footer text-right">
+        <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button>
+        {% if can_delete %}
+            <button type="button"
+                    class="btn btn-sm btn-danger ark"
+                    data-url="{% url "delete-champ" %}"
+                    data-target="emp-list"
+                    data-dismiss="modal"
+                    data-champ_id="{{ champ.id }}">
+                {% trans "Borrar" %}
+            </button>
+        {% endif %}
+    </div>
+</div>

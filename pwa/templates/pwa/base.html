@@ -23,20 +23,14 @@
 		{% block head_tag %} {% endblock %}
 	</head>
 	<body>
-	<div id="body_wrapper">	
-		<header class="row"> {% block header %} {% include "pwa/main_nav.html" %} {% endblock %} </header>
+	<div id="body_wrapper">
+		<header class="pwa-header">{% block header %}{% include "pwa/main_nav.html" %}{% endblock %}</header>
 
-		<div class="row"> {% block content %} {% endblock %} </div>
+		<main class="pwa-content">{% block content %}{% endblock %}</main>
 
-		<footer class="footer">
-			{% block footer %}
-				<div class="row alert alert-warning"> 
-					<div class="col-12">Calle Punta Teno. 48, S/C de Tenerife, España <br/>  +34 622 729 341 <br/>
-					<a href="mailto:info@5db.com">info@5db.com</a> </div>
-				</div>
-			{% endblock %}
+		<footer class="pwa-bottom-nav">
+			{% block footer %}{% include "pwa/bottom_nav.html" %}{% endblock %}
 		</footer>
 	</div>	
 	</body>
 </html>
-

@@ -1,0 +1,26 @@
+{% load i18n %}
+
+<div class="panel panel-danger">
+    <div class="panel-heading"><strong>{% trans "Borrar categoría" %}</strong></div>
+    <div class="panel-body">
+        {% if can_delete %}
+            <p>{% blocktrans with name=champ_category.category.name %}¿Quieres borrar la categoría "{{ name }}" de este campeonato?{% endblocktrans %}</p>
+        {% else %}
+            <p>{% trans "No se puede borrar esta categoría porque tiene competidoras o costes asociados." %}</p>
+        {% endif %}
+    </div>
+    <div class="panel-footer text-right">
+        <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button>
+        {% if can_delete %}
+            <button type="button"
+                    class="btn btn-sm btn-danger ark"
+                    data-url="{% url "delete-champ-category" %}"
+                    data-target="champ-detail-content"
+                    data-dismiss="modal"
+                    data-champ_id="{{ champ.id }}"
+                    data-champ_category_id="{{ champ_category.id }}">
+                {% trans "Borrar" %}
+            </button>
+        {% endif %}
+    </div>
+</div>

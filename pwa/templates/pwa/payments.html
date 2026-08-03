@@ -2,30 +2,28 @@
 {% load i18n %}
 
 {% block content %}
-	<div class="card" style="margin-top:10px">
-		<div class="card-header bg-secondary text-white text-center"> Pagos del alumno/a <strong>{{student.name}}</strong> </div>
-		<div class="card-body">
-			<table class="table">
-				<thead>
-					<tr>
-						<th scope="col">Mes pagado</th>
-						{#<th scope="col">Fecha de inicio del pago</th>#}
-						{#<th scope="col">Fecha de caducudad</th>#}
-						<th scope="col">Importe</th>
-					</tr>
-				</thead>
+	<section class="pwa-screen-header">
+		<p>{% trans "Pagos" %}</p>
+		<h1>{{ student.name }}</h1>
+	</section>
 
-				<tbody>
-				{% for pay in payment_list %}
-					<tr>
-						<td>{{pay.pay_date|date:"M-Y"}}</td>
-						{#<td>{{pay.pay_date}}</td>#}
-						{#<td>{{pay.expire_date|date:"d-m-Y"}}</td>#}
-						<td>{{pay.amount}} €</td>
-					</tr>
-				{% endfor %}
-				</tbody>
-			</table>
+	{% if payment_list %}
+		<div class="pwa-mobile-list">
+			{% for pay in payment_list %}
+				<div class="pwa-mobile-list-item">
+					<div class="pwa-list-icon pwa-list-icon-success"><i class="fas fa-credit-card" aria-hidden="true"></i></div>
+					<div class="pwa-list-body">
+						<strong>{{ pay.pay_date|date:"F Y" }}</strong>
+						<span>{% trans "Mes abonado" %}</span>
+					</div>
+					<div class="pwa-list-amount">{{ pay.amount }} €</div>
+				</div>
+			{% endfor %}
 		</div>
-	</div>
+	{% else %}
+		<div class="pwa-empty-state">
+			<i class="fas fa-credit-card" aria-hidden="true"></i>
+			<p>{% trans "No hay pagos registrados." %}</p>
+		</div>
+	{% endif %}
 {% endblock %}

@@ -3,7 +3,6 @@ from django.conf import settings
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
-from django.utils.translation import ugettext_lazy as _,  to_locale, get_language, ugettext as ugt
 from django.db.models import Count
 
 register= template.Library();

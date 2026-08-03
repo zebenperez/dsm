@@ -1,0 +1,28 @@
+{% load i18n %}
+
+<nav class="pwa-nav" aria-label="{% trans 'Navegación principal' %}">
+    <a class="pwa-nav-item {% if 'index' in request.path %}is-active{% endif %}"
+       href="{% url 'pwa-index' %}"
+       aria-label="{% trans 'Inicio' %}"
+       title="{% trans 'Inicio' %}">
+        <i class="fas fa-home" aria-hidden="true"></i>
+    </a>
+    <a class="pwa-nav-item {% if 'payments' in request.path %}is-active{% endif %}"
+       href="{% url 'pwa-payments' %}"
+       aria-label="{% trans 'Pagos' %}"
+       title="{% trans 'Pagos' %}">
+        <i class="fas fa-credit-card" aria-hidden="true"></i>
+    </a>
+    <a class="pwa-nav-item {% if 'assistances' in request.path %}is-active{% endif %}"
+       href="{% url 'pwa-assistances' %}"
+       aria-label="{% trans 'Asistencias' %}"
+       title="{% trans 'Asistencias' %}">
+        <i class="fas fa-calendar-check" aria-hidden="true"></i>
+    </a>
+    <a class="pwa-nav-item {% if 'championships' in request.path %}is-active{% endif %}"
+       href="{% url 'pwa-championships' %}"
+       aria-label="{% trans 'Campeonatos' %}"
+       title="{% trans 'Campeonatos' %}">
+        <i class="fas fa-trophy" aria-hidden="true"></i>
+    </a>
+</nav>

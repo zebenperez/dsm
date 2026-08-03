@@ -1,0 +1,45 @@
+{% load i18n %}
+
+<div class="row">
+    <div class="col-xs-1 col-xs-offset-11">
+        <button type="button" class="btn btn-sm btn-default" data-dismiss="modal" title="{% trans "Close" %}">
+            <span class="glyphicon glyphicon-remove"></span>
+        </button>
+    </div>
+</div>
+
+<div class="panel panel-danger">
+    <div class="panel-heading">
+        <strong>{% trans "Borrar coste" %}</strong>
+    </div>
+    <div class="panel-body">
+        <p>{% trans "¿Seguro que deseas borrar este coste?" %}</p>
+        {% if champ_cost %}
+            <p>
+                <strong>{{ champ_cost.cost.name }}</strong><br>
+                {{ champ_cost.amount }} €
+            </p>
+        {% endif %}
+    </div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-sm-6 text-center">
+                <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">
+                    {% trans "Cancelar" %}
+                </button>
+            </div>
+            <div class="col-sm-6 text-center">
+                <button type="button"
+                        class="btn btn-sm btn-danger ark"
+                        data-url="{% url "delete-champ-cost" %}"
+                        data-target="champ-detail-content"
+                        data-modal="common-modal"
+                        data-champ_id="{{ champ.id }}"
+                        data-champ_cost_id="{{ champ_cost.id }}"
+                        data-dismiss="modal">
+                    {% trans "Borrar" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

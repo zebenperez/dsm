@@ -1,0 +1,172 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <a class="pwa-back-link" href="{% url 'pwa-championships' %}">
+        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        {% trans "Campeonatos" %}
+    </a>
+    <section class="pwa-screen-header pwa-championship-header">
+        <h1>{{ registration.champ.name }}</h1>
+        <p>{{ registration.champ.date|date:"d M Y" }}</p>
+    </section>
+
+    <ul class="nav nav-tabs pwa-championship-tabs" id="championship-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab">
+                {% trans "Inscripción" %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="costs-tab" data-bs-toggle="tab" data-bs-target="#costs" type="button" role="tab">
+                {% trans "Costes" %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="companions-tab" data-bs-toggle="tab" data-bs-target="#companions" type="button" role="tab">
+                {% trans "Acompañantes" %}
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content pwa-championship-tab-content">
+        <section class="tab-pane fade show active" id="categories" role="tabpanel" aria-labelledby="categories-tab">
+            <div class="pwa-result-card">
+                <span>{% trans "Resultado" %}</span>
+                <strong>{% if registration.position %}{{ registration.position }}{% else %}{% trans "Pendiente" %}{% endif %}</strong>
+            </div>
+
+            <p class="pwa-section-label">{% trans "Categorías inscritas" %}</p>
+            <div class="pwa-mobile-list">
+                {% for detail in summary.category_details %}
+                    <div class="pwa-mobile-list-item">
+                        <div class="pwa-list-icon pwa-list-icon-warning"><i class="fas fa-trophy" aria-hidden="true"></i></div>
+                        <div class="pwa-list-body">
+                            <strong>{{ detail.category.name }}</strong>
+                            <span>{% trans "Inscrita" %}</span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="pwa-empty-state"><p>{% trans "No hay categorías asociadas a esta inscripción." %}</p></div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="tab-pane fade" id="costs" role="tabpanel" aria-labelledby="costs-tab">
+            <section class="pwa-championship-summary">
+                <div class="pwa-championship-summary-row">
+                    <span>{% trans "Coste total" %}</span>
+                    <strong>{{ summary.total_amount }} €</strong>
+                </div>
+                <div class="pwa-championship-summary-row pwa-championship-summary-paid">
+                    <span>{% trans "Importe abonado" %}</span>
+                    <strong>{{ registration.paid_amount }} €</strong>
+                </div>
+                <div class="pwa-championship-summary-row pwa-championship-summary-pending">
+                    <span>{% trans "Pendiente" %}</span>
+                    <strong>{{ summary.pending_amount }} €</strong>
+                </div>
+            </section>
+
+            <p class="pwa-section-label">{% trans "Detalle de costes" %}</p>
+            <div class="pwa-mobile-list">
+                {% for detail in summary.cost_details %}
+                    <div class="pwa-mobile-list-item">
+                        <div class="pwa-list-icon pwa-list-icon-info"><i class="fas fa-receipt" aria-hidden="true"></i></div>
+                        <div class="pwa-list-body">
+                            <strong>{{ detail.name }}</strong>
+                            <span>{{ detail.applies_to }}</span>
+                        </div>
+                        <div class="pwa-list-amount">{{ detail.amount }} €</div>
+                    </div>
+                {% empty %}
+                    <div class="pwa-empty-state"><p>{% trans "No hay costes configurados." %}</p></div>
+                {% endfor %}
+            </div>
+
+            <section class="pwa-form-card">
+                <h2>{% trans "Justificante de pago" %}</h2>
+                {% if registration.payment_proof %}
+                    <a class="pwa-proof-link" href="{{ registration.payment_proof.url }}" target="_blank" rel="noopener">
+                        <i class="fas fa-file-alt" aria-hidden="true"></i> {% trans "Ver justificante actual" %}
+                    </a>
+                {% endif %}
+                <form method="post" enctype="multipart/form-data" action="{% url 'pwa-championship-payment-proof' registration.id %}">
+                    {% csrf_token %}
+                    <label for="payment-proof">{% trans "Subir fichero o sacar una foto" %}</label>
+                    <input id="payment-proof" type="file" name="payment_proof" class="form-control" accept="image/*,.pdf" capture="environment" required>
+                    <button type="submit" class="btn btn-primary w-100">{% trans "Guardar justificante" %}</button>
+                </form>
+            </section>
+        </section>
+
+        <section class="tab-pane fade" id="companions" role="tabpanel" aria-labelledby="companions-tab">
+            <p class="pwa-section-label">{% trans "Acompañantes del viaje" %}</p>
+            <div class="pwa-mobile-list">
+                {% for detail in summary.companion_details %}
+                    {% with companion=detail.companion %}
+                    <div class="pwa-mobile-list-item pwa-companion-item">
+                        <div class="pwa-list-icon pwa-list-icon-success"><i class="fas fa-user" aria-hidden="true"></i></div>
+                        <div class="pwa-list-body">
+                            <strong>{{ companion.full_name }}</strong>
+                            <span>{{ companion.dni }} · {{ companion.birth_date|date:"d-m-Y" }}</span>
+                            {% if companion.is_canary_resident %}<span>{% trans "Residente en Canarias" %}: {{ companion.municipality }}</span>{% endif %}
+                            <span>{% trans "Coste" %}: {{ detail.total_amount }} € · {% trans "Pagado" %}: {{ companion.paid_amount }} € · {% trans "Pendiente" %}: {{ detail.pending_amount }} €</span>
+                        </div>
+                        <form method="post" action="{% url 'pwa-championship-companion-delete' registration.id companion.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="{% trans "Eliminar" %}"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </div>
+                    {% endwith %}
+                {% empty %}
+                    <div class="pwa-empty-state"><p>{% trans "Todavía no has añadido acompañantes." %}</p></div>
+                {% endfor %}
+            </div>
+
+            <section class="pwa-form-card">
+                <h2>{% trans "Añadir acompañante" %}</h2>
+                <form method="post" action="{% url 'pwa-championship-companion-add' registration.id %}">
+                    {% csrf_token %}
+                    <label for="companion-full-name">{% trans "Nombre completo" %}</label>
+                    <input id="companion-full-name" name="full_name" type="text" class="form-control" required>
+
+                    <label for="companion-birth-date">{% trans "Fecha de nacimiento" %}</label>
+                    <input id="companion-birth-date" name="birth_date" type="date" class="form-control" required>
+
+                    <label for="companion-dni">{% trans "DNI" %}</label>
+                    <input id="companion-dni" name="dni" type="text" class="form-control" required>
+
+                    <div class="form-check pwa-resident-check">
+                        <input id="companion-canary-resident" name="is_canary_resident" type="checkbox" class="form-check-input">
+                        <label for="companion-canary-resident" class="form-check-label">{% trans "Residente en Canarias" %}</label>
+                    </div>
+
+                    <div id="companion-municipality-group" hidden>
+                        <label for="companion-municipality">{% trans "Municipio de residencia" %}</label>
+                        <input id="companion-municipality" name="municipality" type="text" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">{% trans "Añadir acompañante" %}</button>
+                </form>
+            </section>
+        </section>
+    </div>
+
+    <script>
+        (function () {
+            var resident = document.getElementById('companion-canary-resident');
+            var municipalityGroup = document.getElementById('companion-municipality-group');
+            var municipality = document.getElementById('companion-municipality');
+            if (!resident) return;
+            resident.addEventListener('change', function () {
+                municipalityGroup.hidden = !this.checked;
+                municipality.required = this.checked;
+            });
+
+            var activeTab = document.querySelector('[data-bs-target="' + window.location.hash + '"]');
+            if (activeTab && window.bootstrap) {
+                window.bootstrap.Tab.getOrCreateInstance(activeTab).show();
+            }
+        }());
+    </script>
+{% endblock %}

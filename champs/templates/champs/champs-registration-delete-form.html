@@ -1,0 +1,34 @@
+{% load i18n %}
+
+<div class="panel panel-danger">
+    <div class="panel-heading"><strong>{% trans "Eliminar competidora de la categoría" %}</strong></div>
+    <div class="panel-body">
+        {% if registration and category %}
+            <p>{% blocktrans with student=registration.student.name category_name=category.name %}¿Quieres eliminar a {{ student }} de la categoría {{ category_name }}?{% endblocktrans %}</p>
+            <p class="text-muted">{% trans "La competidora seguirá inscrita en las demás categorías, si las tiene." %}</p>
+        {% else %}
+            <p class="text-danger">{% trans "No se ha encontrado la inscripción o la categoría." %}</p>
+        {% endif %}
+    </div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-sm-6 text-center">
+                <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button>
+            </div>
+            <div class="col-sm-6 text-center">
+                {% if registration and category %}
+                    <button type="button"
+                            class="btn btn-sm btn-danger ark"
+                            data-url="{% url 'delete-champ-registration' %}"
+                            data-target="champ-detail-content"
+                            data-modal="common-modal"
+                            data-champ_id="{{ champ.id }}"
+                            data-registration_id="{{ registration.id }}"
+                            data-category_id="{{ category.id }}">
+                        {% trans "Eliminar" %}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

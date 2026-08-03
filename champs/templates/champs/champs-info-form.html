@@ -1,0 +1,66 @@
+{% load i18n %}
+
+<div class="row">
+    <div class="col-xs-1 col-xs-offset-11">
+        <button type="button" class="btn btn-sm btn-default" data-dismiss="modal" title="{% trans "Close" %}">
+            <span class="glyphicon glyphicon-remove"></span>
+        </button>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading"><strong>{% trans "Información importante del campeonato" %}</strong></div>
+    <div class="panel-body">
+        <p><strong>{{ champ.name }}</strong></p>
+        <div class="row">
+            <div class="col-sm-6 form-group">
+                <label for="champ-info-outbound-date">{% trans "Fecha de ida" %}</label>
+                <input type="date" id="champ-info-outbound-date" class="form-control" value="{{ champ_info.outbound_date|date:"Y-m-d" }}">
+            </div>
+            <div class="col-sm-6 form-group">
+                <label for="champ-info-return-date">{% trans "Fecha de vuelta" %}</label>
+                <input type="date" id="champ-info-return-date" class="form-control" value="{{ champ_info.return_date|date:"Y-m-d" }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="champ-info-carrier-name">{% trans "Nombre del transportista" %}</label>
+            <input type="text" id="champ-info-carrier-name" class="form-control" value="{{ champ_info.carrier_name }}">
+        </div>
+        <div class="form-group">
+            <label for="champ-info-accommodation-name">{% trans "Nombre de la estancia" %}</label>
+            <input type="text" id="champ-info-accommodation-name" class="form-control" value="{{ champ_info.accommodation_name }}">
+        </div>
+        <div class="form-group">
+            <label for="champ-info-details">{% trans "Detalles" %}</label>
+            <textarea id="champ-info-details" class="form-control" rows="5">{{ champ_info.details }}</textarea>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-sm-6 text-center">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">{% trans "Cancelar" %}</button>
+            </div>
+            <div class="col-sm-6 text-center">
+                <button type="button"
+                        id="save-champ-info-btn"
+                        class="btn btn-sm btn-success ark"
+                        data-url="{% url "save-champ-info" %}"
+                        data-target="champ-detail-content"
+                        data-dismiss="modal"
+                        data-champ_id="{{ champ.id }}">
+                    {% trans "Guardar" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#save-champ-info-btn').on('click', function() {
+        $(this).data('outbound_date', $('#champ-info-outbound-date').val());
+        $(this).data('return_date', $('#champ-info-return-date').val());
+        $(this).data('carrier_name', $('#champ-info-carrier-name').val());
+        $(this).data('accommodation_name', $('#champ-info-accommodation-name').val());
+        $(this).data('details', $('#champ-info-details').val());
+    });
+</script>

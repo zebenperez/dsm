@@ -2,7 +2,7 @@
 
 from studio.models import *
 from studio.dsm_forms import *
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 from django.db.models import Q, Count, Min, Sum, Max, Avg
@@ -11,8 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.middleware import csrf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, reverse
-from django.utils.timezone import utc
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.utils.html import strip_tags
 from web.utils import *
 

@@ -18,18 +18,27 @@ class ChampFileInline(admin.TabularInline):
 	model = ChampFile
 	extra = 1
 
+class ChampioshipInfoInline(admin.StackedInline):
+	model = ChampioshipInfo
+	extra = 1
+	max_num = 1
+
+class TravelCompanionInline(admin.TabularInline):
+	model = TravelCompanion
+	extra = 0
+
 '''
 	Admin
 '''
 class ChampionshipAdmin(admin.ModelAdmin):
 	list_display = ('name', 'date',)
-	inlines = [ChampCostInline, ChampCategoryInline, ChampFileInline]
+	inlines = [ChampioshipInfoInline, ChampCostInline, ChampCategoryInline, ChampFileInline]
 
 class ChampCategoryAdmin(admin.ModelAdmin):
 	list_display = ('category', 'amount',)
 
 class ChampCostAdmin(admin.ModelAdmin):
-	list_display = ('cost', 'amount',)
+	list_display = ('cost', 'champ', 'category', 'amount',)
 
 class ChampFileAdmin(admin.ModelAdmin):
 	list_display = ('name', 'file',)
@@ -38,9 +47,10 @@ class CostAdmin(admin.ModelAdmin):
 	list_display = ('name',)
 
 class RegistrationAdmin(admin.ModelAdmin):
-	list_display = ('champ', 'student', 'get_categories')
+	list_display = ('champ', 'student', 'get_categories', 'position')
 	list_filter = ('champ',)
 	search_fields = ['student',]
+	inlines = [TravelCompanionInline]
 	
 	def get_categories(self, obj):
 		html = ""
@@ -60,4 +70,4 @@ admin.site.register(ChampFile, ChampFileAdmin)
 admin.site.register(Cost, CostAdmin)
 admin.site.register(Registration, RegistrationAdmin)
 admin.site.register(RegistrationFile, RegistrationFileAdmin)
-
+admin.site.register(TravelCompanion)

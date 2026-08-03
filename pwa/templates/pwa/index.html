@@ -2,72 +2,60 @@
 {% load i18n static %}
 
 {% block content %}
-	<style>
-	.carnet {
-		width: 900px;
-		aspect-ratio: 16 / 10;
+    <section class="pwa-home">
+        <p class="pwa-home-welcome">{% trans "Mi licencia" %}</p>
+        <h1>{{ student.name }}</h1>
 
-		background-image: url("/static/images/fondo-carnet.jpeg");
-		background-size: contain;
-		background-position: center;
-		background-repeat: no-repeat;
-	}
-	.texto{
-		font-size:16px;
-		font-weight:bold;
-		color:black;
-		margin-left:8%;
-		margin-top:15%;
-	}
-	.texto2{
-		font-size:11px;
-		color:black;
-	}
-	.texto3{
-		font-size:12px;
-		color:black;
-		margin-left:75%;
-		margin-top:4.5%;
-	}
-	.photo{
-		position:absolute; 
-        top:142px; 
-        right:40px; 
-        width:95px; 
-        height:110px; 
-	}
-	</style>
-	<div class="carnet" style="margin-top:30px;margin-bottom:30px;">
-		{% if student.picture %} <img src="{{student.picture.url}}" alt="foto" class="photo"/> {% endif %}
-		<div class="texto"> LICENCIA FEDERATIVA </div>
-		<table border="0" style="margin-left:8%; margin-top:2%;">
-			<tr class="texto2">
-				<td> <strong>NOMBRE</strong> </td><td>:</td><td> {{student.get_name}}</td>
-			<tr class="texto2">
-				<td> <strong>APELLIDOS</strong> </td><td>:</td><td> {{student.get_surname}}</td>
-			</tr><tr class="texto2">
-				<td> <strong>Nº LICENCIA</strong> </td><td>:</td><td> {{student.licence}}</td>
-			</tr><tr class="texto2">
-				<td> <strong>TIPO</strong> </td><td>:</td><td> DEPORTISTA</td>
-			</tr><tr class="texto2">
-				<td> <strong>DISCIPLINA</strong> </td><td>:</td><td> Hip Hop</td>
-			</tr><tr class="texto2">
-				<td> <strong>CLUB</strong> </td><td>:</td><td> 5db</td>
-			</tr>
-		</table>
-		<div class="texto3"> 31-12-2026 </div>
-	</div>
+        <section class="pwa-license" aria-label="{% trans 'Licencia federativa' %}">
+            <div class="pwa-license-header">
+                <span>5db</span>
+                <strong>{% trans "Licencia federativa" %}</strong>
+            </div>
 
+            <div class="pwa-license-profile">
+                {% if student.picture %}
+                    <img src="{{ student.picture.url }}" alt="{% trans 'Foto de' %} {{ student.name }}">
+                {% else %}
+                    <div class="pwa-license-photo-placeholder" aria-hidden="true">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <p>{% trans "Deportista" %}</p>
+                    <h2>{{ student.name }}</h2>
+                    <span>{% trans "Nº licencia" %}: {{ student.licence|default:"—" }}</span>
+                </div>
+            </div>
 
-	<hr/>
-	<form action="{% url "pwa-change-photo" %}" method="POST" enctype="multipart/form-data">
-		{%csrf_token%}
-		<input type="hidden" name="student" value="{{student.id}}" />
-		<div class="row">
-			<div class="col-12 text-center">
-				<input type="file" name="photo" id="photoInput" class="d-none" onchange="this.form.submit()">
-				<label for="photoInput" class="btn btn-warning"> Cambiar foto </label>
-			</div>
-		</div>
-	</form>
+            <dl class="pwa-license-data">
+                <div>
+                    <dt>{% trans "Disciplina" %}</dt>
+                    <dd>Hip Hop</dd>
+                </div>
+                <div>
+                    <dt>{% trans "Club" %}</dt>
+                    <dd>5db</dd>
+                </div>
+                <div>
+                    <dt>{% trans "Tipo" %}</dt>
+                    <dd>{% trans "Deportista" %}</dd>
+                </div>
+            </dl>
+
+            <div class="pwa-license-footer">
+                <i class="fas fa-certificate" aria-hidden="true"></i>
+                {% trans "Escuela de Baile" %}
+            </div>
+        </section>
+
+        <form class="pwa-photo-form" action="{% url 'pwa-change-photo' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="student" value="{{ student.id }}">
+            <input type="file" name="photo" id="photoInput" accept="image/*" class="d-none" onchange="this.form.submit()">
+            <label for="photoInput" class="pwa-photo-button">
+                <i class="fas fa-camera" aria-hidden="true"></i>
+                {% trans "Cambiar foto" %}
+            </label>
+        </form>
+    </section>
 {% endblock %}

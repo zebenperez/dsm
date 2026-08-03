@@ -1,0 +1,67 @@
+{% load i18n champ_tags %}
+
+<div class="panel panel-info">
+    <div class="panel-heading"><strong>Campeonatos</strong></div>
+    <div class="panel-body">
+        <div class="form-inline text-right" style="margin-bottom: 15px;">
+            <label for="champ-publish-filter">{% trans "Mostrar" %}</label>
+            <select id="champ-publish-filter"
+                    class="form-control ark_change"
+                    data-url="{% url "champs-list" %}"
+                    data-target="emp-list">
+                <option value="all" {% if publish_filter == "all" %}selected{% endif %}>{% trans "Todos" %}</option>
+                <option value="true" {% if publish_filter == "true" %}selected{% endif %}>{% trans "Publicados" %}</option>
+                <option value="false" {% if publish_filter == "false" %}selected{% endif %}>{% trans "No publicados" %}</option>
+            </select>
+        </div>
+        <table class="table table-hover">
+            <thead> <tr> 
+                <th>Nombre</th> 
+                <th>Fecha</th> 
+                <th>Categorías</th> 
+                <th>Gastos</th> 
+                <th></th>
+            </tr> </thead>
+            <tbody>
+                {% for item in champ_list %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.date|date:"d-m-Y" }}</td>
+                        <td>{% for cat in item.categories.all %}{{cat.category.name}}<br/>{% endfor %}</td>
+                        <td>{% for cos in item.costs.all %}{{cos.cost.name}}<br/>{% endfor %}</td>
+                        <td class="text-right">
+                            <button type="button"
+                                    class="btn btn-primary ark"
+                                    data-url="{% url "champs-name-form" %}"
+                                    data-target-modal="common-modal"
+                                    data-champ_id="{{ item.id }}"
+                                    title="{% trans "Editar nombre" %}">
+                                <i class="glyphicon glyphicon-pencil"></i>
+                            </button>
+                            {% if item.can_delete %}
+                                <button type="button"
+                                        class="btn btn-danger ark"
+                                        data-url="{% url "champs-delete-form" %}"
+                                        data-target-modal="common-modal"
+                                        data-champ_id="{{ item.id }}"
+                                        title="{% trans "Borrar" %}">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </button>
+                            {% else %}
+                                <button type="button"
+                                        class="btn btn-danger"
+                                        disabled
+                                        title="{% trans "No se puede borrar porque tiene datos asociados" %}">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </button>
+                            {% endif %}
+                            <a class="btn btn-info" href="{% url "champs-details" item.id %}" title="{% trans "Ver ficha" %}">
+                                <i class="glyphicon glyphicon-list-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
