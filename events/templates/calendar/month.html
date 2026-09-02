@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Calendario | DSM{% endblock %}
+
+{% block content %}
+<div class="calendar-page">
+  <div class="calendar-toolbar">
+    <a class="btn btn-default" href="{% url 'events:month_by_date' previous.0 previous.1 %}">&larr; Mes anterior</a>
+    <h1>{{ month_name }} {{ year }}</h1>
+    <a class="btn btn-primary" href="{% url 'events:event_add' %}"><span class="glyphicon glyphicon-plus"></span> Añadir evento</a>
+    <a class="btn btn-default" href="{% url 'events:month_by_date' following.0 following.1 %}">Mes siguiente &rarr;</a>
+  </div>
+
+  <div class="calendar-grid">
+    {% for name in weekday_names %}<div class="calendar-weekday">{{ name }}</div>{% endfor %}
+    {% for week in weeks %}
+      {% for day in week %}
+        <div class="calendar-day{% if not day.in_month %} calendar-day--outside{% endif %}{% if day.date == today %} calendar-day--today{% endif %}">
+          <div class="calendar-day__number"><a href="{% url 'events:event_add' %}?date={{ day.date|date:'Y-m-d' }}">{{ day.date.day }}</a></div>
+          {% for event in day.events %}
+            <div class="calendar-event">
+              <a class="calendar-event__edit" href="{% url 'events:event_edit' event.pk %}"><strong>{{ event.starts_at|date:'H:i' }}</strong> {{ event.title }}</a>
+              <a class="calendar-event__delete" href="{% url 'events:event_delete' event.pk %}" title="Borrar {{ event.title }}" aria-label="Borrar {{ event.title }}">&times;</a>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.calendar-toolbar { display:flex; align-items:center; gap:12px; margin:22px 0; flex-wrap:wrap; }
+.calendar-toolbar h1 { font-size:26px; margin:0; flex:1; text-align:center; }
+.calendar-grid { display:grid; grid-template-columns:repeat(7, 1fr); border:1px solid #ddd; }
+.calendar-weekday { padding:10px 6px; text-align:center; font-weight:bold; background:#f5f5f5; border-bottom:1px solid #ddd; }
+.calendar-day { min-height:125px; padding:7px; border-right:1px solid #e5e5e5; border-bottom:1px solid #e5e5e5; }
+.calendar-day:nth-child(7n) { border-right:0; }
+.calendar-day--outside { background:#fafafa; color:#aaa; }
+.calendar-day__number { text-align:right; margin-bottom:6px; }
+.calendar-event { background:#337ab7; border-radius:3px; font-size:12px; margin-bottom:3px; display:flex; align-items:center; }
+.calendar-event__edit { color:white; min-width:0; flex:1; overflow:hidden; padding:3px 0 3px 5px; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-event__edit:hover, .calendar-event__edit:focus { color:white; text-decoration:underline; }
+.calendar-event__delete { color:white; font-size:16px; line-height:1; padding:1px 5px 3px; }
+.calendar-event__delete:hover, .calendar-event__delete:focus { color:white; text-decoration:none; }
+@media (max-width: 767px) { .calendar-weekday { font-size:11px; padding:7px 1px; } .calendar-day { min-height:78px; padding:4px; } .calendar-event { font-size:10px; padding:2px; } .calendar-toolbar h1 { order:-1; flex-basis:100%; } }
+</style>
+{% endblock %}

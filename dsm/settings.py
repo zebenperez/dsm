@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 	'champs',
 	'web',
 	'pwa',
+	'events.apps.EventsConfig',
 ]
 
 MIDDLEWARE = [

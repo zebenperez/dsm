@@ -24,6 +24,8 @@
                         <li {% if "cash"|contains:request.path %} class="active" {% endif %}><a href="{% url "cash" %}">Cash</a></li>
                         <li {% if "bad_debt"|contains:request.path %} class="active" {% endif %}>
                             <a href="{% url "bad_debt" %}">Impagos</a></li>
+						<li {% if "article_payments"|contains:request.path %} class="active" {% endif %}>
+							<a href="{% url 'article_payments' %}">Ventas artículos</a></li>
                         <li {% if "assistances"|contains:request.path %} class="active" {% endif %}>
                             <a href="{% url "assistances" %}">Assistances</a></li>
                         <li {% if "no_assistance"|contains:request.path %} class="active" {% endif %}>
@@ -36,6 +38,8 @@
                         {% endif %}
                         <li {% if "notifications"|contains:request.path %} class="active" {% endif %}>
                             <a href="{% url "notifications" %}">Notifications</a></li>
+						<li {% if "calendar"|contains:request.path %} class="active" {% endif %}>
+							<a href="{% url 'events:month' %}">Calendario</a></li>
                         <li {% if "champs"|contains:request.path %} class="active" {% endif %}>
                             <a href="{% url "champs" %}">Campeonatos</a></li>
                         <li {% if "admin"|contains:request.path %} class="active" {% endif %}>

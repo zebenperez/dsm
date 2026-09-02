@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Borrar evento | DSM{% endblock %}
+
+{% block content %}
+<div class="col-md-6 col-md-offset-3" style="margin-top:30px">
+  <h1>Borrar evento</h1>
+  <p>¿Quieres borrar el evento <strong>{{ event.title }}</strong> del {{ event.starts_at|date:'d/m/Y H:i' }}?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Borrar evento</button>
+    <a class="btn btn-default" href="{% url 'events:month_by_date' event.starts_at.year event.starts_at.month %}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

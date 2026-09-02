@@ -1,63 +1,66 @@
 {% extends "base.html" %}
 
-{% load apptags %}
-{% load static %}
-{% load bootstrap_toolkit %}
+{% load apptags static %}
 
 {% block content %}
+    <form method="post" action="{% url "article_payments" %}" name="payment_search" id="payment_search" class="form form-inline">
+        {% csrf_token %}
+        <div class="row list-group-item list-group-item-info text-center">
+            <div class="col-md-4"><label for="ini_date">Inicio:</label></div>
+            <div class="col-md-4"><label for="end_date">Fin:</label></div>
+            <div class="col-md-4">Periodo de ventas</div>
+        </div>
+        <div class="row list-group-item text-center">
+            <div class="col-md-4"><input type="text" name="ini_date" id="ini_date" value="{{ ini_date|date:"d-m-Y" }}" class="form-control" size="8"/></div>
+            <div class="col-md-4"><input type="text" name="end_date" id="end_date" value="{{ end_date|date:"d-m-Y" }}" class="form-control" size="8"/></div>
+            <div class="col-md-4"><input type="submit" value="Actualizar dashboard" class="btn btn-info" /></div>
+        </div>
+    </form>
 
-	<div class="row-fluid">
-		<div class="span12 text-center">
-			<div>
-				<form method="post" action="{% url "article_payments" %}" name="payment_search" id="payment_search" class="form-inline">
-					{% csrf_token %}
-					<label for="code">Name:</label>
-					<select name="article" id="article">
-						<option value=""> --- </option>
-						{% for article in article_list %}
-							<option value="{{ article.id }}" {% if current_article|add:0 == article.id %} selected="selected" {% endif %}> {{ article.name }}</option>
-						{% endfor %}
-					</select>
-					<label for="ini_date">Ini Date:</label>
-					<input type="text" name="ini_date" id="ini_date" value="{{ ini_date|date:"d-m-Y" }}" class="input-small"/>
-					<label for="end_date">End Date:</label>
-					<input type="text" name="end_date" id="end_date" value="{{ end_date|date:"d-m-Y" }}" class="input-small"/>
-					<input type="submit" value="Search" class="btn btn-info" />
-				</form>
-			</div>
-		</div>
-	</div>
+    <br/>
+    <div class="row">
+        {% for sale in article_sales %}
+            <div class="col-md-3 col-sm-4">
+                <div class="panel panel-info article-sales-card">
+                    <div class="panel-heading">{{ sale.article.name }}</div>
+                    <div class="panel-body text-center">
+                        <span class="article-sales-card__label">Ventas</span>
+                        <strong>{{ sale.total|floatformat:2 }} €</strong>
+                    </div>
+                    <div class="panel-footer article-sales-card__footer">
+                        <div class="article-sales-card__metric article-sales-card__metric--full">
+                            <span>Stock actual</span><strong>{{ sale.article.stock }} uds</strong>
+                        </div>
+                        <div class="article-sales-card__metric article-sales-card__metric--full">
+                            <span>Valor a coste</span><strong>{{ sale.inventory_value|floatformat:2 }} €</strong>
+                        </div>
+                        <div class="row article-sales-card__prices">
+                            <div class="col-xs-6"><span>Coste / ud.</span><strong>{{ sale.article.cost|floatformat:2 }} €</strong></div>
+                            <div class="col-xs-6"><span>PVP / ud.</span><strong>{{ sale.article.pvp|floatformat:2 }} €</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 
-	<div class="row-fluid">
-		<div class="span10 offset1 text-center">
-			<div>
-				{% if article_payment_list %}
-					<table class="table table-hover">
-						<thead>
-							<tr> <th></th> <th></th> <th>Total</th> <th>{{ article_payment_list|length }} uds</th> <th> {% get_total_amount article_payment_list %} €</th> </tr>
-							<tr> <th>Artículo</th> <th>Fecha</th> <th>Concepto</th> <th> Notas</th> <th> Cantidad</th> </tr>
-						</thead>
-						<tbody>
-							{% for st in article_payment_list %}
-								<tr>
-									<td>{{ st.article.name }}</td>
-									<td>{{ st.date|date:"d-m-Y" }}</td>
-									<td>{{ st.concept.name }}</td>
-									<td>{{ st.note }}</td>
-									<td>{{ st.amount }}</td>
-								</tr>
-							{% endfor %}
-						</tbody>
-					</table>
-				{% else %}
-					<p>No teachers are available.</p>
-				{%	endif %}
-			</div>
-		</div>
-	</div>
-
-	<script type="text/javascript">
-		$('#ini_date').datepicker({dateFormat: 'dd-mm-yy'});
-		$('#end_date').datepicker({dateFormat: 'dd-mm-yy'});
-	</script>
+    <script type="text/javascript">
+        $('#ini_date').datepicker({dateFormat: 'dd-mm-yy'});
+        $('#end_date').datepicker({dateFormat: 'dd-mm-yy'});
+    </script>
+    <style>
+        .article-sales-card { border: 1px solid #76b9d2; box-shadow: 0 3px 10px rgba(49, 112, 143, .22); }
+        .article-sales-card .panel-heading { background: #d4ecf5; border-bottom: 1px solid #76b9d2; min-height: 42px; font-weight: bold; }
+        .article-sales-card .panel-body { padding: 18px 15px; }
+        .article-sales-card__label { display: block; color: #777; font-size: 12px; text-transform: uppercase; }
+        .article-sales-card .panel-body strong { display: block; color: #31708f; font-size: 27px; margin-top: 3px; }
+        .article-sales-card__footer { background: #f2f9fc; border-top: 1px solid #b6dce9; box-shadow: inset 0 3px 7px rgba(49, 112, 143, .05); font-size: 12px; padding: 0; }
+        .article-sales-card__metric { display: flex; justify-content: space-between; padding: 8px 12px; }
+        .article-sales-card__metric--full { border-bottom: 1px solid #eee; }
+        .article-sales-card__prices { display: flex; margin: 0; }
+        .article-sales-card__prices > div { flex: 1; float: none; min-height: 57px; padding: 9px 12px; text-align: center; }
+        .article-sales-card__prices > div + div { border-left: 1px solid #eee; }
+        .article-sales-card__prices span { color: #777; display: block; }
+        .article-sales-card__prices strong { display: block; margin-top: 2px; }
+    </style>
 {% endblock %}

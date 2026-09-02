@@ -494,28 +494,37 @@ def payments(request):
 
 @login_required
 def article_payments(request):	
-    current_article = ""
     if request.method == 'POST':
         ini_date = datetime.datetime.strptime(request.POST["ini_date"], "%d-%m-%Y") if (request.POST["ini_date"]) else date.today()
         end_date = datetime.datetime.strptime(request.POST["end_date"], "%d-%m-%Y") if (request.POST["end_date"]) else date.today()
-        current_article = request.POST["article"]
-        #FIXME: buscar una formamas elegante de hacer esto
-        if (current_article != ""):
-            article_payment_list = ArticlePayment.objects.filter(date__range=(ini_date, end_date), article__id = current_article).order_by('date')
-        else:
-            article_payment_list = ArticlePayment.objects.filter(date__range=(ini_date, end_date)).order_by('date')
+        period_end = end_date + datetime.timedelta(days=1)
     else: 
         today = date.today()
         ini_date = today.replace(day = 1)
-        end_date = datetime(today.year, today.month, calendar.mdays[today.month], 23, 59, 59)
-        article_payment_list = ArticlePayment.objects.filter(date__range=(ini_date, end_date)).order_by('date')
+        end_date = datetime.datetime(today.year, today.month, calendar.mdays[today.month], 23, 59, 59)
+        period_end = end_date + datetime.timedelta(seconds=1)
+
+    article_list = Article.objects.filter(publish=True).order_by('name')
+    sales_by_article = {
+        sale['article_id']: sale['total']
+        for sale in ArticlePayment.objects.filter(
+            date__gte=ini_date,
+            date__lt=period_end,
+        ).values('article_id').annotate(total=Sum('amount'))
+    }
+    article_sales = [
+        {
+            'article': article,
+            'total': sales_by_article.get(article.id, Decimal('0.00')),
+            'inventory_value': article.stock * article.cost,
+        }
+        for article in article_list
+    ]
 
     context = {
-        'article_list': Article.objects.filter(publish = True),
+        'article_sales': article_sales,
         'ini_date': ini_date,
         'end_date': end_date,
-        'current_article': current_article,
-        'article_payment_list': article_payment_list
     }
 
     return render(request, 'payments/article_payments.html', context)
