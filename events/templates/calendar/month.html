@@ -19,7 +19,7 @@
           <div class="calendar-day__number"><a href="{% url 'events:event_add' %}?date={{ day.date|date:'Y-m-d' }}">{{ day.date.day }}</a></div>
           {% for event in day.events %}
             <div class="calendar-event">
-              <a class="calendar-event__edit" href="{% url 'events:event_edit' event.pk %}"><strong>{{ event.starts_at|date:'H:i' }}</strong> {{ event.title }}</a>
+              <a class="calendar-event__edit" href="{% url 'events:event_edit' event.pk %}">{% if event.starts_at_has_time %}<strong>{{ event.starts_at|date:'H:i' }}</strong> {% endif %}{{ event.title }}</a>
               <a class="calendar-event__delete" href="{% url 'events:event_delete' event.pk %}" title="Borrar {{ event.title }}" aria-label="Borrar {{ event.title }}">&times;</a>
             </div>
           {% endfor %}

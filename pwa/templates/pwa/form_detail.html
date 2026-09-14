@@ -1,0 +1,36 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <a class="pwa-back-link" href="{% url 'pwa-forms' %}"><i class="fas fa-arrow-left" aria-hidden="true"></i>{% trans "Formularios" %}</a>
+    <section class="pwa-form-detail">
+        {% if form.image %}<img class="pwa-form-banner" src="{{ form.image.url }}" alt="">{% endif %}
+        <h1>{{ form.title }}</h1>
+        {% if form.description %}<p class="pwa-form-description">{{ form.description|linebreaksbr }}</p>{% endif %}
+        {% if form.deadline %}<p class="pwa-deadline"><i class="far fa-clock" aria-hidden="true"></i> {% trans "Fecha límite" %}: {{ form.deadline|date:"d M Y, H:i" }}</p>{% endif %}
+    </section>
+    {% if submission and not can_edit %}
+        <section class="pwa-submission-success"><i class="fas fa-check-circle" aria-hidden="true"></i><div><strong>{% trans "Respuesta enviada" %}</strong><p>{% trans "Hemos registrado tu respuesta." %}</p></div></section>
+        <div class="pwa-answer-summary">{% for question in questions %}<div><strong>{{ question.text }}</strong><span>{{ question.answer_value }}</span></div>{% endfor %}</div>
+    {% elif can_edit %}
+        {% if submission %}<p class="pwa-edit-notice">{% trans "Puedes modificar tu respuesta mientras el formulario esté abierto." %}</p>{% endif %}
+        <form method="post" class="pwa-question-form">
+            {% csrf_token %}
+            {% for question in questions %}
+                <fieldset class="pwa-question{% if question.error %} has-error{% endif %}">
+                    <legend>{{ question.text }}{% if question.required %}<span aria-hidden="true"> *</span>{% endif %}</legend>
+                    {% if question.answer_type == 'yes_no' %}
+                        <label><input type="radio" name="question_{{ question.id }}" value="yes" {% if question.submitted_value == 'yes' %}checked{% endif %}> {% trans "Sí" %}</label>
+                        <label><input type="radio" name="question_{{ question.id }}" value="no" {% if question.submitted_value == 'no' %}checked{% endif %}> {% trans "No" %}</label>
+                    {% else %}
+                        <input type="text" name="question_{{ question.id }}" maxlength="500" value="{{ question.submitted_value|default:'' }}">
+                    {% endif %}
+                    {% if question.error %}<small class="pwa-field-error">{{ question.error }}</small>{% endif %}
+                </fieldset>
+            {% empty %}<p class="pwa-section-empty">{% trans "Este formulario aún no tiene preguntas." %}</p>{% endfor %}
+            {% if questions %}<button type="submit" class="pwa-primary-button">{% trans "Enviar respuesta" %}</button>{% endif %}
+        </form>
+    {% else %}
+        <div class="pwa-empty-state"><i class="fas fa-lock" aria-hidden="true"></i><p>{% trans "El plazo para responder este formulario ha finalizado." %}</p></div>
+    {% endif %}
+{% endblock %}

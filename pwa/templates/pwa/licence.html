@@ -1,0 +1,22 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <section class="pwa-home">
+        <p class="pwa-home-welcome">{% trans "Mi licencia" %}</p>
+        <h1>{{ student.name }}</h1>
+        <section class="pwa-license" aria-label="{% trans 'Licencia federativa' %}">
+            <div class="pwa-license-header"><span>5db</span><strong>{% trans "Licencia federativa" %}</strong></div>
+            <div class="pwa-license-profile">
+                {% if student.picture %}<img src="{{ student.picture.url }}" alt="{% trans 'Foto de' %} {{ student.name }}">{% else %}<div class="pwa-license-photo-placeholder" aria-hidden="true"><i class="fas fa-user"></i></div>{% endif %}
+                <div><p>{% trans "Deportista" %}</p><h2>{{ student.name }}</h2><span>{% trans "Nº licencia" %}: {{ student.licence|default:"—" }}</span></div>
+            </div>
+            <dl class="pwa-license-data"><div><dt>{% trans "Disciplina" %}</dt><dd>Hip Hop</dd></div><div><dt>{% trans "Club" %}</dt><dd>5db</dd></div><div><dt>{% trans "Tipo" %}</dt><dd>{% trans "Deportista" %}</dd></div></dl>
+            <div class="pwa-license-footer"><i class="fas fa-certificate" aria-hidden="true"></i>{% trans "Escuela de Baile" %}</div>
+        </section>
+        <form class="pwa-photo-form" action="{% url 'pwa-change-photo' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}<input type="hidden" name="student" value="{{ student.id }}"><input type="file" name="photo" id="photoInput" accept="image/*" class="d-none" onchange="this.form.submit()">
+            <label for="photoInput" class="pwa-photo-button"><i class="fas fa-camera" aria-hidden="true"></i>{% trans "Cambiar foto" %}</label>
+        </form>
+    </section>
+{% endblock %}

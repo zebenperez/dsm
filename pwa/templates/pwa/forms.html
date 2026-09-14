@@ -1,0 +1,19 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <section class="pwa-screen-header"><p>{% trans "Inscripciones" %}</p><h1>{% trans "Formularios" %}</h1></section>
+    {% if form_list %}
+        <div class="pwa-form-list">
+            {% for form in form_list %}
+                <a class="pwa-form-card" href="{% url 'pwa-form-detail' form.id %}">
+                    {% if form.image %}<img src="{{ form.image.url }}" alt="">{% else %}<span class="pwa-form-image-placeholder"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>{% endif %}
+                    <span class="pwa-form-card-content"><strong>{{ form.title }}</strong>{% if form.description %}<small>{{ form.description|truncatechars:120 }}</small>{% endif %}{% if not form.is_open %}<em class="pwa-form-closed">{% trans "Plazo cerrado" %}</em>{% elif form.id in submitted_form_ids %}<em><i class="fas fa-check" aria-hidden="true"></i> {% trans "Enviado" %}</em>{% elif form.deadline %}<small>{% trans "Hasta" %} {{ form.deadline|date:"d M, H:i" }}</small>{% endif %}</span>
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="pwa-empty-state"><i class="fas fa-clipboard-list" aria-hidden="true"></i><p>{% trans "No hay formularios publicados." %}</p></div>
+    {% endif %}
+{% endblock %}

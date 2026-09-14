@@ -12,6 +12,7 @@ from django.middleware import csrf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.utils.translation import gettext as _
+from django.utils import timezone as django_timezone
 from django.utils.html import strip_tags
 from web.utils import *
 
@@ -27,6 +28,7 @@ from studio.common_lib import get_student
 
 #from push_notifications.models import APNSDevice, GCMDevice
 from fcm_django.models import FCMDevice
+from registration_forms.models import Form as RegistrationForm, FormSubmission
 
 '''
 	TPV
@@ -36,6 +38,47 @@ def index(request):
     if request.user.groups.filter(name="student").exists():
         return redirect("champs")
     return redirect("tpv")
+
+
+@group_required("reception")
+def registration_forms(request):
+    state = request.GET.get('state', 'open')
+    now = django_timezone.now()
+    form_list = RegistrationForm.objects.annotate(response_count=Count('submissions'))
+    if state == 'open':
+        form_list = form_list.filter(is_published=True).filter(
+            Q(deadline__isnull=True) | Q(deadline__gte=now)
+        )
+    elif state == 'closed':
+        form_list = form_list.filter(
+            Q(is_published=False) | Q(deadline__lt=now)
+        )
+    else:
+        state = 'all'
+    return render(request, 'forms/forms.html', {
+        'form_list': form_list.order_by('-created_at'),
+        'state': state,
+    })
+
+
+@group_required("reception")
+def registration_form_responses(request, form_id):
+    form = get_object_or_404(RegistrationForm, pk=form_id)
+    questions = list(form.questions.all())
+    submission_list = list(
+        FormSubmission.objects.filter(form=form)
+        .select_related('student')
+        .prefetch_related('answers__question')
+        .order_by('student__name')
+    )
+    for submission in submission_list:
+        answers = {answer.question_id: answer.value for answer in submission.answers.all()}
+        submission.answer_values = [answers.get(question.id, '—') for question in questions]
+    return render(request, 'forms/form_responses.html', {
+        'form': form,
+        'questions': questions,
+        'submission_list': submission_list,
+    })
 
 @group_required("reception")
 def tpv(request, current_date = None, msg = None):

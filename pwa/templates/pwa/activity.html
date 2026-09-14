@@ -1,0 +1,14 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <section class="pwa-screen-header"><p>{% trans "Mi actividad" %}</p><h1>{{ student.name }}</h1></section>
+    <section class="pwa-home-section">
+        <div class="pwa-section-heading"><h2>{% trans "Pagos" %}</h2></div>
+        {% if payment_list %}<div class="pwa-mobile-list">{% for pay in payment_list %}<div class="pwa-mobile-list-item"><div class="pwa-list-icon pwa-list-icon-success"><i class="fas fa-credit-card" aria-hidden="true"></i></div><div class="pwa-list-body"><strong>{{ pay.pay_date|date:"F Y" }}</strong><span>{% trans "Mes abonado" %}</span></div><div class="pwa-list-amount">{{ pay.amount }} €</div></div>{% endfor %}</div>{% else %}<p class="pwa-section-empty">{% trans "No hay pagos registrados." %}</p>{% endif %}
+    </section>
+    <section class="pwa-home-section">
+        <div class="pwa-section-heading"><h2>{% trans "Asistencias" %}</h2></div>
+        {% if assistance_list %}<div class="pwa-mobile-list">{% for assistance in assistance_list %}<div class="pwa-mobile-list-item"><div class="pwa-list-icon pwa-list-icon-info"><i class="fas fa-calendar-check" aria-hidden="true"></i></div><div class="pwa-list-body"><strong>{{ assistance.group.get_name }}</strong><span>{% trans "Asistencia registrada" %}</span></div><div class="pwa-list-date">{{ assistance.date|date:"d M" }}</div></div>{% endfor %}</div>{% else %}<p class="pwa-section-empty">{% trans "No hay asistencias registradas." %}</p>{% endif %}
+    </section>
+{% endblock %}

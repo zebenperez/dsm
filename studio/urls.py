@@ -62,6 +62,10 @@ urlpatterns = [
 	path ('notification_delete/<int:notification_id>/', views.notification_delete, name='notification_delete'),
 	path ('notification_send/<int:notification_id>/', views.notification_send, name='notification_send'),
 
+	## FORMULARIOS
+	path('forms/', views.registration_forms, name='registration_forms'),
+	path('forms/<int:form_id>/', views.registration_form_responses, name='registration_form_responses'),
+
 	##PULSERAS
 	path ('wristbands/', views.wristbands, name='wristbands'),
 ]

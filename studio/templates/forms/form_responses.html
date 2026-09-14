@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <p><a href="{% url 'registration_forms' %}"><i class="glyphicon glyphicon-arrow-left"></i> {% trans "Volver a formularios" %}</a></p>
+    <div class="panel panel-info">
+        <div class="panel-heading"><strong>{{ form.title }}</strong> <span class="badge">{{ submission_list|length }}</span></div>
+        <div class="panel-body">
+            {% if submission_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead><tr><th>{% trans "Alumna" %}</th><th>{% trans "Enviado" %}</th>{% for question in questions %}<th>{{ question.text }}</th>{% endfor %}</tr></thead>
+                        <tbody>
+                            {% for submission in submission_list %}
+                                <tr><td>{{ submission.student.name }}</td><td>{{ submission.submitted_at|date:"d-m-Y H:i" }}</td>{% for value in submission.answer_values %}<td>{{ value }}</td>{% endfor %}</tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">{% trans "Todavía no hay respuestas." %}</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

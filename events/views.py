@@ -1,4 +1,4 @@
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -78,9 +78,7 @@ def event_add(request):
         selected_date = request.GET.get('date')
         initial = {}
         try:
-            initial['starts_at'] = datetime.combine(
-                datetime.strptime(selected_date, '%Y-%m-%d').date(), time(9, 0)
-            )
+            initial['starts_at'] = datetime.strptime(selected_date, '%Y-%m-%d').date()
         except (TypeError, ValueError):
             pass
         form = EventForm(initial=initial)

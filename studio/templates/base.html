@@ -42,26 +42,33 @@
 </head>
 
 <body>
-
-	<header>
-		{%block header %}
-			{% include "nav_bar.html" %}
-		{% endblock %}
-	</header>
-
-	<div id="main_content" class="row" style="">
-	{% block content_wrapper %}
-		<div class="col-md-10 col-md-offset-1">
-			{% block content %}{% endblock %}
+	<div class="studio-layout">
+		<aside class="studio-sidebar" id="studio-sidebar">
+			{% block header %}{% include "nav_bar.html" %}{% endblock %}
+		</aside>
+		<button type="button" class="studio-desktop-sidebar-toggle" id="studio-desktop-sidebar-toggle" aria-controls="studio-sidebar" aria-expanded="true" title="Mostrar u ocultar menú">
+			<span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span><span class="sr-only">Mostrar u ocultar menú</span>
+		</button>
+		<div class="studio-page">
+			<header class="studio-mobile-header">
+				<button type="button" class="studio-menu-toggle" id="studio-menu-toggle" aria-controls="studio-sidebar" aria-expanded="false">
+					<span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span><span class="sr-only">Menú</span>
+				</button>
+				<a href="{% url 'index' %}">DSM</a>
+			</header>
+			<main id="main_content" class="row">
+			{% block content_wrapper %}
+				<div class="col-md-10 col-md-offset-1">
+					{% block content %}{% endblock %}
+				</div>
+			{% endblock %}
+			</main>
+			<footer class="studio-footer">
+				{% block footer %}<p>&copy; {{ current_date|date:"Y" }} <a href="http://www.shidix.com"> Shidix Technologies </a></p>{% endblock %}
+			</footer>
 		</div>
-	{% endblock %}
 	</div>
-
-	<footer>
-		{% block footer %}
-		<p style="text-align:center">&copy; {{ current_date|date:"Y" }} <a href="http://www.shidix.com"> Shidix Technologies </a></p>
-		{% endblock %}
-	</footer>
+	<div class="studio-sidebar-backdrop" id="studio-sidebar-backdrop"></div>
 </body>
 </html>
 
@@ -103,5 +110,15 @@
 		});
 		return false;
 	});
-</script>
 
+	$('#studio-menu-toggle, #studio-sidebar-backdrop').click(function() {
+		var isOpen = $('body').toggleClass('studio-sidebar-open').hasClass('studio-sidebar-open');
+		$('#studio-menu-toggle').attr('aria-expanded', isOpen ? 'true' : 'false');
+	});
+
+	$('#studio-desktop-sidebar-toggle').click(function() {
+		var isCollapsed = $('body').toggleClass('studio-sidebar-collapsed').hasClass('studio-sidebar-collapsed');
+		$(this).attr('aria-expanded', isCollapsed ? 'false' : 'true');
+		$(this).find('.glyphicon').toggleClass('glyphicon-menu-left', !isCollapsed).toggleClass('glyphicon-menu-right', isCollapsed);
+	});
+</script>

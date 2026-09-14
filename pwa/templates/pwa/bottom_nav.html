@@ -7,22 +7,28 @@
        title="{% trans 'Inicio' %}">
         <i class="fas fa-home" aria-hidden="true"></i>
     </a>
-    <a class="pwa-nav-item {% if 'payments' in request.path %}is-active{% endif %}"
-       href="{% url 'pwa-payments' %}"
-       aria-label="{% trans 'Pagos' %}"
-       title="{% trans 'Pagos' %}">
-        <i class="fas fa-credit-card" aria-hidden="true"></i>
+    <a class="pwa-nav-item {% if 'forms' in request.path %}is-active{% endif %}"
+       href="{% url 'pwa-forms' %}"
+       aria-label="{% trans 'Formularios' %}"
+       title="{% trans 'Formularios' %}">
+        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
     </a>
-    <a class="pwa-nav-item {% if 'assistances' in request.path %}is-active{% endif %}"
-       href="{% url 'pwa-assistances' %}"
-       aria-label="{% trans 'Asistencias' %}"
-       title="{% trans 'Asistencias' %}">
-        <i class="fas fa-calendar-check" aria-hidden="true"></i>
+    <a class="pwa-nav-item {% if 'activity' in request.path %}is-active{% endif %}"
+       href="{% url 'pwa-activity' %}"
+       aria-label="{% trans 'Mi actividad' %}"
+       title="{% trans 'Mi actividad' %}">
+        <i class="fas fa-chart-line" aria-hidden="true"></i>
     </a>
     <a class="pwa-nav-item {% if 'championships' in request.path %}is-active{% endif %}"
        href="{% url 'pwa-championships' %}"
        aria-label="{% trans 'Campeonatos' %}"
        title="{% trans 'Campeonatos' %}">
         <i class="fas fa-trophy" aria-hidden="true"></i>
+    </a>
+    <a class="pwa-nav-item {% if 'licence' in request.path %}is-active{% endif %}"
+       href="{% url 'pwa-licence' %}"
+       aria-label="{% trans 'Licencia federativa' %}"
+       title="{% trans 'Licencia federativa' %}">
+        <i class="fas fa-id-card" aria-hidden="true"></i>
     </a>
 </nav>

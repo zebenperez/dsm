@@ -3,12 +3,15 @@ from django.urls import reverse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils.translation import gettext as _
 from django.utils import timezone
+from django.db import transaction
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal, ROUND_UP
 
 from studio.models import Student, Payment, Assistance, Enrolment
 from champs.models import ChampCost, Registration, TravelCompanion
+from champs.models import Championship
+from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 
 
 def check_pin(request):
@@ -36,7 +39,18 @@ def index(request):
 	if not check_pin(request):
 		return redirect(login)
 	student = Student.objects.filter(pin=request.session["pin"]).first()
-	return render (request,'pwa/index.html',{"student": student})
+	submitted_form_ids = set(
+		FormSubmission.objects.filter(student=student).values_list('form_id', flat=True)
+	)
+	return render(request, 'pwa/index.html', {
+		"student": student,
+		"published_forms": Form.objects.filter(is_published=True).order_by('-created_at')[:3],
+		"submitted_form_ids": submitted_form_ids,
+		"upcoming_championships": Championship.objects.filter(
+			publish=True,
+			date__gte=timezone.now().date(),
+		).order_by('date')[:3],
+	})
 
 def payments(request):
 	if not check_pin(request):
@@ -52,6 +66,94 @@ def assistances(request):
 	enrolment_list = Enrolment.objects.filter(student=student, active=True)
 	assistance_list = Assistance.objects.filter(enrolments__in=enrolment_list, date__year=timezone.now().year).order_by('-date')
 	return render (request,'pwa/assistances.html',{'student': student, 'assistance_list': assistance_list})
+
+
+def activity(request):
+	if not check_pin(request):
+		return redirect(login)
+	student = Student.objects.filter(pin=request.session["pin"]).first()
+	enrolment_list = Enrolment.objects.filter(student=student, active=True)
+	return render(request, 'pwa/activity.html', {
+		'student': student,
+		'payment_list': Payment.objects.filter(student=student, date__year=timezone.now().year),
+		'assistance_list': Assistance.objects.filter(
+			enrolments__in=enrolment_list,
+			date__year=timezone.now().year,
+		).order_by('-date'),
+	})
+
+
+def forms(request):
+	if not check_pin(request):
+		return redirect(login)
+	student = Student.objects.filter(pin=request.session["pin"]).first()
+	return render(request, 'pwa/forms.html', {
+		'student': student,
+		'form_list': Form.objects.filter(is_published=True).order_by('-created_at'),
+		'submitted_form_ids': set(FormSubmission.objects.filter(student=student).values_list('form_id', flat=True)),
+	})
+
+
+def form_detail(request, form_id):
+	if not check_pin(request):
+		return redirect(login)
+	student = Student.objects.filter(pin=request.session["pin"]).first()
+	form = get_object_or_404(Form.objects.filter(is_published=True), pk=form_id)
+	questions = list(form.questions.all())
+	submission = FormSubmission.objects.filter(form=form, student=student).prefetch_related('answers__question').first()
+	can_edit = form.is_open and (not submission or form.allow_response_changes)
+
+	if request.method == 'POST' and can_edit:
+		errors = {}
+		values = {}
+		for question in questions:
+			value = request.POST.get('question_%s' % question.id, '').strip()
+			values[question.id] = value
+			if question.required and not value:
+				errors[question.id] = _('Esta pregunta es obligatoria.')
+			elif question.answer_type == FormQuestion.ANSWER_TYPE_YES_NO and value not in ('yes', 'no', ''):
+				errors[question.id] = _('Selecciona Sí o No.')
+		if not errors:
+			with transaction.atomic():
+				if not submission:
+					submission = FormSubmission.objects.create(form=form, student=student)
+				existing_answers = {answer.question_id: answer for answer in submission.answers.all()}
+				for question in questions:
+					answer = existing_answers.get(question.id, FormAnswer(submission=submission, question=question))
+					if question.answer_type == FormQuestion.ANSWER_TYPE_YES_NO:
+						answer.yes_no = values[question.id] == 'yes' if values[question.id] else None
+						answer.short_text = ''
+					else:
+						answer.short_text = values[question.id]
+						answer.yes_no = None
+					answer.save()
+			return redirect('pwa-form-detail', form_id=form.id)
+		for question in questions:
+			question.submitted_value = values.get(question.id, '')
+			question.error = errors.get(question.id)
+		return render(request, 'pwa/form_detail.html', {
+			'student': student, 'form': form, 'questions': questions, 'can_edit': can_edit,
+		})
+
+	answers_by_question = {answer.question_id: answer for answer in submission.answers.all()} if submission else {}
+	for question in questions:
+		question.answer_value = answers_by_question[question.id].value if question.id in answers_by_question else ''
+		answer = answers_by_question.get(question.id)
+		if answer and question.answer_type == FormQuestion.ANSWER_TYPE_YES_NO:
+			question.submitted_value = 'yes' if answer.yes_no else 'no' if answer.yes_no is not None else ''
+		elif answer:
+			question.submitted_value = answer.short_text
+	return render(request, 'pwa/form_detail.html', {
+		'student': student, 'form': form, 'questions': questions, 'submission': submission,
+		'can_edit': can_edit,
+	})
+
+
+def licence(request):
+	if not check_pin(request):
+		return redirect(login)
+	student = Student.objects.filter(pin=request.session["pin"]).first()
+	return render(request, 'pwa/licence.html', {'student': student})
 
 def get_championship_registration_summary(registration):
 	champ = registration.champ

@@ -132,5 +132,9 @@ collect_static**
 logs**
 settings_local.py
 migrations
+events/migrations/
+events/migrations/*.py
+registration_forms/migrations/
+registration_forms/migrations/*.py
 champs/migrations/
 champs/migrations/*.py

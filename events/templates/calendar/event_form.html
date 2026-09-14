@@ -18,4 +18,21 @@
     <a class="btn btn-default" href="{% url 'events:month' %}">Cancelar</a>
   </form>
 </div>
+<script>
+  (function () {
+    var startsTime = document.getElementById('id_starts_time');
+    var endsAt = document.getElementById('id_ends_at');
+
+    function syncEndTime() {
+      if (!startsTime.value || !endsAt.value) {
+        return;
+      }
+      endsAt.value = endsAt.value.slice(0, 11) + startsTime.value;
+    }
+
+    startsTime.addEventListener('change', syncEndTime);
+    endsAt.addEventListener('change', syncEndTime);
+    syncEndTime();
+  }());
+</script>
 {% endblock %}
