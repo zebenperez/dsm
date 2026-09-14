@@ -9,6 +9,6 @@
     </section>
     <section class="pwa-home-section">
         <div class="pwa-section-heading"><h2>{% trans "Próximos campeonatos" %}</h2><a href="{% url 'pwa-championships' %}">{% trans "Mis campeonatos" %}</a></div>
-        {% if upcoming_championships %}<div class="pwa-news-list">{% for champ in upcoming_championships %}<div class="pwa-news-card pwa-news-card-static"><span class="pwa-news-icon pwa-news-icon-trophy"><i class="fas fa-trophy" aria-hidden="true"></i></span><span><strong>{{ champ.name }}</strong><small>{{ champ.date|date:"d M Y" }}{% if champ.location %} · {{ champ.location }}{% endif %}</small></span></div>{% endfor %}</div>{% else %}<p class="pwa-section-empty">{% trans "No hay campeonatos próximos publicados." %}</p>{% endif %}
+        {% if upcoming_registrations %}<div class="pwa-news-list">{% for registration in upcoming_registrations %}<a class="pwa-news-card" href="{% url 'pwa-championship-detail' registration.id %}"><span class="pwa-news-icon pwa-news-icon-trophy"><i class="fas fa-trophy" aria-hidden="true"></i></span><span><strong>{{ registration.champ.name }}</strong><small>{{ registration.champ.date|date:"d M Y" }}{% if registration.champ.location %} · {{ registration.champ.location }}{% endif %}</small></span><i class="fas fa-chevron-right" aria-hidden="true"></i></a>{% endfor %}</div>{% else %}<p class="pwa-section-empty">{% trans "No tienes campeonatos próximos." %}</p>{% endif %}
     </section>
 {% endblock %}

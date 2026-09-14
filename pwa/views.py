@@ -10,7 +10,6 @@ from decimal import Decimal, ROUND_UP
 
 from studio.models import Student, Payment, Assistance, Enrolment
 from champs.models import ChampCost, Registration, TravelCompanion
-from champs.models import Championship
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 
 
@@ -46,10 +45,11 @@ def index(request):
 		"student": student,
 		"published_forms": Form.objects.filter(is_published=True).order_by('-created_at')[:3],
 		"submitted_form_ids": submitted_form_ids,
-		"upcoming_championships": Championship.objects.filter(
-			publish=True,
-			date__gte=timezone.now().date(),
-		).order_by('date')[:3],
+		"upcoming_registrations": Registration.objects.filter(
+			student=student,
+			champ__publish=True,
+			champ__date__gte=timezone.now().date(),
+		).select_related('champ').order_by('champ__date')[:3],
 	})
 
 def payments(request):

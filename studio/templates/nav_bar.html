@@ -1,7 +1,9 @@
-{% load apptags i18n %}
+{% load apptags i18n static %}
 
 <nav class="studio-side-nav" aria-label="Navegación principal">
-    <a class="studio-side-brand" href="{% url 'index' %}">DSM <small>Dance Studio</small></a>
+    <a class="studio-side-brand" href="{% url 'index' %}">
+        <img src="{% static 'images/logo_5db_transparent.png' %}" alt="5db Dance School">
+    </a>
     {% if user.is_authenticated %}
         {% if user.is_superuser or user|in_group:"reception" %}
             <p class="studio-nav-heading">{% trans "Operativa" %}</p>
@@ -20,10 +22,8 @@
             <p class="studio-nav-heading">{% trans "Gestión" %}</p>
             <ul>
                 {% if user.is_superuser %}
-                    <li {% if "teachers"|contains:request.path %}class="active"{% endif %}><a href="{% url 'teachers' %}"><i class="glyphicon glyphicon-user"></i> {% trans "Profesores" %}</a></li>
                     <li {% if "payments"|contains:request.path %}class="active"{% endif %}><a href="{% url 'payments' %}"><i class="glyphicon glyphicon-credit-card"></i> {% trans "Pagos" %}</a></li>
                 {% endif %}
-                <li {% if "notifications"|contains:request.path %}class="active"{% endif %}><a href="{% url 'notifications' %}"><i class="glyphicon glyphicon-bell"></i> {% trans "Avisos" %}</a></li>
                 <li {% if "calendar"|contains:request.path %}class="active"{% endif %}><a href="{% url 'events:month' %}"><i class="glyphicon glyphicon-calendar"></i> {% trans "Calendario" %}</a></li>
                 <li {% if "/studio/forms/"|contains:request.path %}class="active"{% endif %}><a href="{% url 'registration_forms' %}"><i class="glyphicon glyphicon-list-alt"></i> {% trans "Formularios" %}</a></li>
                 <li {% if "champs"|contains:request.path %}class="active"{% endif %}><a href="{% url 'champs' %}"><i class="glyphicon glyphicon-flag"></i> {% trans "Campeonatos" %}</a></li>

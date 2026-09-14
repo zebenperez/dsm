@@ -130,13 +130,20 @@ body {
 
 .studio-side-brand {
 	display: block;
-	padding: 23px 22px 20px;
+	padding: 14px 22px;
 	border-bottom: 1px solid rgba(255, 255, 255, .22);
 	color: #fff;
 	font-size: 23px;
 	font-weight: 700;
 	letter-spacing: .03em;
 	text-decoration: none;
+}
+
+.studio-side-brand img {
+	display: block;
+	width: 150px;
+	height: auto;
+	margin: 0 auto;
 }
 
 .studio-side-brand:hover,
