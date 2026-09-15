@@ -27,6 +27,7 @@
                 <li {% if "calendar"|contains:request.path %}class="active"{% endif %}><a href="{% url 'events:month' %}"><i class="glyphicon glyphicon-calendar"></i> {% trans "Calendario" %}</a></li>
                 <li {% if "/studio/forms/"|contains:request.path %}class="active"{% endif %}><a href="{% url 'registration_forms' %}"><i class="glyphicon glyphicon-list-alt"></i> {% trans "Formularios" %}</a></li>
                 <li {% if "champs"|contains:request.path %}class="active"{% endif %}><a href="{% url 'champs' %}"><i class="glyphicon glyphicon-flag"></i> {% trans "Campeonatos" %}</a></li>
+                <li {% if "reconciliation"|contains:request.path %}class="active"{% endif %}><a href="{% url 'bank-reconciliation' %}"><i class="glyphicon glyphicon-transfer"></i> {% trans "Conciliación bancaria" %}</a></li>
                 <li {% if "admin"|contains:request.path %}class="active"{% endif %}><a href="{% url 'admin:index' %}"><i class="glyphicon glyphicon-cog"></i> Admin</a></li>
             </ul>
         {% endif %}

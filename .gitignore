@@ -138,3 +138,5 @@ registration_forms/migrations/
 registration_forms/migrations/*.py
 champs/migrations/
 champs/migrations/*.py
+!champs/migrations/
+!champs/migrations/0015_bank_reconciliation.py

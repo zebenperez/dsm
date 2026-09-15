@@ -68,6 +68,12 @@
                 </div>
             </section>
 
+            <section class="pwa-form-card">
+                <h2>{% trans "Transferencia bancaria" %}</h2>
+                <p>{% trans "Indica esta referencia en el concepto de la transferencia para identificar el pago automáticamente." %}</p>
+                <strong>{{ registration.payment_reference }}</strong>
+            </section>
+
             <p class="pwa-section-label">{% trans "Detalle de costes" %}</p>
             <div class="pwa-mobile-list">
                 {% for detail in summary.cost_details %}

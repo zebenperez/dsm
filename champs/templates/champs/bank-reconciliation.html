@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Conciliación bancaria" %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% trans "Conciliación bancaria" %}</h1>
+    <p class="text-muted">{% trans "Importa transferencias recibidas y asígnalas a una competidora o acompañante." %}</p>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="panel panel-info">
+    <div class="panel-heading"><strong>{% trans "Importar extracto CSV" %}</strong></div>
+    <div class="panel-body">
+        <form method="post" action="{% url 'import-bank-transactions' %}" enctype="multipart/form-data" class="form-inline">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="bank-file">{% trans "Archivo" %}</label>
+                <input id="bank-file" class="form-control" type="file" name="bank_file" accept=".csv,text/csv" required>
+            </div>
+            <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-upload"></span> {% trans "Importar" %}</button>
+        </form>
+        <p class="help-block">
+            {% trans "Columnas admitidas: fecha/date, importe/amount, concepto/reference, ordenante/payer e id. Se admiten CSV separados por coma o punto y coma; las fechas pueden ser AAAA-MM-DD o DD/MM/AAAA. Los movimientos con importe positivo se importan una sola vez." %}
+        </p>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading"><strong>{% trans "Movimientos recibidos" %}</strong></div>
+    <div class="panel-body">
+        {% if transactions %}
+            <div class="table-responsive">
+                <table class="table table-hover table-condensed">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Fecha" %}</th>
+                            <th>{% trans "Ordenante / concepto" %}</th>
+                            <th class="text-right">{% trans "Importe" %}</th>
+                            <th class="text-right">{% trans "Pendiente" %}</th>
+                            <th>{% trans "Conciliar" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bank_transaction in transactions %}
+                            <tr {% if not bank_transaction.remaining_amount %}class="success"{% endif %}>
+                                <td>{{ bank_transaction.booking_date|date:"d-m-Y" }}</td>
+                                <td>
+                                    <strong>{{ bank_transaction.payer|default:"-" }}</strong><br>
+                                    <small>{{ bank_transaction.reference|default:"-" }}</small>
+                                    {% if bank_transaction.suggested_registration %}
+                                        <br><span class="label label-info">{% trans "Referencia detectada" %}: {{ bank_transaction.suggested_registration.payment_reference }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">{{ bank_transaction.amount }} €</td>
+                                <td class="text-right">{{ bank_transaction.remaining_amount }} €</td>
+                                <td>
+                                    {% if bank_transaction.remaining_amount > 0 %}
+                                        <form method="post" action="{% url 'confirm-bank-allocation' bank_transaction.id %}" class="form-inline">
+                                            {% csrf_token %}
+                                            <select name="target" class="form-control input-sm" required>
+                                                {% if bank_transaction.suggested_registration %}
+                                                    <option value="registration:{{ bank_transaction.suggested_registration.id }}">{{ bank_transaction.suggested_registration.student.name }} · {{ bank_transaction.suggested_registration.champ.name }} ({{ bank_transaction.suggested_registration.payment_reference }})</option>
+                                                {% else %}
+                                                    <option value="">{% trans "Selecciona destinatario" %}</option>
+                                                {% endif %}
+                                                {% for registration in registrations %}
+                                                    {% if registration.id != bank_transaction.suggested_registration.id %}
+                                                        <option value="registration:{{ registration.id }}">{{ registration.student.name }} · {{ registration.champ.name }} ({{ registration.payment_reference }})</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% for companion in companions %}
+                                                    <option value="companion:{{ companion.id }}">{{ companion.full_name }} · {{ companion.registration.student.name }} ({{ companion.registration.champ.name }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input type="number" name="amount" class="form-control input-sm" min="0.01" max="{{ bank_transaction.remaining_amount }}" step="0.01" value="{{ bank_transaction.remaining_amount }}" required>
+                                            <button class="btn btn-success btn-sm" type="submit">{% trans "Confirmar" %}</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="label label-success">{% trans "Conciliado" %}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">{% trans "Todavía no se han importado movimientos bancarios." %}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

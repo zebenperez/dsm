@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from studio.models import Student
 
 import datetime
@@ -113,10 +114,23 @@ class Registration(models.Model):
     paid_amount = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Importe pagado", default=0)
     position = models.CharField(max_length=100, verbose_name="Posición", blank=True, default="")
     payment_proof = models.FileField(upload_to='regs/payment-proofs/', blank=True, verbose_name="Justificante de pago")
+    payment_reference = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name="Referencia de transferencia")
 
     class Meta:
         verbose_name = 'Inscripción'
         verbose_name_plural = 'Inscripciones'
+
+    def save(self, *args, **kwargs):
+        needs_reference = not self.payment_reference
+        super().save(*args, **kwargs)
+        if needs_reference and self.pk:
+            self.payment_reference = '5DB-C%s-R%s' % (self.champ_id, self.pk)
+            super().save(update_fields=['payment_reference'])
+
+    def ensure_payment_reference(self):
+        if not self.payment_reference:
+            self.save()
+        return self.payment_reference
 
 
 class TravelCompanion(models.Model):
@@ -131,6 +145,44 @@ class TravelCompanion(models.Model):
     class Meta:
         verbose_name = 'Acompañante de viaje'
         verbose_name_plural = 'Acompañantes de viaje'
+
+
+class BankTransaction(models.Model):
+    """An incoming bank movement imported for reconciliation."""
+    external_id = models.CharField(max_length=255, unique=True, verbose_name='Identificador bancario')
+    booking_date = models.DateField(verbose_name='Fecha contable')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Importe')
+    payer = models.CharField(max_length=255, blank=True, default='', verbose_name='Ordenante')
+    reference = models.CharField(max_length=255, blank=True, default='', verbose_name='Concepto')
+    imported_at = models.DateTimeField(auto_now_add=True)
+    imported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='imported_bank_transactions')
+
+    class Meta:
+        verbose_name = 'Movimiento bancario'
+        verbose_name_plural = 'Movimientos bancarios'
+        ordering = ['-booking_date', '-id']
+
+    def __str__(self):
+        return '%s · %s € · %s' % (self.booking_date, self.amount, self.reference)
+
+
+class PaymentAllocation(models.Model):
+    """A confirmed portion of a bank movement assigned to a participant."""
+    transaction = models.ForeignKey(BankTransaction, on_delete=models.CASCADE, related_name='allocations')
+    registration = models.ForeignKey(Registration, on_delete=models.CASCADE, null=True, blank=True, related_name='bank_allocations')
+    companion = models.ForeignKey(TravelCompanion, on_delete=models.CASCADE, null=True, blank=True, related_name='bank_allocations')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Importe conciliado')
+    confirmed_at = models.DateTimeField(auto_now_add=True)
+    confirmed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='confirmed_payment_allocations')
+
+    class Meta:
+        verbose_name = 'Imputación de pago'
+        verbose_name_plural = 'Imputaciones de pago'
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if bool(self.registration_id) == bool(self.companion_id):
+            raise ValidationError('Selecciona una competidora o un acompañante, pero no ambos.')
 
 def upload_reg_file(instance, filename):
     ascii_filename = str(filename.encode('ascii', 'ignore'))

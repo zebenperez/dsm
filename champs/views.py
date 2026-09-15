@@ -1,4 +1,11 @@
-from django.shortcuts import render, redirect
+import csv
+import hashlib
+import re
+from io import TextIOWrapper
+
+from django.contrib import messages
+from django.db import transaction
+from django.shortcuts import get_object_or_404, render, redirect
 
 from datetime import date, datetime
 from collections import defaultdict
@@ -6,7 +13,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP, ROUND_UP
 
 from studio.decorators import group_required
 from studio.models import Student
-from .models import Category, ChampCategory, ChampCost, Championship, ChampFile, ChampioshipInfo, Cost, Registration, RegistrationFile, TravelCompanion
+from .models import BankTransaction, Category, ChampCategory, ChampCost, Championship, ChampFile, ChampioshipInfo, Cost, PaymentAllocation, Registration, RegistrationFile, TravelCompanion
 from .commons import show_exc, get_or_none, get_param
 
 
@@ -177,6 +184,157 @@ def get_champ_details_context(obj):
         'champ_paid_amount': champ_paid_amount,
         'champ_pending_amount': champ_pending_amount,
     }
+
+
+def parse_bank_amount(value):
+    value = (value or '').strip().replace('€', '').replace(' ', '')
+    if ',' in value and '.' in value:
+        value = value.replace('.', '').replace(',', '.')
+    else:
+        value = value.replace(',', '.')
+    return Decimal(value)
+
+
+def get_csv_value(row, *names):
+    normalized = {str(key).strip().lower(): value for key, value in row.items() if key}
+    for name in names:
+        if name in normalized:
+            return normalized[name]
+    return ''
+
+
+def suggested_registration(reference):
+    normalized_reference = (reference or '').lower()
+    if not normalized_reference:
+        return None
+    for registration in Registration.objects.exclude(payment_reference__isnull=True).exclude(payment_reference=''):
+        pattern = r'(?<![a-z0-9])%s(?![a-z0-9])' % re.escape(registration.payment_reference.lower())
+        if re.search(pattern, normalized_reference):
+            return registration
+    return None
+
+
+def parse_bank_date(value):
+    for date_format in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y'):
+        try:
+            return datetime.strptime(value.strip(), date_format).date()
+        except ValueError:
+            pass
+    raise ValueError('Fecha no válida: %s' % value)
+
+
+@group_required("admins", "reception")
+def bank_reconciliation(request):
+    transactions = list(BankTransaction.objects.prefetch_related('allocations').all())
+    registrations = list(Registration.objects.select_related('student', 'champ').order_by('-champ__date', 'student__name'))
+    companions = list(TravelCompanion.objects.select_related('registration__student', 'registration__champ').order_by('registration__student__name', 'full_name'))
+    for bank_transaction in transactions:
+        allocated = sum((allocation.amount for allocation in bank_transaction.allocations.all()), Decimal('0.00'))
+        bank_transaction.remaining_amount = bank_transaction.amount - allocated
+        bank_transaction.suggested_registration = suggested_registration(bank_transaction.reference)
+    return render(request, 'champs/bank-reconciliation.html', {
+        'transactions': transactions,
+        'registrations': registrations,
+        'companions': companions,
+    })
+
+
+@group_required("admins", "reception")
+def import_bank_transactions(request):
+    if request.method != 'POST' or not request.FILES.get('bank_file'):
+        messages.error(request, 'Selecciona un archivo CSV para importar.')
+        return redirect('bank-reconciliation')
+
+    try:
+        csv_file = TextIOWrapper(request.FILES['bank_file'].file, encoding='utf-8-sig')
+        sample = csv_file.read(4096)
+        csv_file.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=',;\t|')
+        except csv.Error:
+            dialect = csv.excel
+        rows = csv.DictReader(csv_file, dialect=dialect)
+        imported = 0
+        duplicated = 0
+        ignored = 0
+        for row in rows:
+            booking_date = get_csv_value(row, 'date', 'fecha', 'booking_date', 'fecha contable')
+            amount_value = get_csv_value(row, 'amount', 'importe', 'cantidad')
+            reference = get_csv_value(row, 'reference', 'concepto', 'description', 'descripción')
+            payer = get_csv_value(row, 'payer', 'ordenante', 'sender', 'remitente')
+            external_id = get_csv_value(row, 'id', 'external_id', 'identificador', 'transaction_id')
+            if not booking_date or not amount_value:
+                ignored += 1
+                continue
+            amount = parse_bank_amount(amount_value)
+            if amount <= 0:
+                ignored += 1
+                continue
+            parsed_date = parse_bank_date(booking_date)
+            if not external_id:
+                identity = '|'.join([booking_date, str(amount), reference, payer])
+                external_id = hashlib.sha256(identity.encode('utf-8')).hexdigest()
+            _, created = BankTransaction.objects.get_or_create(
+                external_id=external_id.strip(),
+                defaults={
+                    'booking_date': parsed_date,
+                    'amount': amount,
+                    'reference': reference.strip(),
+                    'payer': payer.strip(),
+                    'imported_by': request.user,
+                },
+            )
+            if created:
+                imported += 1
+            else:
+                duplicated += 1
+        messages.success(request, '%s movimientos importados, %s duplicados omitidos y %s filas ignoradas.' % (imported, duplicated, ignored))
+    except (UnicodeDecodeError, ValueError, csv.Error) as error:
+        messages.error(request, 'No se ha podido leer el CSV: %s' % error)
+    return redirect('bank-reconciliation')
+
+
+@group_required("admins", "reception")
+def confirm_bank_allocation(request, transaction_id):
+    if request.method != 'POST':
+        return redirect('bank-reconciliation')
+    bank_transaction = get_object_or_404(BankTransaction.objects.prefetch_related('allocations'), pk=transaction_id)
+    target = request.POST.get('target', '')
+    try:
+        amount = parse_bank_amount(request.POST.get('amount'))
+        target_type, target_id = target.split(':', 1)
+        registration = None
+        companion = None
+        if target_type == 'registration':
+            registration = get_object_or_404(Registration, pk=target_id)
+        elif target_type == 'companion':
+            companion = get_object_or_404(TravelCompanion, pk=target_id)
+        else:
+            raise ValueError
+        with transaction.atomic():
+            allocated = sum((allocation.amount for allocation in bank_transaction.allocations.select_for_update()), Decimal('0.00'))
+            remaining = bank_transaction.amount - allocated
+            if amount <= 0 or amount > remaining:
+                raise ValueError('El importe debe ser mayor que cero y no superar el importe pendiente del movimiento.')
+            allocation = PaymentAllocation(
+                transaction=bank_transaction,
+                registration=registration,
+                companion=companion,
+                amount=amount,
+                confirmed_by=request.user,
+            )
+            allocation.full_clean()
+            allocation.save()
+            if registration:
+                registration.paid_amount += amount
+                registration.save(update_fields=['paid_amount'])
+            else:
+                companion.paid_amount += amount
+                companion.save(update_fields=['paid_amount'])
+        messages.success(request, 'Movimiento conciliado por %s €.' % amount)
+    except (ValueError, InvalidOperation) as error:
+        messages.error(request, 'No se ha conciliado el movimiento: %s' % error)
+    return redirect('bank-reconciliation')
 
 
 '''
@@ -380,6 +538,7 @@ def add_champ_registration(request):
             reg = Registration.objects.filter(champ=champ, student=student).first()
             if not reg:
                 reg = Registration.objects.create(champ=champ, student=student)
+                reg.ensure_payment_reference()
             reg.categories.add(category)
 
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
