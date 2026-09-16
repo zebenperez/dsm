@@ -3,6 +3,7 @@
 
 {% block content %}
 	<div id="tpv">
+		{% if wallet_message %}<div class="alert alert-{{ wallet_message_level }}">{{ wallet_message }}</div>{% endif %}
 		<div class="row">
 			<div class="col-md-2 input-group" id="current_date_container" >
 				<span class="glyphicon glyphicon-calendar icon_graybox input-group-addon"></span> <input type="text" name="current_date" id="current_date" class="form-control" value="{{ current_date|date:"d-m-Y" }}"/>

@@ -31,6 +31,7 @@
 							<div class="col-md-1"> <input type='text' name='amount' value='{{ e.price }}' class="form-control" size="4"/> </div>
 							<div class="col-md-2">
 								<button style="display:inline;" type="submit" class="btn btn-success"><span class="glyphicon glyphicon-euro"></span></button>
+								<button style="display:inline;" type="submit" formaction="{% url 'pay_with_wallet' %}" class="btn btn-warning" title="{% trans 'Cobrar desde el monedero' %} · {% trans 'Saldo' %}: {{ e.student.wallet_balance }} €"><span class="glyphicon glyphicon-credit-card"></span></button>
 								<a class='options btn btn-primary' data-placement='top' title="Acciones"><span class="glyphicon glyphicon-plus"></span></a>
 								<div id="popover_content_wrapper" style="display: none">
 										<li class="list-group-item">

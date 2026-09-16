@@ -5,6 +5,7 @@ from studio.dsm_forms import *
 from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal, InvalidOperation
+from django.db import transaction
 from django.db.models import Q, Count, Min, Sum, Max, Avg
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -18,6 +19,7 @@ from django.utils.html import strip_tags
 from web.utils import *
 
 from operator import attrgetter
+from urllib.parse import urlencode
 
 import calendar
 from dateutil.relativedelta import relativedelta
@@ -117,6 +119,8 @@ def tpv(request, current_date = None, msg = None):
         'current_enrol': current_enrol,
         'msg': msg
     }
+    context['wallet_message'] = request.GET.get('wallet_message', '')
+    context['wallet_message_level'] = request.GET.get('wallet_message_level', 'info')
     return render(request, 'tpv/tpv.html', context)
 
 @login_required
@@ -148,6 +152,52 @@ def pay(request):
 		payment.save()
 	return redirect('/studio/tpv/?current_code='+str(e.student.code))
 	#return redirect('/studio/tpv/')
+
+
+@group_required("reception")
+def pay_with_wallet(request):
+	student_code = ''
+	message = ''
+	level = 'danger'
+	if request.method == 'POST':
+		try:
+			enrolment = get_object_or_404(Enrolment, pk=request.POST['enrolment_id'])
+			student_code = enrolment.student.code
+			amount = Decimal(request.POST['amount'].replace(',', '.'))
+			if amount <= 0:
+				raise ValidationError('El importe debe ser mayor que cero.')
+			pay_date = datetime.datetime.strptime(request.POST['pay_date'], '%d-%m-%Y')
+			expire_date = datetime.datetime.strptime(request.POST['expire_date'], '%d-%m-%Y')
+			with transaction.atomic():
+				WalletMovement.record(
+					enrolment.student,
+					-amount,
+					WalletMovement.TYPE_PURCHASE,
+					'Cuota: %s' % enrolment.group,
+					'',
+					request.user,
+				)
+				Payment.objects.create(
+					date=date.today(),
+					pay_date=pay_date,
+					expire_date=expire_date,
+					amount=amount,
+					student=enrolment.student,
+					enrolment=enrolment,
+				)
+			message = 'Cuota cobrada desde el monedero.'
+			level = 'success'
+		except InsufficientWalletBalance:
+			message = 'Saldo insuficiente en el monedero.'
+		except (KeyError, ValueError, InvalidOperation, ValidationError):
+			message = 'No se ha podido registrar el cobro. Revisa los datos de la cuota.'
+	else:
+		message = 'Solicitud de cobro no válida.'
+
+	query = {'wallet_message': message, 'wallet_message_level': level}
+	if student_code:
+		query['current_code'] = student_code
+	return redirect('/studio/tpv/?' + urlencode(query))
 
 @login_required
 def delete_payment(request, payment_id):

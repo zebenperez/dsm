@@ -8,6 +8,7 @@ urlpatterns = [
 	path('tpv/', views.tpv, name="tpv"),
 	path('search/', views.search, name="search"),
 	path('pay/', views.pay, name="pay"),
+	path('pay-with-wallet/', views.pay_with_wallet, name='pay_with_wallet'),
 	path('<int:payment_id>/delete_payment/', views.delete_payment, name="delete_payment"),
 	re_path('tpv/(?P<current_date>\d{2}-\d{2}-\d{4})/', views.tpv),
 	path ('pin/', views.set_pins, name='pins'),

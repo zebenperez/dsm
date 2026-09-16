@@ -482,6 +482,8 @@ body {
 
 .pwa-question-form {
 	margin-top: 20px;
+	/* Deja recorrido de scroll tras el botón, para que la navegación fija no lo tape. */
+	padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 .pwa-question {
