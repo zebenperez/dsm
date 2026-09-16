@@ -1,50 +1,49 @@
 {% load i18n static %}
 
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>{% block title %} {% trans "5db Dance School" %} {% endblock %}</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="es">
+    <head>
+        <title>{% trans "Acceso" %} · {% trans "5db Dance School" %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+        <meta name="theme-color" content="#f0a000">
+        <link rel="manifest" href="{% static 'manifest.json' %}">
+        <link rel="stylesheet" href="{% static "css/pwa.css" %}">
+    </head>
+    <body class="pwa-login-page">
+        <main class="pwa-login" aria-labelledby="login-title">
+            <div class="pwa-login-glow pwa-login-glow-one" aria-hidden="true"></div>
+            <div class="pwa-login-glow pwa-login-glow-two" aria-hidden="true"></div>
 
-		<link rel="manifest" href="{% static 'manifest.json' %}">
+            <section class="pwa-login-card">
+                <div class="pwa-login-brand">
+                    <img src="{% static "images/logo_5db_transparent.png" %}" alt="{% trans '5db Escuela de Baile' %}">
+                </div>
 
-		<link rel="stylesheet" href="{% static "css/pwa.css" %}" />
-		<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+                <header class="pwa-login-intro">
+                    <p>{% trans "Área de alumnas/os" %}</p>
+                    <h1 id="login-title">{% trans "Hola, bienvenida/o" %}</h1>
+                    <span>{% trans "Introduce tu PIN para acceder a tu espacio." %}</span>
+                </header>
 
-		<!-- Bootstrap -->
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" media="screen"/>
-		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+                <form method="post" action="{% url "pwa-set-pin" %}" class="pwa-login-form">
+                    {% csrf_token %}
+                    <label for="pin">{% trans "Tu PIN" %}</label>
+                    <div class="pwa-pin-field">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Zm7 13H7v-9h10v9Z"></path></svg>
+                        <input type="password" id="pin" name="pin" maxlength="4" autocapitalize="characters" autocomplete="one-time-code" autofocus required>
+                    </div>
+                    {% if err %}<p class="pwa-login-error" role="alert">{{ err }}</p>{% endif %}
+                    <button class="pwa-login-submit" type="submit">{% trans "Entrar" %}<span aria-hidden="true">→</span></button>
+                </form>
 
-		<!-- JQuery -->
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script> 
+                <p class="pwa-login-help">{% trans "¿Necesitas ayuda? Habla con recepción." %}</p>
+            </section>
+        </main>
 
-		{% block head_tag %} {% endblock %}
-	</head>
-	<body>
-
-		 <div class="row justify-content-md-center">
-			<div class="col-md-6 col-sm-12">
-				<div class="card text-center">
-					<div class="text-center">
-						<img src="{% static "images/logo_5db.png" %}" class="card-img-top" alt="logo" style="width:50%">
-					</div>
-					<div class="card-header border-warning bg-warning">
-						<h5 class="card-title">PIN</h5>
-					</div>
-					<div class="card-body">
-						<form method="POST" action="{% url "pwa-set-pin" %}">
-							{%csrf_token%}
-							<input type="password" class="form-control" id="pin" name="pin" placeholder="">
-							<br/>
-							{%if err and err != ""%}<div class="alert alert-danger">{{err}}</div>{%endif%}
-							<br/>
-							<button class="btn btn-primary w-100 py-2" type="submit">Acceder</button>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
-
-
-	</body>
+        <script>
+            document.getElementById('pin').addEventListener('input', function () {
+                this.value = this.value.toUpperCase();
+            });
+        </script>
+    </body>
 </html>
