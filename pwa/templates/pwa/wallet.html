@@ -1,0 +1,28 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <a class="pwa-back-link" href="{% url 'pwa-index' %}"><i class="fas fa-arrow-left" aria-hidden="true"></i>{% trans "Inicio" %}</a>
+    <section class="pwa-screen-header pwa-wallet-header"><p>{% trans "Mi pulsera" %}</p><h1>{% trans "Mi monedero" %}</h1></section>
+
+    <section class="pwa-wallet-balance" aria-label="{% trans 'Saldo disponible' %}">
+        <span>{% trans "Saldo disponible" %}</span>
+        <strong>{{ wallet_balance }} €</strong>
+        <small>{% trans "Utiliza tu pulsera para pagar en la escuela." %}</small>
+    </section>
+
+    <p class="pwa-section-label">{% trans "Movimientos" %}</p>
+    {% if movement_list %}
+        <div class="pwa-wallet-movements">
+            {% for movement in movement_list %}
+                <article class="pwa-wallet-movement">
+                    <span class="pwa-wallet-movement-icon {% if movement.amount > 0 %}is-credit{% else %}is-debit{% endif %}"><i class="fas {% if movement.amount > 0 %}fa-plus{% else %}fa-shopping-bag{% endif %}" aria-hidden="true"></i></span>
+                    <span class="pwa-wallet-movement-info"><strong>{{ movement.description|default:movement.get_movement_type_display }}</strong><small>{{ movement.created_at|date:"d M Y, H:i" }} · {{ movement.get_movement_type_display }}</small></span>
+                    <strong class="pwa-wallet-movement-amount {% if movement.amount > 0 %}is-credit{% else %}is-debit{% endif %}">{% if movement.amount > 0 %}+{% endif %}{{ movement.amount }} €</strong>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="pwa-empty-state"><i class="fas fa-wallet" aria-hidden="true"></i><p>{% trans "Todavía no hay movimientos en tu monedero." %}</p></div>
+    {% endif %}
+{% endblock %}

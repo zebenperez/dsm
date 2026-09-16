@@ -132,8 +132,8 @@ collect_static**
 logs**
 settings_local.py
 migrations
-!studio/migrations/
-!studio/migrations/0012_wallet_movement.py
+studio/migrations/
+studio/migrations/0012_wallet_movement.py
 events/migrations/
 events/migrations/*.py
 registration_forms/migrations/
