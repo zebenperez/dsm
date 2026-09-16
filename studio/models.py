@@ -290,9 +290,6 @@ class WalletMovement(models.Model):
 		verbose_name = 'movimiento de monedero'
 		verbose_name_plural = 'movimientos de monedero'
 		ordering = ('-created_at', '-id')
-		constraints = [
-			models.CheckConstraint(condition=~models.Q(amount=0), name='wallet_movement_amount_not_zero'),
-		]
 
 	def __str__(self):
 		return '%s · %s €' % (self.student, self.amount)
