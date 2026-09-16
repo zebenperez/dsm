@@ -10,6 +10,7 @@
             <ul>
                 <li {% if "tpv"|contains:request.path %}class="active"{% endif %}><a href="{% url 'tpv' %}"><i class="glyphicon glyphicon-shopping-cart"></i> TPV</a></li>
                 <li {% if "wristbands"|contains:request.path %}class="active"{% endif %}><a href="{% url 'wristbands' %}"><i class="glyphicon glyphicon-tag"></i> {% trans "Pulseras" %}</a></li>
+                <li {% if "wallet"|contains:request.path %}class="active"{% endif %}><a href="{% url 'wallet' %}"><i class="glyphicon glyphicon-credit-card"></i> {% trans "Monedero" %}</a></li>
                 <li {% if "cash"|contains:request.path %}class="active"{% endif %}><a href="{% url 'cash' %}"><i class="glyphicon glyphicon-euro"></i> {% trans "Caja" %}</a></li>
             </ul>
             <p class="studio-nav-heading">{% trans "Seguimiento" %}</p>

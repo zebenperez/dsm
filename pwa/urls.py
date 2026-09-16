@@ -12,6 +12,7 @@ urlpatterns = [
 	path('payments', views.payments, name="pwa-payments"),
 	path('assistances', views.assistances, name="pwa-assistances"),
 	path('activity', views.activity, name="pwa-activity"),
+	path('wallet', views.wallet, name="pwa-wallet"),
 	path('forms', views.forms, name="pwa-forms"),
 	path('forms/<int:form_id>', views.form_detail, name="pwa-form-detail"),
 	path('licence', views.licence, name="pwa-licence"),

@@ -191,6 +191,18 @@ class ArticlePaymentAdmin(admin.ModelAdmin):
 		}),
 	)
 
+class WalletMovementAdmin(admin.ModelAdmin):
+	list_display = ('student', 'amount', 'movement_type', 'payment_method', 'description', 'created_at', 'created_by')
+	list_filter = ('movement_type', 'payment_method', 'created_at')
+	search_fields = ('student__name', 'student__code', 'student__band', 'description')
+	readonly_fields = ('student', 'amount', 'movement_type', 'payment_method', 'description', 'created_at', 'created_by')
+
+	def has_add_permission(self, request):
+		return False
+
+	def has_delete_permission(self, request, obj=None):
+		return False
+
 class CashAdmin(admin.ModelAdmin):
 	fieldsets = (
 		(None, { 
@@ -203,6 +215,7 @@ class NotificationAdmin (admin.ModelAdmin):
 
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(ArticlePayment, ArticlePaymentAdmin)
+admin.site.register(WalletMovement, WalletMovementAdmin)
 admin.site.register(Assistance)
 admin.site.register(Cash, CashAdmin)
 admin.site.register(Concept, ConceptAdmin)

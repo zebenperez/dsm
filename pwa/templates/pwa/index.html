@@ -3,6 +3,11 @@
 
 {% block content %}
     <section class="pwa-screen-header"><p>{% trans "Novedades" %}</p><h1>{% trans "Hola" %}, {{ student.get_name }}</h1></section>
+    <a class="pwa-wallet-card" href="{% url 'pwa-wallet' %}">
+        <span class="pwa-wallet-icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+        <span><small>{% trans "Saldo de mi pulsera/llavero" %}</small><strong>{{ wallet_balance }} €</strong></span>
+        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+    </a>
     <section class="pwa-home-section">
         <div class="pwa-section-heading"><h2>{% trans "Formularios publicados" %}</h2><a href="{% url 'pwa-forms' %}">{% trans "Ver todos" %}</a></div>
         {% if published_forms %}<div class="pwa-news-list">{% for form in published_forms %}<a class="pwa-news-card" href="{% url 'pwa-form-detail' form.id %}">{% if form.image %}<img src="{{ form.image.url }}" alt="">{% else %}<span class="pwa-news-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>{% endif %}<span><strong>{{ form.title }}</strong><small>{{ form.description|default:"Formulario disponible"|truncatechars:75 }}</small>{% if form.id in submitted_form_ids %}<em class="pwa-news-status"><i class="fas fa-check" aria-hidden="true"></i> {% trans "Respondido" %}{% if form.is_open and form.allow_response_changes %} · {% trans "Puedes modificarlo" %}{% endif %}</em>{% endif %}</span><i class="fas fa-chevron-right" aria-hidden="true"></i></a>{% endfor %}</div>{% else %}<p class="pwa-section-empty">{% trans "No hay formularios publicados ahora mismo." %}</p>{% endif %}

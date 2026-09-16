@@ -68,4 +68,5 @@ urlpatterns = [
 
 	##PULSERAS
 	path ('wristbands/', views.wristbands, name='wristbands'),
+	path('wallet/', views.wallet, name='wallet'),
 ]

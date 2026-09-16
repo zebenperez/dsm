@@ -154,6 +154,45 @@ body {
 	font-weight: 700;
 }
 
+.pwa-wallet-card {
+	display: flex;
+	align-items: center;
+	gap: 13px;
+	margin: 0 0 20px;
+	padding: 15px;
+	border-radius: 15px;
+	background: linear-gradient(135deg, #f5b51f, #dc9000);
+	box-shadow: 0 7px 16px rgba(205, 130, 0, .2);
+	color: #fff;
+	text-decoration: none;
+}
+
+.pwa-wallet-card:hover,
+.pwa-wallet-card:focus { color: #fff; text-decoration: none; }
+.pwa-wallet-card > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; }
+.pwa-wallet-card small { font-size: 12px; font-weight: 600; opacity: .88; }
+.pwa-wallet-card strong { font-size: 24px; line-height: 1.2; }
+.pwa-wallet-icon,
+.pwa-wallet-movement-icon { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+.pwa-wallet-icon { width: 46px; height: 46px; background: rgba(255, 255, 255, .22); font-size: 21px; }
+
+.pwa-wallet-header { padding-bottom: 10px; }
+.pwa-wallet-balance { margin: 0 0 24px; padding: 24px 20px; border-radius: 18px; background: linear-gradient(145deg, #283645, #40566b); box-shadow: 0 8px 18px rgba(31, 45, 57, .16); color: #fff; }
+.pwa-wallet-balance span,
+.pwa-wallet-balance small { display: block; color: rgba(255, 255, 255, .73); font-size: 13px; font-weight: 600; }
+.pwa-wallet-balance strong { display: block; margin: 4px 0 7px; font-size: 34px; letter-spacing: -.03em; }
+.pwa-wallet-movements { margin: 0 -12px; border-top: 1px solid #e5e8eb; }
+.pwa-wallet-movement { display: flex; align-items: center; gap: 12px; min-height: 74px; padding: 12px; border-bottom: 1px solid #e5e8eb; background: #fff; }
+.pwa-wallet-movement-icon { flex: 0 0 40px; width: 40px; height: 40px; font-size: 15px; }
+.pwa-wallet-movement-icon.is-credit { background: #e0f4e9; color: #24965d; }
+.pwa-wallet-movement-icon.is-debit { background: #fff0e3; color: #d97e00; }
+.pwa-wallet-movement-info { display: flex; flex: 1; min-width: 0; flex-direction: column; }
+.pwa-wallet-movement-info strong { overflow: hidden; color: #344454; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.pwa-wallet-movement-info small { margin-top: 3px; color: #89929b; font-size: 11px; }
+.pwa-wallet-movement-amount { font-size: 14px; white-space: nowrap; }
+.pwa-wallet-movement-amount.is-credit { color: #24965d; }
+.pwa-wallet-movement-amount.is-debit { color: #c96e00; }
+
 .pwa-mobile-list {
 	margin: 0 -12px;
 	border-top: 1px solid #e5e8eb;

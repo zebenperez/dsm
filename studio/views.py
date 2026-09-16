@@ -4,10 +4,11 @@ from studio.models import *
 from studio.dsm_forms import *
 from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.db.models import Q, Count, Min, Sum, Max, Avg
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.middleware import csrf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, reverse
@@ -333,29 +334,37 @@ def article_pay(request):
 '''
 def calculate_amount(current_date, positive):
 	date_min = datetime.datetime.combine(current_date, datetime.time.min)
+	date_max = date_min + datetime.timedelta(days=1)
 	if positive:
 		pays = Payment.objects.filter(date = current_date).filter(amount__gte = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
 		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
 		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
+		wallet_pays=WalletMovement.objects.filter(created_at__gte=date_min, created_at__lt=date_max, movement_type=WalletMovement.TYPE_TOP_UP, payment_method=WalletMovement.METHOD_CASH).aggregate(Sum('amount'))['amount__sum']
 	else:
 		pays = Payment.objects.filter(date = current_date).filter(amount__lt = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
 		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
 		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
+		wallet_pays = 0
 
 	pay_amounts = pays if pays != None else 0
 	teacher_pay_amounts = teacher_pays if teacher_pays != None else 0
 	article_pay_amounts = article_pays if article_pays != None else 0
+	wallet_pay_amounts = wallet_pays if wallet_pays != None else 0
 
-	return (pay_amounts + teacher_pay_amounts + article_pay_amounts)
+	return (pay_amounts + teacher_pay_amounts + article_pay_amounts + wallet_pay_amounts)
 
 def calculate_card(current_date):
+	date_min = datetime.datetime.combine(current_date, datetime.time.min)
+	date_max = date_min + datetime.timedelta(days=1)
 	pays = Payment.objects.filter(date = current_date).filter(card = True).aggregate(Sum('amount'))['amount__sum']
 	article_pays = ArticlePayment.objects.filter(date = current_date).filter(card = True).aggregate(Sum('amount'))['amount__sum']
+	wallet_pays = WalletMovement.objects.filter(created_at__gte=date_min, created_at__lt=date_max, movement_type=WalletMovement.TYPE_TOP_UP, payment_method=WalletMovement.METHOD_CARD).aggregate(Sum('amount'))['amount__sum']
 
 	pay_amounts = pays if pays != None else 0
 	article_pay_amounts = article_pays if article_pays != None else 0
+	wallet_pay_amounts = wallet_pays if wallet_pays != None else 0
 
-	return (pay_amounts + article_pay_amounts)
+	return (pay_amounts + article_pay_amounts + wallet_pay_amounts)
 
 @login_required
 def cash(request, current_date = None, msg = None):
@@ -815,4 +824,78 @@ def wristbands(request):
 				assistance.enrolments.add(item)
 				assistance_list.append(assistance)
 	return render(request, 'wristbands/wristbands.html', {"student": student, "assistance_list": assistance_list})
+
+
+@group_required("reception")
+def wallet(request):
+	"""Reception wallet: look up an NFC band, then top up or charge it."""
+	student = None
+	band = ''
+	feedback = None
+	feedback_level = 'info'
+
+	if request.method == 'POST':
+		band = request.POST.get('band', '').strip()
+		action = request.POST.get('action', 'lookup')
+		if not band:
+			feedback = 'Lee una pulsera para continuar.'
+			feedback_level = 'warning'
+		else:
+			student = Student.objects.filter(band=band).first()
+			if not student:
+				feedback = 'No hay ninguna alumna/o asociada a esta pulsera.'
+				feedback_level = 'danger'
+			elif action in ('top_up', 'charge'):
+				try:
+					amount = Decimal(request.POST.get('amount', '0').replace(',', '.'))
+				except (InvalidOperation, TypeError):
+					amount = Decimal('0.00')
+
+				if not amount.is_finite() or amount <= 0:
+					feedback = 'Indica un importe mayor que cero.'
+					feedback_level = 'warning'
+				else:
+					description = request.POST.get('description', '').strip()
+					if action == 'top_up':
+						payment_method = request.POST.get('payment_method', WalletMovement.METHOD_CASH)
+						valid_methods = {method[0] for method in WalletMovement.METHOD_CHOICES}
+						if payment_method not in valid_methods:
+							payment_method = WalletMovement.METHOD_CASH
+						try:
+							WalletMovement.record(
+								student, amount, WalletMovement.TYPE_TOP_UP,
+								description or 'Recarga de saldo', payment_method, request.user,
+							)
+							feedback = 'Recarga registrada correctamente.'
+							feedback_level = 'success'
+						except ValidationError:
+							feedback = 'El importe no es válido.'
+							feedback_level = 'warning'
+					else:
+						try:
+							WalletMovement.record(
+								student, -amount, WalletMovement.TYPE_PURCHASE,
+								description or 'Pago con pulsera', '', request.user,
+							)
+							feedback = 'Pago registrado correctamente.'
+							feedback_level = 'success'
+						except InsufficientWalletBalance:
+							feedback = 'Saldo insuficiente para realizar este pago.'
+							feedback_level = 'danger'
+						except ValidationError:
+							feedback = 'El importe no es válido.'
+							feedback_level = 'warning'
+
+	if student:
+		movement_list = student.wallet_movements.select_related('created_by').all()[:10]
+	else:
+		movement_list = []
+	return render(request, 'wallet/wallet.html', {
+		'student': student,
+		'band': band,
+		'movement_list': movement_list,
+		'feedback': feedback,
+		'feedback_level': feedback_level,
+		'payment_methods': WalletMovement.METHOD_CHOICES,
+	})
  

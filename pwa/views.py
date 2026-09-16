@@ -43,6 +43,7 @@ def index(request):
 	)
 	return render(request, 'pwa/index.html', {
 		"student": student,
+		"wallet_balance": student.wallet_balance,
 		"published_forms": Form.objects.filter(is_published=True).for_student(student).order_by('-created_at')[:3],
 		"submitted_form_ids": submitted_form_ids,
 		"upcoming_registrations": Registration.objects.filter(
@@ -81,6 +82,17 @@ def activity(request):
 			enrolments__in=enrolment_list,
 			date__year=timezone.now().year,
 		).order_by('-date'),
+	})
+
+
+def wallet(request):
+	if not check_pin(request):
+		return redirect(login)
+	student = Student.objects.filter(pin=request.session["pin"]).first()
+	return render(request, 'pwa/wallet.html', {
+		'student': student,
+		'wallet_balance': student.wallet_balance,
+		'movement_list': student.wallet_movements.select_related('created_by').all(),
 	})
 
 

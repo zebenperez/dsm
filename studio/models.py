@@ -1,6 +1,9 @@
 # -*- encoding: utf-8 -*-
 
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Sum
+from django.core.exceptions import ValidationError
+from decimal import Decimal
 from datetime import datetime
 from django.contrib.auth.models import User
 from django.forms import ModelForm
@@ -74,6 +77,10 @@ class Student(models.Model):
 		payment = self.last_payment() 
 		today = datetime.datetime.today()
 		return (payment.expire_date.month < today.month and payment.expire_date < today)
+
+	@property
+	def wallet_balance(self):
+		return self.wallet_movements.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
 	class Meta:
 		verbose_name = "Alumno"
@@ -244,6 +251,80 @@ class ArticlePayment(models.Model):
 	class Meta:
 		verbose_name = "Pago de artículos"
 		verbose_name_plural = "Pagos de artículos"
+
+
+class InsufficientWalletBalance(Exception):
+	pass
+
+
+class WalletMovement(models.Model):
+	TYPE_TOP_UP = 'top_up'
+	TYPE_PURCHASE = 'purchase'
+	TYPE_REFUND = 'refund'
+	TYPE_ADJUSTMENT = 'adjustment'
+	TYPE_CHOICES = (
+		(TYPE_TOP_UP, 'Recarga'),
+		(TYPE_PURCHASE, 'Pago'),
+		(TYPE_REFUND, 'Devolución'),
+		(TYPE_ADJUSTMENT, 'Ajuste'),
+	)
+
+	METHOD_CASH = 'cash'
+	METHOD_CARD = 'card'
+	METHOD_TRANSFER = 'transfer'
+	METHOD_CHOICES = (
+		(METHOD_CASH, 'Efectivo'),
+		(METHOD_CARD, 'Tarjeta'),
+		(METHOD_TRANSFER, 'Transferencia'),
+	)
+
+	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='wallet_movements', verbose_name='Alumna/o')
+	amount = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Importe')
+	movement_type = models.CharField(max_length=12, choices=TYPE_CHOICES, verbose_name='Tipo')
+	payment_method = models.CharField(max_length=12, choices=METHOD_CHOICES, blank=True, verbose_name='Método de recarga')
+	description = models.CharField(max_length=200, blank=True, verbose_name='Concepto')
+	created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha')
+	created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='wallet_movements', verbose_name='Registrado por')
+
+	class Meta:
+		verbose_name = 'movimiento de monedero'
+		verbose_name_plural = 'movimientos de monedero'
+		ordering = ('-created_at', '-id')
+		constraints = [
+			models.CheckConstraint(condition=~models.Q(amount=0), name='wallet_movement_amount_not_zero'),
+		]
+
+	def __str__(self):
+		return '%s · %s €' % (self.student, self.amount)
+
+	def clean(self):
+		if self.amount == 0:
+			raise ValidationError({'amount': 'El importe debe ser distinto de cero.'})
+		if self.movement_type in (self.TYPE_TOP_UP, self.TYPE_REFUND) and self.amount < 0:
+			raise ValidationError({'amount': 'Las recargas y devoluciones deben ser positivas.'})
+		if self.movement_type == self.TYPE_PURCHASE and self.amount > 0:
+			raise ValidationError({'amount': 'Los pagos deben restar saldo.'})
+
+	@classmethod
+	def record(cls, student, amount, movement_type, description='', payment_method='', created_by=None):
+		"""Create an immutable wallet entry, never allowing a negative balance."""
+		amount = Decimal(amount)
+		with transaction.atomic():
+			locked_student = Student.objects.select_for_update().get(pk=student.pk)
+			balance = cls.objects.filter(student=locked_student).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+			if balance + amount < 0:
+				raise InsufficientWalletBalance
+			movement = cls(
+				student=locked_student,
+				amount=amount,
+				movement_type=movement_type,
+				description=description,
+				payment_method=payment_method,
+				created_by=created_by,
+			)
+			movement.full_clean()
+			movement.save()
+			return movement
 	
 class Cash(models.Model):
 	i_card = models.IntegerField(verbose_name="Tarjeta apertura", blank=True, null=True, default=0)
@@ -312,4 +393,3 @@ class Notification(models.Model):
 
 	def __str__(self):
 		return "%s" % (self.msg)
-
