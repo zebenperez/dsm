@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_UP
 
 from studio.models import Student, Payment, Assistance, Enrolment
-from champs.models import ChampCost, Registration, TravelCompanion
+from champs.models import ChampCost, Championship, Registration, TravelCompanion
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 
 
@@ -43,10 +43,11 @@ def index(request):
 	)
 	return render(request, 'pwa/index.html', {
 		"student": student,
-		"published_forms": Form.objects.filter(is_published=True).order_by('-created_at')[:3],
+		"published_forms": Form.objects.filter(is_published=True).for_student(student).order_by('-created_at')[:3],
 		"submitted_form_ids": submitted_form_ids,
 		"upcoming_registrations": Registration.objects.filter(
 			student=student,
+			champ__in=Championship.objects.for_student(student),
 			champ__publish=True,
 			champ__date__gte=timezone.now().date(),
 		).select_related('champ').order_by('champ__date')[:3],
@@ -89,7 +90,7 @@ def forms(request):
 	student = Student.objects.filter(pin=request.session["pin"]).first()
 	return render(request, 'pwa/forms.html', {
 		'student': student,
-		'form_list': Form.objects.filter(is_published=True).order_by('-created_at'),
+		'form_list': Form.objects.filter(is_published=True).for_student(student).order_by('-created_at'),
 		'submitted_form_ids': set(FormSubmission.objects.filter(student=student).values_list('form_id', flat=True)),
 	})
 
@@ -98,7 +99,7 @@ def form_detail(request, form_id):
 	if not check_pin(request):
 		return redirect(login)
 	student = Student.objects.filter(pin=request.session["pin"]).first()
-	form = get_object_or_404(Form.objects.filter(is_published=True), pk=form_id)
+	form = get_object_or_404(Form.objects.filter(is_published=True).for_student(student), pk=form_id)
 	questions = list(form.questions.all())
 	submission = FormSubmission.objects.filter(form=form, student=student).prefetch_related('answers__question').first()
 	can_edit = form.is_open and (not submission or form.allow_response_changes)
@@ -247,7 +248,10 @@ def championships(request):
 	if not check_pin(request):
 		return redirect(login)
 	student = Student.objects.filter(pin=request.session["pin"]).first()
-	registration_list = Registration.objects.filter(student=student).select_related('champ').order_by('-champ__date')
+	registration_list = Registration.objects.filter(
+		student=student,
+		champ__in=Championship.objects.for_student(student),
+	).select_related('champ').order_by('-champ__date')
 	return render(request, 'pwa/championships.html', {
 		'student': student,
 		'registration_list': registration_list,
@@ -262,6 +266,7 @@ def championship_detail(request, registration_id):
 		Registration.objects.select_related('champ').prefetch_related('categories', 'travel_companions'),
 		pk=registration_id,
 		student=student,
+		champ__in=Championship.objects.for_student(student),
 	)
 	return render(request, 'pwa/championship-detail.html', {
 		'student': student,
@@ -274,7 +279,12 @@ def upload_championship_payment_proof(request, registration_id):
 	if not check_pin(request):
 		return redirect(login)
 	student = Student.objects.filter(pin=request.session["pin"]).first()
-	registration = get_object_or_404(Registration, pk=registration_id, student=student)
+	registration = get_object_or_404(
+		Registration,
+		pk=registration_id,
+		student=student,
+		champ__in=Championship.objects.for_student(student),
+	)
 	if request.method == 'POST' and request.FILES.get('payment_proof'):
 		registration.payment_proof = request.FILES['payment_proof']
 		registration.save(update_fields=['payment_proof'])
@@ -285,7 +295,12 @@ def add_championship_companion(request, registration_id):
 	if not check_pin(request):
 		return redirect(login)
 	student = Student.objects.filter(pin=request.session["pin"]).first()
-	registration = get_object_or_404(Registration, pk=registration_id, student=student)
+	registration = get_object_or_404(
+		Registration,
+		pk=registration_id,
+		student=student,
+		champ__in=Championship.objects.for_student(student),
+	)
 	if request.method == 'POST':
 		full_name = request.POST.get('full_name', '').strip()
 		birth_date = request.POST.get('birth_date', '')
@@ -312,7 +327,12 @@ def delete_championship_companion(request, registration_id, companion_id):
 	if not check_pin(request):
 		return redirect(login)
 	student = Student.objects.filter(pin=request.session["pin"]).first()
-	registration = get_object_or_404(Registration, pk=registration_id, student=student)
+	registration = get_object_or_404(
+		Registration,
+		pk=registration_id,
+		student=student,
+		champ__in=Championship.objects.for_student(student),
+	)
 	if request.method == 'POST':
 		TravelCompanion.objects.filter(pk=companion_id, registration=registration).delete()
 	return redirect('%s#companions' % reverse('pwa-championship-detail', args=[registration.id]))

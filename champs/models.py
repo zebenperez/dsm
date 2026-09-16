@@ -1,6 +1,7 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
-from studio.models import Student
+from studio.models import Group, Student
 
 import datetime
 
@@ -25,11 +26,30 @@ class Category(models.Model):
         verbose_name = 'Categoría'
         verbose_name_plural = 'Categorías'
 
+class ChampionshipQuerySet(models.QuerySet):
+    def for_student(self, student):
+        """Return championships available to a student's active groups."""
+        return self.filter(
+            Q(target_groups__isnull=True) |
+            Q(target_groups__enrolment__student=student,
+              target_groups__enrolment__active=True)
+        ).distinct()
+
+
 class Championship(models.Model):
     publish = models.BooleanField(verbose_name='Publicado', default=False)
     date = models.DateField('Fecha', default=datetime.datetime.today)
     name = models.CharField(max_length=200, verbose_name="Nombre", default="")
     location = models.CharField(max_length=900, verbose_name="Localización", default="")
+    target_groups = models.ManyToManyField(
+        Group,
+        verbose_name='Grupos destinatarios',
+        related_name='championships',
+        blank=True,
+        help_text='Déjalo vacío para que puedan verlo todas las alumnas.',
+    )
+
+    objects = ChampionshipQuerySet.as_manager()
 
     def __str__(self):
         return self.name

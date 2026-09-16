@@ -34,6 +34,10 @@ urlpatterns = [
     path('save-champ-cost/', views.save_champ_cost, name="save-champ-cost"),
     path('champs-cost-delete-form/', views.champ_cost_delete_form, name="champs-cost-delete-form"),
     path('delete-champ-cost/', views.delete_champ_cost, name="delete-champ-cost"),
+    path('champs-group-form/', views.champ_group_form, name="champs-group-form"),
+    path('add-champ-group/', views.add_champ_group, name="add-champ-group"),
+    path('champs-group-delete-form/', views.champ_group_delete_form, name="champs-group-delete-form"),
+    path('delete-champ-group/', views.delete_champ_group, name="delete-champ-group"),
 
     path('save_reg/', views.save_reg, name="save_reg"),
     path('remove_reg/<int:reg_id>/', views.remove_reg, name="remove_reg"),

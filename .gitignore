@@ -136,7 +136,10 @@ events/migrations/
 events/migrations/*.py
 registration_forms/migrations/
 registration_forms/migrations/*.py
+registration_forms/migrations/
+registration_forms/migrations/0003_form_target_groups.py
 champs/migrations/
 champs/migrations/*.py
-!champs/migrations/
-!champs/migrations/0015_bank_reconciliation.py
+champs/migrations/
+champs/migrations/0015_bank_reconciliation.py
+champs/migrations/0016_championship_target_groups.py

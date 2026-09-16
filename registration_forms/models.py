@@ -1,8 +1,23 @@
 from django.db import models
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from studio.models import Student
+from studio.models import Group, Student
+
+
+class FormQuerySet(models.QuerySet):
+    def for_student(self, student):
+        """Return forms that are available to a student's active groups.
+
+        A form without recipient groups is available to every student, which
+        preserves the behaviour of forms created before group targeting.
+        """
+        return self.filter(
+            Q(target_groups__isnull=True) |
+            Q(target_groups__enrolment__student=student,
+              target_groups__enrolment__active=True)
+        ).distinct()
 
 
 class Form(models.Model):
@@ -12,7 +27,16 @@ class Form(models.Model):
     is_published = models.BooleanField('Publicado', default=False)
     deadline = models.DateTimeField('Fecha límite', blank=True, null=True)
     allow_response_changes = models.BooleanField('Permitir cambiar la respuesta', default=False)
+    target_groups = models.ManyToManyField(
+        Group,
+        verbose_name='Grupos destinatarios',
+        related_name='registration_forms',
+        blank=True,
+        help_text='Déjalo vacío para que puedan verlo todas las alumnas.',
+    )
     created_at = models.DateTimeField('Creado el', auto_now_add=True)
+
+    objects = FormQuerySet.as_manager()
 
     class Meta:
         ordering = ('-created_at', 'title')

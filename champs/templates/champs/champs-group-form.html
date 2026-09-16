@@ -1,0 +1,40 @@
+{% load i18n %}
+
+<div class="panel panel-info">
+    <div class="panel-heading"><strong>{% trans "Añadir grupo" %}</strong></div>
+    <div class="panel-body">
+        <p><strong>{{ champ.name }}</strong></p>
+        {% if group_list %}
+            <div class="form-group">
+                <label for="champ-group-id">{% trans "Grupo" %}</label>
+                <select id="champ-group-id" class="form-control">
+                    {% for group in group_list %}
+                        <option value="{{ group.id }}">{{ group.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% else %}
+            <p class="text-muted">{% trans "No hay más grupos activos para añadir." %}</p>
+        {% endif %}
+    </div>
+    <div class="panel-footer text-right">
+        <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button>
+        {% if group_list %}
+            <button type="button"
+                    id="save-champ-group-btn"
+                    class="btn btn-sm btn-success ark"
+                    data-url="{% url "add-champ-group" %}"
+                    data-target="champ-detail-content"
+                    data-dismiss="modal"
+                    data-champ_id="{{ champ.id }}">
+                {% trans "Añadir" %}
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#save-champ-group-btn').on('click', function() {
+        $(this).data('group_id', $('#champ-group-id').val());
+    });
+</script>

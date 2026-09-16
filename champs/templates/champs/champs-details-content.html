@@ -219,6 +219,47 @@
             {% endif %}
 
             <div class="clearfix">
+                <p class="text-muted pull-left">{% trans "Grupos destinatarios" %}</p>
+                <button type="button"
+                        class="btn btn-sm btn-success pull-right ark"
+                        data-url="{% url "champs-group-form" %}"
+                        data-target-modal="common-modal"
+                        data-champ_id="{{ obj.id }}">
+                    <span class="glyphicon glyphicon-plus"></span>
+                    {% trans "Añadir grupo" %}
+                </button>
+            </div>
+
+            {% if target_group_list %}
+                <div class="table-responsive">
+                    <table class="table table-condensed">
+                        <tbody>
+                            {% for group in target_group_list %}
+                                <tr>
+                                    <td>{{ group.get_full_name }}</td>
+                                    <td class="text-right">
+                                        <button type="button"
+                                                class="btn btn-xs btn-danger ark"
+                                                data-url="{% url "champs-group-delete-form" %}"
+                                                data-target-modal="common-modal"
+                                                data-champ_id="{{ obj.id }}"
+                                                data-group_id="{{ group.id }}"
+                                                title="{% trans "Borrar" %}">
+                                            <span class="glyphicon glyphicon-trash"></span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">{% trans "Disponible para todas las alumnas." %}</p>
+            {% endif %}
+
+            <hr>
+
+            <div class="clearfix">
                 <p class="text-muted pull-left">{% trans "Costes" %}</p>
                 <button type="button"
                         class="btn btn-sm btn-success pull-right ark"

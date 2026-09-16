@@ -12,8 +12,9 @@ class FormQuestionInline(admin.TabularInline):
 @admin.register(Form)
 class FormAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_published', 'deadline', 'allow_response_changes', 'created_at')
-    list_filter = ('is_published',)
+    list_filter = ('is_published', 'target_groups')
     search_fields = ('title', 'description')
+    filter_horizontal = ('target_groups',)
     inlines = (FormQuestionInline,)
 
 

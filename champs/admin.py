@@ -32,6 +32,7 @@ class TravelCompanionInline(admin.TabularInline):
 '''
 class ChampionshipAdmin(admin.ModelAdmin):
 	list_display = ('name', 'date',)
+	filter_horizontal = ('target_groups',)
 	inlines = [ChampioshipInfoInline, ChampCostInline, ChampCategoryInline, ChampFileInline]
 
 class ChampCategoryAdmin(admin.ModelAdmin):

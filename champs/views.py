@@ -12,7 +12,7 @@ from collections import defaultdict
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP, ROUND_UP
 
 from studio.decorators import group_required
-from studio.models import Student
+from studio.models import Group, Student
 from .models import BankTransaction, Category, ChampCategory, ChampCost, Championship, ChampFile, ChampioshipInfo, Cost, PaymentAllocation, Registration, RegistrationFile, TravelCompanion
 from .commons import show_exc, get_or_none, get_param
 
@@ -183,6 +183,7 @@ def get_champ_details_context(obj):
         'champ_total_amount': champ_total_amount,
         'champ_paid_amount': champ_paid_amount,
         'champ_pending_amount': champ_pending_amount,
+        'target_group_list': list(obj.target_groups.select_related('teacher').all()) if obj else [],
     }
 
 
@@ -728,14 +729,69 @@ def delete_champ_cost(request):
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
 
 
+@group_required("admins")
+def champ_group_form(request):
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        group_list = Group.objects.filter(active=True).exclude(
+            championships=champ
+        ).select_related('teacher').order_by('teacher__name', 'name') if champ else []
+        return render(request, "champs/champs-group-form.html", {
+            'champ': champ,
+            'group_list': group_list,
+        })
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
+
+@group_required("admins")
+def add_champ_group(request):
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        group = get_or_none(Group, get_param(request.GET, "group_id"))
+        if champ and group:
+            champ.target_groups.add(group)
+        return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
+
+@group_required("admins")
+def champ_group_delete_form(request):
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        group = get_or_none(Group, get_param(request.GET, "group_id"))
+        if not champ or (group and not champ.target_groups.filter(pk=group.pk).exists()):
+            group = None
+        return render(request, "champs/champs-group-delete-form.html", {
+            'champ': champ,
+            'group': group,
+        })
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
+
+@group_required("admins")
+def delete_champ_group(request):
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        group = get_or_none(Group, get_param(request.GET, "group_id"))
+        if champ and group:
+            champ.target_groups.remove(group)
+        return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
+
 '''
     Championship studen
 '''
 @group_required("student")
 def champs_student(request):
-    reg_list = Registration.objects.filter(student=request.student)
+    available_championships = Championship.objects.for_student(request.student)
+    reg_list = Registration.objects.filter(student=request.student, champ__in=available_championships)
     reg_champ_list = [item.champ.id for item in reg_list]
-    champ_list = Championship.objects.filter(publish=True).exclude(id__in=reg_champ_list)
+    champ_list = available_championships.filter(publish=True).exclude(id__in=reg_champ_list)
     context = {'champ_list': champ_list, 'reg_list': reg_list}
     return render(request, 'champs/champs.html', context)
 
@@ -743,10 +799,11 @@ def champs_student(request):
 def save_reg(request):
     if request.POST:
         if "categories" in request.POST:
-            champ = Championship.objects.get(pk=request.POST["champ"])
-            reg = Registration.objects.create(student=request.student, champ=champ)
-            for item in request.POST.getlist("categories"):
-                reg.categories.add(item)
+            champ = Championship.objects.for_student(request.student).filter(pk=request.POST["champ"]).first()
+            if champ:
+                reg = Registration.objects.create(student=request.student, champ=champ)
+                for item in request.POST.getlist("categories"):
+                    reg.categories.add(item)
     return redirect(champs)
  
 @group_required("student")
