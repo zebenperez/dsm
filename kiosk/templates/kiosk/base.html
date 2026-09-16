@@ -1,0 +1,15 @@
+{% load static i18n %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#243647">
+    <title>{% block title %}Quiosco 5db{% endblock %}</title>
+    <link rel="manifest" href="{% static 'kiosk-manifest.json' %}">
+    <link rel="stylesheet" href="{% static 'css/kiosk.css' %}">
+</head>
+<body>
+    {% block body %}{% endblock %}
+</body>
+</html>

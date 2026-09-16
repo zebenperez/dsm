@@ -16,6 +16,7 @@ urlpatterns = [
 	path('studio/', include('studio.urls')),
 	path('champs/', include('champs.urls')),
 	path('app/', include('pwa.urls')),
+	path('kiosk/', include('kiosk.urls')),
 	path('calendar/', include('events.urls')),
 	path('rest-api/', include('rest.urls')),
 	path('app/', include('pwa.urls')),

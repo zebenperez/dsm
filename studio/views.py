@@ -30,6 +30,7 @@ from studio.common_lib import get_student
 #from push_notifications.models import APNSDevice, GCMDevice
 from fcm_django.models import FCMDevice
 from registration_forms.models import Form as RegistrationForm, FormSubmission
+from kiosk.models import KioskPayment
 
 '''
 	TPV
@@ -340,18 +341,21 @@ def calculate_amount(current_date, positive):
 		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
 		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
 		wallet_pays=WalletMovement.objects.filter(created_at__gte=date_min, created_at__lt=date_max, movement_type=WalletMovement.TYPE_TOP_UP, payment_method=WalletMovement.METHOD_CASH).aggregate(Sum('amount'))['amount__sum']
+		kiosk_pays=KioskPayment.objects.filter(ticket__created_at__gte=date_min, ticket__created_at__lt=date_max, method=KioskPayment.METHOD_CASH).aggregate(Sum('amount'))['amount__sum']
 	else:
 		pays = Payment.objects.filter(date = current_date).filter(amount__lt = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
 		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
 		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
 		wallet_pays = 0
+		kiosk_pays = 0
 
 	pay_amounts = pays if pays != None else 0
 	teacher_pay_amounts = teacher_pays if teacher_pays != None else 0
 	article_pay_amounts = article_pays if article_pays != None else 0
 	wallet_pay_amounts = wallet_pays if wallet_pays != None else 0
+	kiosk_pay_amounts = kiosk_pays if kiosk_pays != None else 0
 
-	return (pay_amounts + teacher_pay_amounts + article_pay_amounts + wallet_pay_amounts)
+	return (pay_amounts + teacher_pay_amounts + article_pay_amounts + wallet_pay_amounts + kiosk_pay_amounts)
 
 def calculate_card(current_date):
 	date_min = datetime.datetime.combine(current_date, datetime.time.min)
@@ -359,12 +363,14 @@ def calculate_card(current_date):
 	pays = Payment.objects.filter(date = current_date).filter(card = True).aggregate(Sum('amount'))['amount__sum']
 	article_pays = ArticlePayment.objects.filter(date = current_date).filter(card = True).aggregate(Sum('amount'))['amount__sum']
 	wallet_pays = WalletMovement.objects.filter(created_at__gte=date_min, created_at__lt=date_max, movement_type=WalletMovement.TYPE_TOP_UP, payment_method=WalletMovement.METHOD_CARD).aggregate(Sum('amount'))['amount__sum']
+	kiosk_pays = KioskPayment.objects.filter(ticket__created_at__gte=date_min, ticket__created_at__lt=date_max, method=KioskPayment.METHOD_CARD).aggregate(Sum('amount'))['amount__sum']
 
 	pay_amounts = pays if pays != None else 0
 	article_pay_amounts = article_pays if article_pays != None else 0
 	wallet_pay_amounts = wallet_pays if wallet_pays != None else 0
+	kiosk_pay_amounts = kiosk_pays if kiosk_pays != None else 0
 
-	return (pay_amounts + article_pay_amounts + wallet_pay_amounts)
+	return (pay_amounts + article_pay_amounts + wallet_pay_amounts + kiosk_pay_amounts)
 
 @login_required
 def cash(request, current_date = None, msg = None):

@@ -1,0 +1,46 @@
+{% extends "kiosk/base.html" %}
+{% load i18n %}
+{% block body %}
+<header class="kiosk-header"><a href="{% url 'kiosk-terminal' %}"><strong>5db</strong> {% trans "Quiosco" %}</a><span>{{ request.user.username }}</span><a href="{% url 'kiosk-logout' %}">{% trans "Salir" %}</a></header>
+<main class="kiosk-terminal">
+    {% if messages %}{% for message in messages %}<div class="kiosk-alert">{{ message }}</div>{% endfor %}{% endif %}
+    <section class="kiosk-catalogue">
+        <form class="kiosk-search" method="get"><input name="q" value="{{ search }}" placeholder="{% trans 'Buscar artículo' %}"><button>{% trans "Buscar" %}</button></form>
+        <div class="kiosk-products">
+            {% for product in product_list %}
+                <form method="post" class="kiosk-product">{% csrf_token %}<input type="hidden" name="action" value="add"><input type="hidden" name="product_id" value="{{ product.id }}">
+                    {% if product.image %}<img src="{{ product.image.url }}" alt="">{% else %}<span class="kiosk-product-image">{% if product.category %}{{ product.category|slice:":1" }}{% else %}<i>5db</i>{% endif %}</span>{% endif %}
+                    <strong>{{ product.name }}</strong><small>{{ product.price }} €</small><button type="submit">{% trans "Añadir" %}</button>
+                </form>
+            {% empty %}<p class="kiosk-empty">{% trans "No hay productos disponibles." %}</p>{% endfor %}
+        </div>
+    </section>
+    <aside class="kiosk-cart">
+        <div class="kiosk-cart-heading"><h1>{% trans "Pedido" %}</h1>{% if cart_lines %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="clear"><button class="kiosk-link">{% trans "Vaciar" %}</button></form>{% endif %}</div>
+        <div class="kiosk-cart-lines">
+            {% for line in cart_lines %}
+                <article><div><strong>{{ line.product.name }}</strong><small>{{ line.product.price }} € unidad</small></div><form method="post" class="kiosk-quantity">{% csrf_token %}<input type="hidden" name="action" value="set_quantity"><input type="hidden" name="product_id" value="{{ line.product.id }}"><input name="quantity" type="number" min="0" value="{{ line.quantity }}"><button>↻</button></form><strong>{{ line.total }} €</strong></article>
+            {% empty %}<p class="kiosk-empty">{% trans "Añade artículos al pedido." %}</p>{% endfor %}
+        </div>
+        <div class="kiosk-total"><span>{% trans "Total" %}</span><strong>{{ cart_total }} €</strong></div>
+        <form method="post" action="{% url 'kiosk-checkout' %}" class="kiosk-payment" id="kiosk-payment">{% csrf_token %}
+            <input class="kiosk-band" id="kiosk-band" name="band" placeholder="{% trans 'Lee pulsera o llavero' %}" autocomplete="off">
+            <div><button type="submit" name="payment_method" value="cash" class="kiosk-pay-method kiosk-pay-cash">{% trans "Efectivo" %}</button><button type="submit" name="payment_method" value="card" class="kiosk-pay-method kiosk-pay-card">{% trans "Tarjeta" %}</button><button type="button" id="kiosk-wallet-button" class="kiosk-pay-method kiosk-pay-wallet">{% trans "Pulsera/llavero" %}</button></div>
+            <button type="submit" name="payment_method" value="wallet" class="kiosk-wallet-confirm">{% trans "Confirmar pago con pulsera/llavero" %}</button>
+        </form>
+    </aside>
+</main>
+<script>
+    document.getElementById('kiosk-wallet-button').addEventListener('click', function() {
+        var payment = document.getElementById('kiosk-payment');
+        payment.classList.add('wallet-active');
+        document.getElementById('kiosk-band').focus();
+    });
+    document.getElementById('kiosk-band').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            document.querySelector('.kiosk-wallet-confirm').focus();
+        }
+    });
+</script>
+{% endblock %}

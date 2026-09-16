@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 	'champs',
 	'web',
 	'pwa',
+	'kiosk.apps.KioskConfig',
 	'registration_forms.apps.RegistrationFormsConfig',
 	'events.apps.EventsConfig',
 ]

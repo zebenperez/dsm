@@ -134,6 +134,12 @@ settings_local.py
 migrations
 studio/migrations/
 studio/migrations/0012_wallet_movement.py
+studio/migrations/
+studio/migrations/0012_wallet_movement.py
+kiosk/migrations/
+kiosk/migrations/*.py
+kiosk/migrations/
+kiosk/migrations/0001_initial.py
 events/migrations/
 events/migrations/*.py
 registration_forms/migrations/

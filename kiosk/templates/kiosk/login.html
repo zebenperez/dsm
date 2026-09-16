@@ -1,0 +1,17 @@
+{% extends "kiosk/base.html" %}
+{% load static i18n %}
+{% block body %}
+<main class="kiosk-login-page">
+    <section class="kiosk-login-card">
+        <img src="{% static 'images/logo_5db_transparent.png' %}" alt="5db Escuela de Baile">
+        <p>{% trans "Acceso de personal" %}</p>
+        <h1>{% trans "Quiosco" %}</h1>
+        <form method="post">{% csrf_token %}
+            <label for="username">{% trans "Usuario" %}</label><input id="username" name="username" autocomplete="username" autofocus required>
+            <label for="password">{% trans "Contraseña" %}</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+            {% if error %}<div class="kiosk-alert">{{ error }}</div>{% endif %}
+            <button type="submit">{% trans "Entrar al quiosco" %} →</button>
+        </form>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "kiosk/base.html" %}
+{% load i18n %}
+{% block body %}
+<main class="kiosk-receipt-page"><section class="kiosk-receipt"><p class="kiosk-success">✓ {% trans "Pago registrado" %}</p><h1>{% trans "Ticket" %} #{{ ticket.id }}</h1><p>{{ ticket.created_at|date:"d/m/Y H:i" }}</p><hr>{% for line in ticket.lines.all %}<div class="kiosk-receipt-line"><span>{{ line.quantity }} × {{ line.product_name }}</span><strong>{{ line.line_total }} €</strong></div>{% endfor %}<hr>{% for payment in ticket.payments.all %}<div class="kiosk-receipt-line"><span>{{ payment.get_method_display }}</span><strong>{{ payment.amount }} €</strong></div>{% endfor %}<div class="kiosk-receipt-total"><span>{% trans "Total" %}</span><strong>{{ ticket.total }} €</strong></div><a class="kiosk-new-ticket" href="{% url 'kiosk-terminal' %}">{% trans "Nuevo pedido" %}</a></section></main>
+{% endblock %}
