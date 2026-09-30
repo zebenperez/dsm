@@ -203,6 +203,7 @@ class Payment(models.Model):
 	expire_date = models.DateTimeField(verbose_name="Fecha de caducidad")
 	student = models.ForeignKey(Student, unique=False, on_delete=models.CASCADE, verbose_name="Alumno")
 	enrolment = models.ForeignKey(Enrolment, unique=False, on_delete=models.CASCADE, verbose_name="Matrícula")
+	wallet_movement = models.OneToOneField('WalletMovement', blank=True, null=True, on_delete=models.SET_NULL, related_name='payment', verbose_name='Movimiento de monedero')
 	#concept = models.ForeignKey(Concept, unique=False, verbose_name="Concepto")
 	
 	def __str__(self):
@@ -227,11 +228,17 @@ class TeacherPayment(models.Model):
 	
 class Article(models.Model):
 	publish = models.BooleanField(verbose_name="Publicado", default=True)
+	is_promo = models.BooleanField(verbose_name="En promoción", default=False)
 	code = models.CharField(max_length=10, verbose_name="Código")
 	name = models.CharField(max_length=200, verbose_name="Nombre")
 	cost = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Costo")
 	pvp = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Pvp")
+	promo_price = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name="Precio promocional")
 	stock = models.BigIntegerField(verbose_name="Stock")
+
+	@property
+	def sale_price(self):
+		return self.promo_price if self.is_promo and self.promo_price is not None else self.pvp
 	
 	def __str__(self):
 		return str(self.name)
@@ -247,6 +254,8 @@ class ArticlePayment(models.Model):
 	amount = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Cantidad")
 	article = models.ForeignKey(Article, unique=False, on_delete=models.CASCADE, verbose_name="Artículo")
 	concept = models.ForeignKey(Concept, unique=False, on_delete=models.CASCADE, verbose_name="Concepto")
+	student = models.ForeignKey(Student, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="Alumno")
+	wallet_movement = models.OneToOneField('WalletMovement', blank=True, null=True, on_delete=models.SET_NULL, related_name='article_payment', verbose_name='Movimiento de monedero')
 
 	class Meta:
 		verbose_name = "Pago de artículos"

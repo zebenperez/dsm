@@ -81,6 +81,11 @@
 								<div class="col-md-4">Pagos con tarjeta</div>
 								<div class="col-md-2"><span id="spanFinalCard">{{ cash.e_card|default:"0" }}</span></div>
 							</div>
+							<div class="row list-group-item list-group-item-warning">
+								<div class="col-md-4">Pagos con monedero</div>
+								<div class="col-md-2">{{ wallet_payments|default:"0" }}</div>
+								<div class="col-md-6 text-muted">Informativo: no entra en efectivo ni en tarjeta.</div>
+							</div>
 							{% comment %}
 							<div class="row list-group-item">
 								<div class="col-md-4">Pagos con tarjeta facturados</div>

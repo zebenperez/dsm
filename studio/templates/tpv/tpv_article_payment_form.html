@@ -1,3 +1,5 @@
+{% load i18n %}
+
 <br/>
 <div class="row-fluid">
 	<div class="span12 text-center">
@@ -7,7 +9,7 @@
 					<tr> <th> Name </th> <th> Concepto </th> <th> Pvp </th> <th> Notas </th> <th> Stock </th> </tr>
 				</thead>
 				{% for a in article_list %}
-					<form method='post' action='{% url "article_pay" %}' role="form"> 
+					<form method='post' action='{% url "article_pay" %}' role="form" id="article_payment_form_{{ a.id }}">
 						{% csrf_token %}
 						<input type='hidden' name='article_id' value='{{ a.id }}'/>
 						<tbody>
@@ -20,11 +22,14 @@
 										{% endfor %}
 									</select>
 								</td>
-								<td><input type='text' name='amount' value='{{ a.pvp }}' class="input-xs form-control"/></td>
+								<td><input type='text' name='amount' value='{{ a.sale_price }}' class="input-xs form-control"/>{% if a.is_promo and a.promo_price is not None %}<small class="text-success"><del>{{ a.pvp }} €</del> · Promo</small>{% endif %}</td>
 								<td><input type='text' name='note' value='' class="form-control"/></td>
 								<td>{{ a.stock }}</td>
 								{#<td><input type='checkbox' name='card'/></td>#}
-								<td><button type="submit" class="btn btn-success">Pagar</button></td>
+								<td>
+									<button type="submit" class="btn btn-success">Pagar</button>
+									<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#walletArticleModal" data-article-id="{{ a.id }}" data-article-name="{{ a.name }}" title="{% trans 'Cobrar desde el monedero' %}"><span class="glyphicon glyphicon-credit-card"></span> {% trans "Monedero" %}</button>
+								</td>
 							</tr>
 						</tbody>
 					</form> 
@@ -33,3 +38,49 @@
 		</div>
 	</div>
 </div>
+
+<div class="modal fade" id="walletArticleModal" tabindex="-1" role="dialog" aria-labelledby="walletArticleModalTitle">
+	<div class="modal-dialog" role="document">
+		<form method="post" action="{% url 'article_pay_with_wallet' %}" class="modal-content">
+			{% csrf_token %}
+			<input type="hidden" name="article_id">
+			<input type="hidden" name="concept">
+			<input type="hidden" name="amount">
+			<input type="hidden" name="note">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Cerrar' %}"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="walletArticleModalTitle"><span class="glyphicon glyphicon-credit-card"></span> {% trans "Pagar con monedero" %}</h4>
+			</div>
+			<div class="modal-body">
+				<p>{% trans "Artículo" %}: <strong class="wallet-article-name"></strong> · <strong class="wallet-article-amount"></strong> €</p>
+				<div class="form-group">
+					<label for="wallet_article_band">{% trans "Código del llavero" %}</label>
+					<input type="text" id="wallet_article_band" name="band" class="form-control" placeholder="{% trans 'Acerca o lee el llavero' %}" autocomplete="off" required>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button>
+				<button type="submit" class="btn btn-warning"><span class="glyphicon glyphicon-credit-card"></span> {% trans "Cobrar desde el monedero" %}</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script>
+	$('#walletArticleModal').on('show.bs.modal', function (event) {
+		var button = $(event.relatedTarget);
+		var sourceRow = button.closest('tr');
+		var modal = $(this);
+		modal.find('[name="article_id"]').val(button.data('article-id'));
+		modal.find('[name="concept"]').val(sourceRow.find('[name="concept"]').val());
+		modal.find('[name="amount"]').val(sourceRow.find('[name="amount"]').val());
+		modal.find('[name="note"]').val(sourceRow.find('[name="note"]').val());
+		modal.find('.wallet-article-name').text(button.data('article-name'));
+		modal.find('.wallet-article-amount').text(sourceRow.find('[name="amount"]').val());
+		modal.find('[name="band"]').val('');
+	});
+
+	$('#walletArticleModal').on('shown.bs.modal', function () {
+		$(this).find('[name="band"]').focus();
+	});
+</script>

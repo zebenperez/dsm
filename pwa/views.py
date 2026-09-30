@@ -8,7 +8,7 @@ from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal, ROUND_UP
 
-from studio.models import Student, Payment, Assistance, Enrolment
+from studio.models import Article, Student, Payment, Assistance, Enrolment
 from champs.models import ChampCost, Championship, Registration, TravelCompanion
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 
@@ -44,6 +44,9 @@ def index(request):
 	return render(request, 'pwa/index.html', {
 		"student": student,
 		"wallet_balance": student.wallet_balance,
+		"promotions": Article.objects.filter(
+			publish=True, is_promo=True, promo_price__isnull=False, stock__gt=0,
+		).order_by('name'),
 		"published_forms": Form.objects.filter(is_published=True).for_student(student).order_by('-created_at')[:3],
 		"submitted_form_ids": submitted_form_ids,
 		"upcoming_registrations": Registration.objects.filter(

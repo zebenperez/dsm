@@ -27,6 +27,7 @@ urlpatterns = [
 	path('<int:article_payment_id>/delete_article_payment/', views.delete_article_payment, name="delete_article_payment"),
 	path('article_search/', views.article_search, name="article_search"),
 	path('article_pay/', views.article_pay, name="article_pay"),
+	path('article-pay-with-wallet/', views.article_pay_with_wallet, name='article_pay_with_wallet'),
 
 	## CASH
 	path('cash/', views.cash, name="cash"),

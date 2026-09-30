@@ -179,10 +179,10 @@ class TeacherPaymentAdmin(admin.ModelAdmin):
 class ArticleAdmin(admin.ModelAdmin):
 	fieldsets = (
 		(None, { 
-			'fields': ('code', 'name', 'cost', 'pvp', 'stock'), 
+			'fields': ('code', 'name', 'cost', 'pvp', 'is_promo', 'promo_price', 'stock'),
 		}),
 	)
-	list_display = ('code', 'name')
+	list_display = ('code', 'name', 'pvp', 'is_promo', 'promo_price')
 
 class ArticlePaymentAdmin(admin.ModelAdmin):
 	fieldsets = (

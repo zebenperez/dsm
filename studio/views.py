@@ -169,7 +169,7 @@ def pay_with_wallet(request):
 			pay_date = datetime.datetime.strptime(request.POST['pay_date'], '%d-%m-%Y')
 			expire_date = datetime.datetime.strptime(request.POST['expire_date'], '%d-%m-%Y')
 			with transaction.atomic():
-				WalletMovement.record(
+				wallet_movement = WalletMovement.record(
 					enrolment.student,
 					-amount,
 					WalletMovement.TYPE_PURCHASE,
@@ -184,6 +184,7 @@ def pay_with_wallet(request):
 					amount=amount,
 					student=enrolment.student,
 					enrolment=enrolment,
+					wallet_movement=wallet_movement,
 				)
 			message = 'Cuota cobrada desde el monedero.'
 			level = 'success'
@@ -347,10 +348,20 @@ def delete_teacher_payment(request, teacher_payment_id):
 def delete_article_payment(request, article_payment_id):
 	a = get_object_or_404(ArticlePayment, pk=article_payment_id)
 	art = a.article
-	a.delete()
+	with transaction.atomic():
+		if a.wallet_movement_id and a.student_id:
+			WalletMovement.record(
+				a.student,
+				a.amount,
+				WalletMovement.TYPE_REFUND,
+				'Devolución artículo: %s' % art,
+				'',
+				request.user,
+			)
+		a.delete()
 
-	art.stock += 1
-	art.save()
+		art.stock += 1
+		art.save()
 	return redirect('/studio/tpv/?t=article')
 
 @login_required
@@ -380,6 +391,60 @@ def article_pay(request):
 	a.save()
 	return redirect('/studio/tpv/?t=article')
 
+
+@group_required("reception")
+def article_pay_with_wallet(request):
+	"""Sell an article and charge it to the selected student's wallet."""
+	message = ''
+	level = 'danger'
+	if request.method == 'POST':
+		try:
+			article = get_object_or_404(Article, pk=request.POST['article_id'])
+			student = get_object_or_404(Student, band=request.POST['band'].strip())
+			amount = Decimal(request.POST['amount'].replace(',', '.'))
+			if amount <= 0:
+				raise ValidationError('El importe debe ser mayor que cero.')
+			concept_code = request.POST.get('concept', '').strip()
+			if concept_code:
+				concept = Concept.objects.get(code=concept_code)
+			else:
+				concept, _ = Concept.objects.get_or_create(
+					code='art', defaults={'name': 'Artículos'},
+				)
+			with transaction.atomic():
+				wallet_movement = WalletMovement.record(
+					student,
+					-amount,
+					WalletMovement.TYPE_PURCHASE,
+					'Artículo: %s' % article,
+					'',
+					request.user,
+				)
+				ArticlePayment.objects.create(
+					note=request.POST.get('note', ''),
+					amount=amount,
+					article=article,
+					concept=concept,
+					student=student,
+					wallet_movement=wallet_movement,
+				)
+				article.stock -= 1
+				article.save(update_fields=['stock'])
+			message = 'Artículo cobrado desde el monedero de %s.' % student
+			level = 'success'
+		except InsufficientWalletBalance:
+			message = 'Saldo insuficiente en el monedero.'
+		except (KeyError, ValueError, InvalidOperation, ValidationError, Student.DoesNotExist, Concept.DoesNotExist):
+			message = 'No se ha podido registrar el cobro. Revisa el código del llavero y los datos del artículo.'
+	else:
+		message = 'Solicitud de cobro no válida.'
+
+	return redirect('/studio/tpv/?' + urlencode({
+		't': 'article',
+		'wallet_message': message,
+		'wallet_message_level': level,
+	}))
+
 '''
 	CASH
 '''
@@ -387,15 +452,15 @@ def calculate_amount(current_date, positive):
 	date_min = datetime.datetime.combine(current_date, datetime.time.min)
 	date_max = date_min + datetime.timedelta(days=1)
 	if positive:
-		pays = Payment.objects.filter(date = current_date).filter(amount__gte = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
+		pays = Payment.objects.filter(date=current_date, wallet_movement__isnull=True).filter(amount__gte=0, card=False).aggregate(Sum('amount'))['amount__sum']
 		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
-		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__gte=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
+		article_pays=ArticlePayment.objects.filter(date__gt=date_min, wallet_movement__isnull=True).filter(amount__gte=0, card=False).aggregate(Sum('amount'))['amount__sum']
 		wallet_pays=WalletMovement.objects.filter(created_at__gte=date_min, created_at__lt=date_max, movement_type=WalletMovement.TYPE_TOP_UP, payment_method=WalletMovement.METHOD_CASH).aggregate(Sum('amount'))['amount__sum']
 		kiosk_pays=KioskPayment.objects.filter(ticket__created_at__gte=date_min, ticket__created_at__lt=date_max, method=KioskPayment.METHOD_CASH).aggregate(Sum('amount'))['amount__sum']
 	else:
-		pays = Payment.objects.filter(date = current_date).filter(amount__lt = 0).filter(card = False).aggregate(Sum('amount'))['amount__sum']
+		pays = Payment.objects.filter(date=current_date, wallet_movement__isnull=True).filter(amount__lt=0, card=False).aggregate(Sum('amount'))['amount__sum']
 		teacher_pays=TeacherPayment.objects.filter(date=current_date).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
-		article_pays=ArticlePayment.objects.filter(date__gt=date_min).filter(amount__lt=0).filter(card=False).aggregate(Sum('amount'))['amount__sum']
+		article_pays=ArticlePayment.objects.filter(date__gt=date_min, wallet_movement__isnull=True).filter(amount__lt=0, card=False).aggregate(Sum('amount'))['amount__sum']
 		wallet_pays = 0
 		kiosk_pays = 0
 
@@ -410,8 +475,8 @@ def calculate_amount(current_date, positive):
 def calculate_card(current_date):
 	date_min = datetime.datetime.combine(current_date, datetime.time.min)
 	date_max = date_min + datetime.timedelta(days=1)
-	pays = Payment.objects.filter(date = current_date).filter(card = True).aggregate(Sum('amount'))['amount__sum']
-	article_pays = ArticlePayment.objects.filter(date = current_date).filter(card = True).aggregate(Sum('amount'))['amount__sum']
+	pays = Payment.objects.filter(date=current_date, wallet_movement__isnull=True).filter(card=True).aggregate(Sum('amount'))['amount__sum']
+	article_pays = ArticlePayment.objects.filter(date=current_date, wallet_movement__isnull=True).filter(card=True).aggregate(Sum('amount'))['amount__sum']
 	wallet_pays = WalletMovement.objects.filter(created_at__gte=date_min, created_at__lt=date_max, movement_type=WalletMovement.TYPE_TOP_UP, payment_method=WalletMovement.METHOD_CARD).aggregate(Sum('amount'))['amount__sum']
 	kiosk_pays = KioskPayment.objects.filter(ticket__created_at__gte=date_min, ticket__created_at__lt=date_max, method=KioskPayment.METHOD_CARD).aggregate(Sum('amount'))['amount__sum']
 
@@ -421,6 +486,17 @@ def calculate_card(current_date):
 	kiosk_pay_amounts = kiosk_pays if kiosk_pays != None else 0
 
 	return (pay_amounts + article_pay_amounts + wallet_pay_amounts + kiosk_pay_amounts)
+
+def calculate_wallet_payments(current_date):
+	"""Net sales paid with wallet balance; these never enter the cash drawer."""
+	date_min = datetime.datetime.combine(current_date, datetime.time.min)
+	date_max = date_min + datetime.timedelta(days=1)
+	total = WalletMovement.objects.filter(
+		created_at__gte=date_min,
+		created_at__lt=date_max,
+		movement_type__in=(WalletMovement.TYPE_PURCHASE, WalletMovement.TYPE_REFUND),
+	).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+	return -total
 
 @login_required
 def cash(request, current_date = None, msg = None):
@@ -440,6 +516,7 @@ def cash(request, current_date = None, msg = None):
 	billing_positive = calculate_amount(current_date, True)
 	billing_negative = calculate_amount(current_date, False)
 	billing_card = calculate_card(current_date)
+	wallet_payments = calculate_wallet_payments(current_date)
 
 	i_total = cash.i_total if cash.i_total != None else 0
 	e_total = cash.e_total if cash.e_total != None else 0
@@ -451,7 +528,7 @@ def cash(request, current_date = None, msg = None):
 	diff = total - total_cash
 
 	form = CashForm(instance = cash)
-	return render(request, 'cash.html', {'form': form, 'cash': cash, 'current_date': current_date, 'amounts_positive': billing_positive, 'amounts_negative': billing_negative, 'total': total, 'total_cash': total_cash, 'total_billing': total_billing, 'billing_card': billing_card, 'diff': diff, 'msg': msg})
+	return render(request, 'cash.html', {'form': form, 'cash': cash, 'current_date': current_date, 'amounts_positive': billing_positive, 'amounts_negative': billing_negative, 'total': total, 'total_cash': total_cash, 'total_billing': total_billing, 'billing_card': billing_card, 'wallet_payments': wallet_payments, 'diff': diff, 'msg': msg})
 
 @login_required
 def save_cash(request, cash_id):
