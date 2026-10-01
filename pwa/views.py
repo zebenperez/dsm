@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils.translation import gettext as _
 from django.utils import timezone
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal, ROUND_UP
@@ -13,31 +13,48 @@ from champs.models import ChampCost, Championship, Registration, TravelCompanion
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 
 
-def check_pin(request):
-	return ("pin" in request.session and request.session["pin"] != "")
+def get_current_student(request):
+	student_id = request.session.get("student_id")
+	if student_id:
+		return Student.objects.filter(pk=student_id).first()
+
+	# Conserva las sesiones iniciadas antes de migrar de PIN a student_id.
+	legacy_pin = request.session.pop("pin", None)
+	if not legacy_pin:
+		return None
+	student = Student.objects.filter(pin=legacy_pin).first()
+	if student:
+		request.session["student_id"] = student.pk
+	return student
+
+
+def check_student(request):
+	return get_current_student(request) is not None
 
 def login(request):
 	return render (request,'pwa/login.html',{})
 
 def logout(request):
-	request.session["pin"] = ""
+	request.session.flush()
 	return redirect(login)
 
 def set_pin(request):
 	try:
-		pin = request.POST["pin"]
+		pin = request.POST["pin"].strip().upper()
 		student = Student.objects.filter(pin=pin).first()
 		if student == None:
 			return render (request,'pwa/login.html',{'err': 'Pin no encontrado!'})
-		request.session["pin"] = pin
+		request.session.cycle_key()
+		request.session.pop("pin", None)
+		request.session["student_id"] = student.pk
 		return redirect(index)
 	except Exception as e:
 		return render (request,'pwa/login.html',{"err": e})
 
 def index(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	submitted_form_ids = set(
 		FormSubmission.objects.filter(student=student).values_list('form_id', flat=True)
 	)
@@ -58,25 +75,25 @@ def index(request):
 	})
 
 def payments(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	payment_list = Payment.objects.filter(student=student, date__year=timezone.now().year)
 	return render (request,'pwa/payments.html',{'student': student, 'payment_list': payment_list})
 
 def assistances(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	enrolment_list = Enrolment.objects.filter(student=student, active=True)
 	assistance_list = Assistance.objects.filter(enrolments__in=enrolment_list, date__year=timezone.now().year).order_by('-date')
 	return render (request,'pwa/assistances.html',{'student': student, 'assistance_list': assistance_list})
 
 
 def activity(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	enrolment_list = Enrolment.objects.filter(student=student, active=True)
 	return render(request, 'pwa/activity.html', {
 		'student': student,
@@ -89,9 +106,9 @@ def activity(request):
 
 
 def wallet(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	return render(request, 'pwa/wallet.html', {
 		'student': student,
 		'wallet_balance': student.wallet_balance,
@@ -100,9 +117,9 @@ def wallet(request):
 
 
 def forms(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	return render(request, 'pwa/forms.html', {
 		'student': student,
 		'form_list': Form.objects.filter(is_published=True).for_student(student).order_by('-created_at'),
@@ -111,9 +128,9 @@ def forms(request):
 
 
 def form_detail(request, form_id):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	form = get_object_or_404(Form.objects.filter(is_published=True).for_student(student), pk=form_id)
 	questions = list(form.questions.all())
 	submission = FormSubmission.objects.filter(form=form, student=student).prefetch_related('answers__question').first()
@@ -166,9 +183,9 @@ def form_detail(request, form_id):
 
 
 def licence(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	return render(request, 'pwa/licence.html', {'student': student})
 
 def get_championship_registration_summary(registration):
@@ -260,9 +277,9 @@ def get_championship_registration_summary(registration):
 
 
 def championships(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	registration_list = Registration.objects.filter(
 		student=student,
 		champ__in=Championship.objects.for_student(student),
@@ -274,9 +291,9 @@ def championships(request):
 
 
 def championship_detail(request, registration_id):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	registration = get_object_or_404(
 		Registration.objects.select_related('champ').prefetch_related('categories', 'travel_companions'),
 		pk=registration_id,
@@ -291,9 +308,9 @@ def championship_detail(request, registration_id):
 
 
 def upload_championship_payment_proof(request, registration_id):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	registration = get_object_or_404(
 		Registration,
 		pk=registration_id,
@@ -307,9 +324,9 @@ def upload_championship_payment_proof(request, registration_id):
 
 
 def add_championship_companion(request, registration_id):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	registration = get_object_or_404(
 		Registration,
 		pk=registration_id,
@@ -339,9 +356,9 @@ def add_championship_companion(request, registration_id):
 
 
 def delete_championship_companion(request, registration_id, companion_id):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	student = Student.objects.filter(pin=request.session["pin"]).first()
+	student = get_current_student(request)
 	registration = get_object_or_404(
 		Registration,
 		pk=registration_id,
@@ -353,11 +370,44 @@ def delete_championship_companion(request, registration_id, companion_id):
 	return redirect('%s#companions' % reverse('pwa-championship-detail', args=[registration.id]))
 
 def change_photo(request):
-	if not check_pin(request):
+	if not check_student(request):
 		return redirect(login)
-	if request.POST:
-		student = Student.objects.get(pk=request.POST["student"])
-		#print(request.FILES["photo"])
+	if request.method == 'POST' and request.FILES.get("photo"):
+		student = get_current_student(request)
 		student.picture = request.FILES["photo"]
 		student.save()
 	return redirect(index)
+
+
+def change_pin(request):
+	if not check_student(request):
+		return redirect(login)
+
+	student = get_current_student(request)
+	context = {'student': student}
+	if request.method != 'POST':
+		return render(request, 'pwa/change_pin.html', context)
+
+	current_pin = request.POST.get('current_pin', '').strip().upper()
+	new_pin = request.POST.get('new_pin', '').strip().upper()
+	confirmation = request.POST.get('new_pin_confirmation', '').strip().upper()
+
+	if current_pin != student.pin:
+		context['error'] = _('El PIN actual no es correcto.')
+	elif len(new_pin) != 4 or not new_pin.isalnum():
+		context['error'] = _('El nuevo PIN debe tener cuatro caracteres alfanuméricos.')
+	elif new_pin != confirmation:
+		context['error'] = _('Los PIN nuevos no coinciden.')
+	elif new_pin == student.pin:
+		context['error'] = _('El nuevo PIN debe ser distinto del actual.')
+	else:
+		try:
+			student.pin = new_pin
+			student.save(update_fields=['pin'])
+		except IntegrityError:
+			context['error'] = _('Ese PIN ya está en uso. Elige otro.')
+		else:
+			request.session.cycle_key()
+			context['success'] = _('Tu PIN se ha actualizado correctamente.')
+
+	return render(request, 'pwa/change_pin.html', context)

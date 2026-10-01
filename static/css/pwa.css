@@ -70,7 +70,12 @@ body {
 	object-fit: contain;
 }
 
-.pwa-logout {
+.pwa-account-menu {
+	position: relative;
+	flex: 0 0 auto;
+}
+
+.pwa-account-menu summary {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -81,13 +86,59 @@ body {
 	color: #d88d00;
 	font-size: 20px;
 	text-decoration: none;
+	list-style: none;
+	cursor: pointer;
 }
 
-.pwa-logout:hover,
-.pwa-logout:focus {
+.pwa-account-menu summary::-webkit-details-marker {
+	display: none;
+}
+
+.pwa-account-menu summary:hover,
+.pwa-account-menu summary:focus {
 	border-color: #d88d00;
 	background: #fff5dc;
+	color: #a36c00;
+}
+
+.pwa-account-menu nav {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	width: 190px;
+	padding: 7px;
+	border: 1px solid #e5d8bc;
+	border-radius: 13px;
+	background: #fff;
+	box-shadow: 0 10px 24px rgba(31, 45, 57, .18);
+}
+
+.pwa-account-menu nav a {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 11px 12px;
+	border-radius: 8px;
+	color: #344454;
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.pwa-account-menu nav a:hover,
+.pwa-account-menu nav a:focus {
+	background: #fff5dc;
+	color: #a36c00;
+}
+
+.pwa-account-menu nav .pwa-account-menu-logout {
 	color: #a94442;
+}
+
+.pwa-account-menu nav .pwa-account-menu-logout:hover,
+.pwa-account-menu nav .pwa-account-menu-logout:focus {
+	background: #fff1f0;
+	color: #8e342e;
 }
 
 .pwa-content {
@@ -979,3 +1030,12 @@ body {
 	border-color: #f0a000;
 	color: #a36c00;
 }
+
+.pwa-settings { max-width: 460px; margin: 0 auto; padding: 12px 6px 24px; }
+.pwa-change-pin-form { padding: 20px; border: 1px solid #e5e8eb; border-radius: 18px; background: #fff; box-shadow: 0 4px 12px rgba(31, 45, 57, .08); }
+.pwa-change-pin-form > p:first-of-type { margin: 0 0 18px; color: #697581; font-size: 14px; line-height: 1.45; }
+.pwa-change-pin-form label { display: block; margin: 16px 0 7px; color: #4d5966; font-size: 14px; font-weight: 700; }
+.pwa-change-pin-form input { width: 100%; height: 48px; padding: 0 12px; border: 1px solid #d5dbe0; border-radius: 10px; color: #283645; font-size: 18px; font-weight: 700; letter-spacing: .25em; text-align: center; }
+.pwa-change-pin-form input:focus { border-color: #eca300; outline: 0; box-shadow: 0 0 0 3px rgba(240, 160, 0, .15); }
+.pwa-change-pin-form .pwa-primary-button { width: 100%; margin-top: 20px; }
+.pwa-pin-success { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #e0f4e9; color: #187743; font-size: 13px; font-weight: 600; text-align: center; }

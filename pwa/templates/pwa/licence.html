@@ -15,7 +15,7 @@
             <div class="pwa-license-footer"><i class="fas fa-certificate" aria-hidden="true"></i>{% trans "Escuela de Baile" %}</div>
         </section>
         <form class="pwa-photo-form" action="{% url 'pwa-change-photo' %}" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}<input type="hidden" name="student" value="{{ student.id }}"><input type="file" name="photo" id="photoInput" accept="image/*" class="d-none" onchange="this.form.submit()">
+            {% csrf_token %}<input type="file" name="photo" id="photoInput" accept="image/*" class="d-none" onchange="this.form.submit()">
             <label for="photoInput" class="pwa-photo-button"><i class="fas fa-camera" aria-hidden="true"></i>{% trans "Cambiar foto" %}</label>
         </form>
     </section>

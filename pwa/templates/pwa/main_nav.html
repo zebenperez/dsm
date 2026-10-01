@@ -3,6 +3,12 @@
 <a class="pwa-brand" href="{% url 'pwa-index' %}" aria-label="{% trans 'Inicio' %}">
 	<img src="{% static 'images/logo_5db.png' %}" alt="5db" width="54" height="54">
 </a>
-<a class="pwa-logout" href="{% url 'pwa-logout' %}" aria-label="{% trans 'Cerrar sesión' %}" title="{% trans 'Cerrar sesión' %}">
-	<i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-</a>
+<details class="pwa-account-menu">
+	<summary aria-label="{% trans 'Menú de cuenta' %}" title="{% trans 'Menú de cuenta' %}">
+		<i class="fas fa-bars" aria-hidden="true"></i>
+	</summary>
+	<nav aria-label="{% trans 'Opciones de cuenta' %}">
+		<a href="{% url 'pwa-change-pin' %}"><i class="fas fa-key" aria-hidden="true"></i>{% trans 'Cambiar PIN' %}</a>
+		<a class="pwa-account-menu-logout" href="{% url 'pwa-logout' %}"><i class="fas fa-sign-out-alt" aria-hidden="true"></i>{% trans 'Cerrar sesión' %}</a>
+	</nav>
+</details>

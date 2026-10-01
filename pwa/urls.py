@@ -22,5 +22,6 @@ urlpatterns = [
 	path('championships/<int:registration_id>/companions', views.add_championship_companion, name="pwa-championship-companion-add"),
 	path('championships/<int:registration_id>/companions/<int:companion_id>/delete', views.delete_championship_companion, name="pwa-championship-companion-delete"),
 	path('set-pin', views.set_pin, name="pwa-set-pin"),
+	path('change-pin', views.change_pin, name="pwa-change-pin"),
 	path('change-photo', views.change_photo, name="pwa-change-photo"),
 ]

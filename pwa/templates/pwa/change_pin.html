@@ -1,0 +1,38 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Cambiar PIN" %} · 5db Dance School{% endblock %}
+
+{% block content %}
+<section class="pwa-settings" aria-labelledby="change-pin-title">
+    <a class="pwa-back-link" href="{% url 'pwa-licence' %}">← {% trans "Volver a mi licencia" %}</a>
+    <header class="pwa-screen-header">
+        <p>{% trans "Seguridad" %}</p>
+        <h1 id="change-pin-title">{% trans "Cambiar PIN" %}</h1>
+    </header>
+
+    <form method="post" class="pwa-change-pin-form">
+        {% csrf_token %}
+        <p>{% trans "Para confirmar el cambio, introduce tu PIN actual y el nuevo PIN de cuatro caracteres." %}</p>
+
+        <label for="current_pin">{% trans "PIN actual" %}</label>
+        <input id="current_pin" name="current_pin" type="password" maxlength="4" autocomplete="current-password" autocapitalize="characters" required autofocus>
+
+        <label for="new_pin">{% trans "PIN nuevo" %}</label>
+        <input id="new_pin" name="new_pin" type="password" maxlength="4" autocomplete="new-password" autocapitalize="characters" required>
+
+        <label for="new_pin_confirmation">{% trans "Repite el PIN nuevo" %}</label>
+        <input id="new_pin_confirmation" name="new_pin_confirmation" type="password" maxlength="4" autocomplete="new-password" autocapitalize="characters" required>
+
+        {% if error %}<p class="pwa-login-error" role="alert">{{ error }}</p>{% endif %}
+        {% if success %}<p class="pwa-pin-success" role="status">{{ success }}</p>{% endif %}
+
+        <button class="pwa-primary-button" type="submit">{% trans "Guardar PIN" %}</button>
+    </form>
+</section>
+<script>
+    document.querySelectorAll('.pwa-change-pin-form input').forEach(function (input) {
+        input.addEventListener('input', function () { this.value = this.value.toUpperCase(); });
+    });
+</script>
+{% endblock %}

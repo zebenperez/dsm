@@ -1,0 +1,14 @@
+{
+  "name": "Quiosco 5db",
+  "short_name": "Quiosco",
+  "start_url": "/kiosk/",
+  "scope": "/kiosk/",
+  "display": "standalone",
+  "background_color": "#f3f5f6",
+  "theme_color": "#243647",
+  "lang": "es-ES",
+  "icons": [
+    {"src": "/static/images/logo_5db_96.png", "type": "image/png", "sizes": "96x96"},
+    {"src": "/static/images/logo_5db_512.png", "type": "image/png", "sizes": "512x512"}
+  ]
+}
