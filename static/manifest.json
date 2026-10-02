@@ -2,8 +2,8 @@
     "name": "Escuela de Baile 5db",
     "gcm_sender_id": "549100667689",
     "short_name": "5db",
-    "start_url": "/pwa/payments/",
-    "scope":"/",
+    "start_url": "/app/index",
+    "scope":"/app/",
     "display": "standalone",
     "background_color": "#FFF",
     "theme_color": "#FFF",
@@ -19,4 +19,3 @@
         "sizes": "512x512"
     }]
 }
-
