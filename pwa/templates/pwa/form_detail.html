@@ -7,6 +7,7 @@
         {% if form.image %}<img class="pwa-form-banner" src="{{ form.image.url }}" alt="">{% endif %}
         <h1>{{ form.title }}</h1>
         {% if form.description %}<p class="pwa-form-description">{{ form.description|linebreaksbr }}</p>{% endif %}
+        {% if not form.has_started %}<p class="pwa-deadline"><i class="far fa-calendar-alt" aria-hidden="true"></i> {% trans "Disponible a partir de" %}: {{ form.response_start_at|date:"d M Y, H:i" }}</p>{% endif %}
         {% if form.deadline %}<p class="pwa-deadline"><i class="far fa-clock" aria-hidden="true"></i> {% trans "Fecha límite" %}: {{ form.deadline|date:"d M Y, H:i" }}</p>{% endif %}
     </section>
     {% if submission and not can_edit %}
@@ -30,6 +31,8 @@
             {% empty %}<p class="pwa-section-empty">{% trans "Este formulario aún no tiene preguntas." %}</p>{% endfor %}
             {% if questions %}<button type="submit" class="pwa-primary-button">{% trans "Enviar respuesta" %}</button>{% endif %}
         </form>
+    {% elif not form.has_started %}
+        <div class="pwa-empty-state"><i class="far fa-calendar-alt" aria-hidden="true"></i><p>{% trans "Podrás responder este formulario a partir del" %} {{ form.response_start_at|date:"d M Y, H:i" }}.</p></div>
     {% else %}
         <div class="pwa-empty-state"><i class="fas fa-lock" aria-hidden="true"></i><p>{% trans "El plazo para responder este formulario ha finalizado." %}</p></div>
     {% endif %}

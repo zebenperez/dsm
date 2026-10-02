@@ -25,6 +25,7 @@ class Form(models.Model):
     description = models.TextField('Descripción', blank=True)
     image = models.ImageField('Imagen', upload_to='forms/', blank=True)
     is_published = models.BooleanField('Publicado', default=False)
+    response_start_at = models.DateTimeField('Fecha de inicio de respuestas', default=timezone.now)
     deadline = models.DateTimeField('Fecha límite', blank=True, null=True)
     allow_response_changes = models.BooleanField('Permitir cambiar la respuesta', default=False)
     target_groups = models.ManyToManyField(
@@ -46,9 +47,21 @@ class Form(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        if self.response_start_at and self.deadline and self.response_start_at > self.deadline:
+            raise ValidationError('La fecha de inicio de respuestas no puede ser posterior a la fecha límite.')
+
+    @property
+    def has_started(self):
+        return self.response_start_at <= timezone.now()
+
     @property
     def is_open(self):
-        return self.is_published and (self.deadline is None or self.deadline >= timezone.now())
+        return (
+            self.is_published
+            and self.has_started
+            and (self.deadline is None or self.deadline >= timezone.now())
+        )
 
 
 class FormQuestion(models.Model):

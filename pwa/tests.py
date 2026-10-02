@@ -5,12 +5,13 @@ when you run "manage.py test".
 Replace this with more appropriate tests for your application.
 """
 
-from datetime import time
+from datetime import time, timedelta
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from registration_forms.models import Form
+from registration_forms.models import Form, FormSubmission
 from studio.models import Enrolment, Group, Student, Teacher
 
 
@@ -50,6 +51,37 @@ class RegistrationFormVisibilityTests(TestCase):
         response = self.client.get(reverse('pwa-form-detail', args=[self.targeted_form.id]))
 
         self.assertEqual(response.status_code, 404)
+
+
+class FormResponsePeriodTests(TestCase):
+    def setUp(self):
+        self.student = Student.objects.create(code=20, pin='A020', name='Alumna', phone='')
+        session = self.client.session
+        session['student_id'] = self.student.pk
+        session.save()
+
+    def test_response_start_defaults_to_the_form_creation_time(self):
+        before_creation = timezone.now()
+        form = Form.objects.create(title='Formulario inmediato')
+        after_creation = timezone.now()
+
+        self.assertGreaterEqual(form.response_start_at, before_creation)
+        self.assertLessEqual(form.response_start_at, after_creation)
+
+    def test_future_form_shows_its_response_start_date_and_rejects_submissions(self):
+        response_start_at = timezone.now() + timedelta(days=2)
+        form = Form.objects.create(
+            title='Formulario futuro', is_published=True, response_start_at=response_start_at,
+        )
+
+        response = self.client.get(reverse('pwa-form-detail', args=[form.id]))
+
+        self.assertContains(response, 'Podrás responder este formulario a partir del')
+        self.assertContains(response, response_start_at.strftime('%d'))
+        self.assertFalse(form.is_open)
+
+        self.client.post(reverse('pwa-form-detail', args=[form.id]), {})
+        self.assertFalse(FormSubmission.objects.filter(form=form, student=self.student).exists())
 
 
 class ChangePinTests(TestCase):
