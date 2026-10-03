@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Estado de la escuela{% endblock %}
+
+{% block content %}
+<div class="health-dashboard">
+    <div class="dashboard-heading clearfix">
+        <div class="pull-left">
+            <h1>Estado de la escuela</h1>
+            <p>Datos del {{ period_start|date:"d/m/Y" }} al {{ period_end|date:"d/m/Y" }}.</p>
+        </div>
+        <form method="get" class="pull-right dashboard-period" aria-label="Periodo del informe">
+            <label for="months">Periodo</label>
+            <select class="form-control" name="months" id="months" onchange="this.form.submit()">
+                <option value="1" {% if months == 1 %}selected{% endif %}>Último mes</option>
+                <option value="3" {% if months == 3 %}selected{% endif %}>Último trimestre</option>
+                <option value="6" {% if months == 6 %}selected{% endif %}>Últimos 6 meses</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="row dashboard-kpis">
+        <div class="col-sm-6 col-lg-3"><div class="dashboard-card"><span>Alumnado activo</span><strong>{{ active_students_count }}</strong><small>{{ active_enrolments_count }} matrículas activas</small></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="dashboard-card"><span>Altas del período</span><strong>{{ new_enrolments }}</strong><small>Matrículas creadas</small></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="dashboard-card"><span>Ingresos registrados</span><strong>{{ total_income|floatformat:2 }} €</strong><small>Cuotas, ventas y quiosco</small></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="dashboard-card"><span>Asistencia</span><strong>{% if attendance_rate is not None %}{{ attendance_rate }}%{% else %}—{% endif %}</strong><small>{{ sessions_count }} clases registradas</small></div></div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <section class="panel panel-default dashboard-panel">
+                <div class="panel-heading"><strong>Financiación del período</strong></div>
+                <div class="panel-body">
+                    <dl class="dashboard-finance-list">
+                        <dt>Cuotas</dt><dd>{{ tuition_income|floatformat:2 }} €</dd>
+                        <dt>Ventas de artículos</dt><dd>{{ article_income|floatformat:2 }} €</dd>
+                        <dt>Quiosco</dt><dd>{{ kiosk_income|floatformat:2 }} €</dd>
+                        <dt>Pagos a profesorado registrados</dt><dd class="text-danger">− {{ teacher_cost|floatformat:2 }} €</dd>
+                        <dt class="total">Saldo operativo registrado</dt><dd class="total">{{ operating_balance|floatformat:2 }} €</dd>
+                    </dl>
+                    <p class="help-block">No incluye otros gastos fijos o variables que no estén registrados en la aplicación.</p>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-5">
+            <section class="panel panel-default dashboard-panel">
+                <div class="panel-heading"><strong>Alertas</strong></div>
+                <div class="panel-body dashboard-alerts">
+                    <p><span class="badge badge-danger">{{ overdue_students|length }}</span> alumno(s) activo(s) con cuota caducada.</p>
+                    <p><span class="badge badge-warning">{{ low_attendance_students|length }}</span> alumno(s) con asistencia inferior al 60%.</p>
+                    <p class="help-block">Las alertas de asistencia se calculan solo con clases que tengan asistencia registrada durante el período.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <section class="panel panel-default dashboard-panel">
+        <div class="panel-heading"><strong>Recomendaciones para actuar</strong></div>
+        <div class="list-group">
+            {% for recommendation in recommendations %}
+                <div class="list-group-item dashboard-recommendation dashboard-recommendation-{{ recommendation.level }}"><h4>{{ recommendation.title }}</h4><p>{{ recommendation.text }}</p></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel panel-default dashboard-panel">
+        <div class="panel-heading"><strong>Grupos: ocupación, asistencia e ingresos</strong></div>
+        <div class="table-responsive">
+            <table class="table table-hover dashboard-table">
+                <thead><tr><th>Grupo</th><th>Profesor/a</th><th>Alumnado activo</th><th>Clases registradas</th><th>Asistencia</th><th>Ingresos del período</th></tr></thead>
+                <tbody>
+                {% for row in group_rows %}
+                    <tr><td>{{ row.group.name }}</td><td>{{ row.group.teacher.name }}</td><td>{{ row.students }}</td><td>{{ row.sessions }}</td><td>{% if row.attendance is not None %}{{ row.attendance }}%{% else %}—{% endif %}</td><td>{{ row.income|floatformat:2 }} €</td></tr>
+                {% empty %}
+                    <tr><td colspan="6" class="text-muted">No hay matrículas activas todavía.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -5,6 +5,7 @@ from studio.dsm_forms import *
 from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal, InvalidOperation
+from collections import defaultdict
 from django.db import transaction
 from django.db.models import Q, Count, Min, Sum, Max, Avg
 from django.contrib import messages
@@ -42,6 +43,159 @@ def index(request):
     if request.user.groups.filter(name="student").exists():
         return redirect("champs")
     return redirect("tpv")
+
+
+@group_required("managers")
+def dashboard(request):
+    """Show an operational health snapshot for the selected calendar period.
+
+    The dashboard deliberately uses only information already captured by the
+    school.  Campaign attribution can be added later without making these
+    indicators depend on a third party service.
+    """
+    today = date.today()
+    try:
+        months = int(request.GET.get('months', 1))
+    except (TypeError, ValueError):
+        months = 1
+    months = months if months in (1, 3, 6) else 1
+    period_start = today - relativedelta(months=months) + relativedelta(days=1)
+
+    active_enrolments = Enrolment.objects.filter(active=True).select_related(
+        'student', 'group', 'group__teacher'
+    )
+    active_students = Student.objects.filter(enrolment__active=True).distinct()
+    new_enrolments = Enrolment.objects.filter(
+        creation_date__date__gte=period_start,
+        creation_date__date__lte=today,
+    ).count()
+
+    tuition_income = Payment.objects.filter(
+        date__date__gte=period_start, date__date__lte=today
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    article_income = ArticlePayment.objects.filter(
+        date__date__gte=period_start, date__date__lte=today
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    kiosk_income = KioskPayment.objects.filter(
+        ticket__created_at__date__gte=period_start,
+        ticket__created_at__date__lte=today,
+        ticket__status='completed',
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    teacher_cost = TeacherPayment.objects.filter(
+        date__date__gte=period_start, date__date__lte=today
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    total_income = tuition_income + article_income + kiosk_income
+
+    sessions = list(Assistance.objects.filter(
+        date__gte=period_start, date__lte=today
+    ).prefetch_related('enrolments'))
+    group_active_counts = defaultdict(int)
+    for enrolment in active_enrolments:
+        group_active_counts[enrolment.group_id] += 1
+
+    possible_attendances = 0
+    recorded_attendances = 0
+    group_attendance = defaultdict(lambda: {'sessions': 0, 'present': 0, 'possible': 0})
+    student_attendance = defaultdict(lambda: {'sessions': 0, 'present': 0})
+    active_enrolment_ids = {enrolment.id for enrolment in active_enrolments}
+    for session in sessions:
+        active_in_group = group_active_counts[session.group_id]
+        present_ids = {enrolment.id for enrolment in session.enrolments.all()}
+        possible_attendances += active_in_group
+        recorded_attendances += len(present_ids & active_enrolment_ids)
+        group_attendance[session.group_id]['sessions'] += 1
+        group_attendance[session.group_id]['possible'] += active_in_group
+        group_attendance[session.group_id]['present'] += len(present_ids & active_enrolment_ids)
+        for enrolment in active_enrolments:
+            if enrolment.group_id == session.group_id:
+                student_attendance[enrolment.student_id]['sessions'] += 1
+                if enrolment.id in present_ids:
+                    student_attendance[enrolment.student_id]['present'] += 1
+
+    attendance_rate = None
+    if possible_attendances:
+        attendance_rate = round(recorded_attendances * 100.0 / possible_attendances)
+
+    group_rows = []
+    for group_id, count in group_active_counts.items():
+        group = next(enrolment.group for enrolment in active_enrolments if enrolment.group_id == group_id)
+        data = group_attendance[group_id]
+        attendance = None
+        if data['possible']:
+            attendance = round(data['present'] * 100.0 / data['possible'])
+        group_income = Payment.objects.filter(
+            enrolment__group_id=group_id,
+            date__date__gte=period_start, date__date__lte=today,
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        group_rows.append({
+            'group': group, 'students': count, 'sessions': data['sessions'],
+            'attendance': attendance, 'income': group_income,
+        })
+    group_rows.sort(key=lambda row: (row['students'], row['group'].name.lower()))
+
+    overdue_students = []
+    for student in active_students:
+        last_payment = Payment.objects.filter(student=student).order_by('-expire_date').first()
+        if last_payment and last_payment.expire_date.date() < today:
+            overdue_students.append({'student': student, 'expire_date': last_payment.expire_date})
+
+    low_attendance_students = []
+    for student in active_students:
+        data = student_attendance[student.id]
+        if data['sessions'] >= 2 and data['present'] * 100.0 / data['sessions'] < 60:
+            low_attendance_students.append({
+                'student': student,
+                'rate': round(data['present'] * 100.0 / data['sessions']),
+                'sessions': data['sessions'],
+            })
+    low_attendance_students.sort(key=lambda row: row['rate'])
+
+    recommendations = []
+    low_occupancy_groups = [row for row in group_rows if row['students'] < 5]
+    if low_occupancy_groups:
+        recommendations.append({
+            'level': 'warning',
+            'title': 'Impulsar los grupos con menos alumnado',
+            'text': 'Hay %s grupo(s) con menos de 5 matrículas activas. Preparad una campaña de clase de prueba centrada en su estilo y horario.' % len(low_occupancy_groups),
+        })
+    if overdue_students:
+        recommendations.append({
+            'level': 'danger',
+            'title': 'Atender cuotas vencidas',
+            'text': '%s alumno(s) activo(s) tienen una cuota caducada. Priorizad un recordatorio personal antes de invertir en captación.' % len(overdue_students),
+        })
+    if low_attendance_students:
+        recommendations.append({
+            'level': 'warning',
+            'title': 'Recuperar asistencia antes de que haya bajas',
+            'text': '%s alumno(s) han asistido a menos del 60 %% de las clases registradas. Contactadles con una propuesta concreta de vuelta.' % len(low_attendance_students),
+        })
+    if attendance_rate is not None and attendance_rate >= 80:
+        recommendations.append({
+            'level': 'success',
+            'title': 'Convertir la buena asistencia en prueba social',
+            'text': 'La asistencia global es alta. Recoged testimonios y contenido de estos grupos para las próximas campañas.',
+        })
+    if not recommendations:
+        recommendations.append({
+            'level': 'info',
+            'title': 'Construir una línea base',
+            'text': 'Aún no hay alertas concluyentes. Revisad este panel cada mes: el valor aumentará a medida que se registren pagos y asistencias.',
+        })
+
+    return render(request, 'dashboard.html', {
+        'months': months, 'period_start': period_start, 'period_end': today,
+        'active_students_count': active_students.count(),
+        'active_enrolments_count': active_enrolments.count(),
+        'new_enrolments': new_enrolments, 'total_income': total_income,
+        'tuition_income': tuition_income, 'article_income': article_income,
+        'kiosk_income': kiosk_income, 'teacher_cost': teacher_cost,
+        'operating_balance': total_income - teacher_cost,
+        'attendance_rate': attendance_rate, 'sessions_count': len(sessions),
+        'group_rows': group_rows, 'overdue_students': overdue_students,
+        'low_attendance_students': low_attendance_students,
+        'recommendations': recommendations,
+    })
 
 
 @group_required("reception")

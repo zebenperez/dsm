@@ -12,7 +12,10 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.urls import reverse
 
-from studio.models import Article, ArticlePayment, Concept, InsufficientWalletBalance, Student, WalletMovement
+from studio.models import (
+    Article, ArticlePayment, Assistance, Concept, Enrolment, Group as StudioGroup,
+    InsufficientWalletBalance, Payment, Student, Teacher, WalletMovement,
+)
 from studio.views import calculate_amount, calculate_wallet_payments
 
 
@@ -42,6 +45,46 @@ class WalletMovementTests(TestCase):
             )
 
         self.assertEqual(WalletMovement.objects.filter(student=self.student).count(), 2)
+
+
+class DashboardTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='manager', password='secret')
+        managers, _ = Group.objects.get_or_create(name='managers')
+        self.user.groups.add(managers)
+        self.teacher = Teacher.objects.create(code=10, name='Profesora', phone='')
+        self.dance_group = StudioGroup.objects.create(
+            name='Bachata iniciación', teacher=self.teacher,
+            ini_time='18:00', end_time='19:00', monday=True,
+        )
+        self.student = Student.objects.create(code=10, pin='D010', name='Alumna activa', phone='')
+        self.enrolment = Enrolment.objects.create(student=self.student, group=self.dance_group)
+
+    def test_dashboard_shows_existing_operational_data(self):
+        Payment.objects.create(
+            student=self.student, enrolment=self.enrolment,
+            amount=Decimal('30.00'), note='', date=date.today(),
+            pay_date=date.today(), expire_date=date.today(),
+        )
+        assistance = Assistance.objects.create(date=date.today(), group=self.dance_group)
+        assistance.enrolments.add(self.enrolment)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Estado de la escuela')
+        self.assertEqual(response.context['active_students_count'], 1)
+        self.assertEqual(response.context['total_income'], Decimal('30.00'))
+        self.assertEqual(response.context['attendance_rate'], 100)
+
+    def test_dashboard_requires_manager_access(self):
+        outsider = User.objects.create_user(username='outsider', password='secret')
+        self.client.force_login(outsider)
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertRedirects(response, reverse('auth_login'))
 
 
 class ArticleWalletPaymentTests(TestCase):

@@ -32,6 +32,12 @@
                 <li {% if "admin"|contains:request.path %}class="active"{% endif %}><a href="{% url 'admin:index' %}"><i class="glyphicon glyphicon-cog"></i> Admin</a></li>
             </ul>
         {% endif %}
+        {% if user.is_superuser or user|in_group:"managers" %}
+            <p class="studio-nav-heading">{% trans "Dirección" %}</p>
+            <ul>
+                <li {% if "dashboard"|contains:request.path %}class="active"{% endif %}><a href="{% url 'dashboard' %}"><i class="glyphicon glyphicon-dashboard"></i> {% trans "Estado de la escuela" %}</a></li>
+            </ul>
+        {% endif %}
         {% if user|in_group:"student" %}
             <p class="studio-nav-heading">{% trans "Mi cuenta" %}</p>
             <ul>

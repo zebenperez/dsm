@@ -211,6 +211,40 @@ body {
 	color: #ffc14d;
 }
 
+/* School health dashboard */
+.health-dashboard { padding: 25px 0 15px; }
+.dashboard-heading { margin-bottom: 20px; }
+.dashboard-heading h1 { margin: 0 0 5px; color: #31485b; font-size: 28px; font-weight: 700; }
+.dashboard-heading p { margin: 0; color: #6f7f8c; }
+.dashboard-period { display: flex; align-items: center; gap: 8px; }
+.dashboard-period label { margin: 0; color: #526778; }
+.dashboard-period select { width: 155px; }
+.dashboard-kpis { margin-bottom: 8px; }
+.dashboard-kpis > div { margin-bottom: 15px; }
+.dashboard-card { min-height: 132px; padding: 18px; border-radius: 5px; background: #fff; border-top: 4px solid #4c849f; box-shadow: 0 1px 4px rgba(28, 53, 70, .12); }
+.dashboard-card span, .dashboard-card small { display: block; color: #697b88; }
+.dashboard-card span { font-size: 13px; font-weight: 700; text-transform: uppercase; }
+.dashboard-card strong { display: block; margin: 10px 0 4px; color: #263f53; font-size: 27px; line-height: 1; }
+.dashboard-panel { border-color: #d9e1e6; box-shadow: 0 1px 3px rgba(28, 53, 70, .07); }
+.dashboard-panel > .panel-heading { background: #fff; color: #344e61; }
+.dashboard-finance-list { display: grid; grid-template-columns: 1fr auto; margin: 0; }
+.dashboard-finance-list dt, .dashboard-finance-list dd { padding: 7px 0; border-bottom: 1px solid #edf0f2; }
+.dashboard-finance-list dd { text-align: right; }
+.dashboard-finance-list .total { padding-top: 12px; border-bottom: 0; color: #263f53; font-size: 16px; }
+.dashboard-alerts p { margin-bottom: 16px; }
+.badge-danger { background: #bd4d4d; }
+.badge-warning { background: #c9841b; }
+.dashboard-recommendation { border-left: 4px solid #4c849f; }
+.dashboard-recommendation-warning { border-left-color: #d3932b; }
+.dashboard-recommendation-danger { border-left-color: #c45656; }
+.dashboard-recommendation-success { border-left-color: #4c9a72; }
+.dashboard-recommendation h4 { margin: 0 0 5px; color: #334b5d; }
+.dashboard-recommendation p { margin: 0; color: #5d6f7d; }
+.dashboard-table th { color: #566b7a; font-size: 12px; text-transform: uppercase; }
+@media (max-width: 767px) {
+  .dashboard-period { float: none !important; margin-top: 15px; }
+}
+
 .studio-user-menu {
 	margin: 28px 20px 0;
 	padding: 14px 0 0;

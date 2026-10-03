@@ -5,6 +5,7 @@ from studio import views
 urlpatterns = [
 	#path('', RedirectView.as_view(url='tpv/')),
 	path('', views.index, name="index"),
+	path('dashboard/', views.dashboard, name='dashboard'),
 	path('tpv/', views.tpv, name="tpv"),
 	path('search/', views.search, name="search"),
 	path('pay/', views.pay, name="pay"),
