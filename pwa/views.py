@@ -146,6 +146,8 @@ def form_detail(request, form_id):
 				errors[question.id] = _('Esta pregunta es obligatoria.')
 			elif question.answer_type == FormQuestion.ANSWER_TYPE_YES_NO and value not in ('yes', 'no', ''):
 				errors[question.id] = _('Selecciona Sí o No.')
+			elif question.answer_type == FormQuestion.ANSWER_TYPE_SELECT and value not in question.select_options:
+				errors[question.id] = _('Selecciona una opción válida.')
 		if not errors:
 			with transaction.atomic():
 				if not submission:

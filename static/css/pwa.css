@@ -584,7 +584,8 @@ body {
 	color: #52606d;
 }
 
-.pwa-question input[type="text"] {
+.pwa-question input[type="text"],
+.pwa-question select {
 	width: 100%;
 	padding: 9px 10px;
 	border: 1px solid #cbd3da;

@@ -11,7 +11,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from registration_forms.models import Form, FormSubmission
+from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 from studio.models import Enrolment, Group, Student, Teacher
 
 
@@ -82,6 +82,46 @@ class FormResponsePeriodTests(TestCase):
 
         self.client.post(reverse('pwa-form-detail', args=[form.id]), {})
         self.assertFalse(FormSubmission.objects.filter(form=form, student=self.student).exists())
+
+
+class SelectQuestionTests(TestCase):
+    def setUp(self):
+        self.student = Student.objects.create(code=30, pin='A030', name='Alumna', phone='')
+        session = self.client.session
+        session['student_id'] = self.student.pk
+        session.save()
+        self.form = Form.objects.create(title='Elección de talla', is_published=True)
+        self.question = FormQuestion.objects.create(
+            form=self.form,
+            text='¿Qué talla necesitas?',
+            answer_type=FormQuestion.ANSWER_TYPE_SELECT,
+            options='Pequeña\nMediana\nGrande',
+            required=True,
+        )
+
+    def test_select_question_renders_its_configured_options(self):
+        response = self.client.get(reverse('pwa-form-detail', args=[self.form.id]))
+
+        self.assertContains(response, '<select name="question_%s">' % self.question.id, html=True)
+        self.assertContains(response, '<option value="Mediana">Mediana</option>', html=True)
+
+    def test_select_question_saves_a_configured_option(self):
+        response = self.client.post(reverse('pwa-form-detail', args=[self.form.id]), {
+            'question_%s' % self.question.id: 'Mediana',
+        })
+
+        self.assertRedirects(response, reverse('pwa-form-detail', args=[self.form.id]))
+        answer = FormAnswer.objects.get(question=self.question, submission__student=self.student)
+        self.assertEqual(answer.short_text, 'Mediana')
+        self.assertEqual(answer.value, 'Mediana')
+
+    def test_select_question_rejects_a_value_outside_its_options(self):
+        response = self.client.post(reverse('pwa-form-detail', args=[self.form.id]), {
+            'question_%s' % self.question.id: 'No existe',
+        })
+
+        self.assertContains(response, 'Selecciona una opción válida.')
+        self.assertFalse(FormSubmission.objects.filter(form=self.form, student=self.student).exists())
 
 
 class ChangePinTests(TestCase):

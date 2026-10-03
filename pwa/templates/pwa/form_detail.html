@@ -23,6 +23,13 @@
                     {% if question.answer_type == 'yes_no' %}
                         <label><input type="radio" name="question_{{ question.id }}" value="yes" {% if question.submitted_value == 'yes' %}checked{% endif %}> {% trans "Sí" %}</label>
                         <label><input type="radio" name="question_{{ question.id }}" value="no" {% if question.submitted_value == 'no' %}checked{% endif %}> {% trans "No" %}</label>
+                    {% elif question.answer_type == 'select' %}
+                        <select name="question_{{ question.id }}">
+                            <option value="">{% trans "Selecciona una opción" %}</option>
+                            {% for option in question.select_options %}
+                                <option value="{{ option }}" {% if question.submitted_value == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
                     {% else %}
                         <input type="text" name="question_{{ question.id }}" maxlength="500" value="{{ question.submitted_value|default:'' }}">
                     {% endif %}

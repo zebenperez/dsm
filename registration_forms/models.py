@@ -67,14 +67,21 @@ class Form(models.Model):
 class FormQuestion(models.Model):
     ANSWER_TYPE_YES_NO = 'yes_no'
     ANSWER_TYPE_SHORT_TEXT = 'short_text'
+    ANSWER_TYPE_SELECT = 'select'
     ANSWER_TYPE_CHOICES = (
         (ANSWER_TYPE_YES_NO, 'Sí o no'),
         (ANSWER_TYPE_SHORT_TEXT, 'Texto corto'),
+        (ANSWER_TYPE_SELECT, 'Lista desplegable'),
     )
 
     form = models.ForeignKey(Form, verbose_name='Formulario', related_name='questions', on_delete=models.CASCADE)
     text = models.CharField('Pregunta', max_length=500)
     answer_type = models.CharField('Tipo de respuesta', max_length=20, choices=ANSWER_TYPE_CHOICES)
+    options = models.TextField(
+        'Opciones',
+        blank=True,
+        help_text='Escribe una opción por línea. Solo se usa en las listas desplegables.',
+    )
     required = models.BooleanField('Obligatoria', default=False)
     position = models.PositiveIntegerField('Orden', default=0)
 
@@ -85,6 +92,22 @@ class FormQuestion(models.Model):
 
     def __str__(self):
         return self.text
+
+    @property
+    def select_options(self):
+        """Return the non-empty options configured for a select question."""
+        return [option.strip() for option in self.options.splitlines() if option.strip()]
+
+    def clean(self):
+        super().clean()
+        if self.answer_type == self.ANSWER_TYPE_SELECT:
+            options = self.select_options
+            if not options:
+                raise ValidationError({'options': 'Añade al menos una opción para la lista desplegable.'})
+            if len(options) != len(set(options)):
+                raise ValidationError({'options': 'Las opciones de la lista desplegable no pueden repetirse.'})
+            if any(len(option) > 500 for option in options):
+                raise ValidationError({'options': 'Cada opción puede tener un máximo de 500 caracteres.'})
 
 
 class FormSubmission(models.Model):
@@ -120,6 +143,13 @@ class FormAnswer(models.Model):
         if self.submission_id and self.question_id:
             if self.submission.form_id != self.question.form_id:
                 raise ValidationError('La pregunta debe pertenecer al formulario respondido.')
+        if (
+            self.question_id
+            and self.question.answer_type == FormQuestion.ANSWER_TYPE_SELECT
+            and self.short_text
+            and self.short_text not in self.question.select_options
+        ):
+            raise ValidationError({'short_text': 'La opción elegida no es válida para esta pregunta.'})
 
     @property
     def value(self):

@@ -6,7 +6,7 @@ from .models import Form, FormAnswer, FormQuestion, FormSubmission
 class FormQuestionInline(admin.TabularInline):
     model = FormQuestion
     extra = 1
-    fields = ('position', 'text', 'answer_type', 'required')
+    fields = ('position', 'text', 'answer_type', 'options', 'required')
 
 
 @admin.register(Form)
