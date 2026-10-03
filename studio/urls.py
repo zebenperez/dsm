@@ -66,7 +66,6 @@ urlpatterns = [
 
 	## FORMULARIOS
 	path('forms/', views.registration_forms, name='registration_forms'),
-	path('forms/<int:form_id>/clone/', views.registration_form_clone, name='registration_form_clone'),
 	path('forms/<int:form_id>/', views.registration_form_responses, name='registration_form_responses'),
 
 	##PULSERAS

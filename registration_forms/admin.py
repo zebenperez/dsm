@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib import messages
+from django.db import transaction
 
 from .models import Form, FormAnswer, FormQuestion, FormSubmission
 
@@ -16,6 +18,18 @@ class FormAdmin(admin.ModelAdmin):
     search_fields = ('title', 'description')
     filter_horizontal = ('target_groups',)
     inlines = (FormQuestionInline,)
+    actions = ('clone_selected_forms',)
+
+    def clone_selected_forms(self, request, queryset):
+        with transaction.atomic():
+            clones = [form.clone() for form in queryset]
+        self.message_user(
+            request,
+            '%d formulario(s) clonado(s) como borrador.' % len(clones),
+            messages.SUCCESS,
+        )
+
+    clone_selected_forms.short_description = 'Clonar los formularios seleccionados'
 
 
 class FormAnswerInline(admin.TabularInline):
