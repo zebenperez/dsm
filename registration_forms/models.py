@@ -51,6 +51,31 @@ class Form(models.Model):
         if self.response_start_at and self.deadline and self.response_start_at > self.deadline:
             raise ValidationError('La fecha de inicio de respuestas no puede ser posterior a la fecha límite.')
 
+    def clone(self):
+        """Create a draft copy of this form and its questions, without responses."""
+        clone = Form.objects.create(
+            title=('Copia de %s' % self.title)[:200],
+            description=self.description,
+            image=self.image,
+            is_published=False,
+            response_start_at=self.response_start_at,
+            deadline=self.deadline,
+            allow_response_changes=self.allow_response_changes,
+        )
+        clone.target_groups.set(self.target_groups.all())
+        FormQuestion.objects.bulk_create([
+            FormQuestion(
+                form=clone,
+                text=question.text,
+                answer_type=question.answer_type,
+                options=question.options,
+                required=question.required,
+                position=question.position,
+            )
+            for question in self.questions.all()
+        ])
+        return clone
+
     @property
     def has_started(self):
         return self.response_start_at <= timezone.now()

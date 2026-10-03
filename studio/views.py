@@ -66,6 +66,18 @@ def registration_forms(request):
 
 
 @group_required("reception")
+def registration_form_clone(request, form_id):
+    if request.method != 'POST':
+        return redirect('registration_forms')
+
+    form = get_object_or_404(RegistrationForm, pk=form_id)
+    with transaction.atomic():
+        clone = form.clone()
+    messages.success(request, _('Se ha creado el borrador "%s".') % clone.title)
+    return redirect('%s?%s' % (reverse('registration_forms'), urlencode({'state': 'all'})))
+
+
+@group_required("reception")
 def registration_form_responses(request, form_id):
     form = get_object_or_404(RegistrationForm, pk=form_id)
     questions = list(form.questions.all())

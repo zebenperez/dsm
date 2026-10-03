@@ -12,6 +12,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.urls import reverse
 
+from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 from studio.models import Article, ArticlePayment, Concept, InsufficientWalletBalance, Student, WalletMovement
 from studio.views import calculate_amount, calculate_wallet_payments
 
@@ -42,6 +43,46 @@ class WalletMovementTests(TestCase):
             )
 
         self.assertEqual(WalletMovement.objects.filter(student=self.student).count(), 2)
+
+
+class RegistrationFormCloneTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='recepcion', password='secret')
+        reception, _ = Group.objects.get_or_create(name='reception')
+        self.user.groups.add(reception)
+        self.form = Form.objects.create(
+            title='Pedido de camiseta', description='Elige talla', is_published=True,
+            allow_response_changes=True,
+        )
+        self.question = FormQuestion.objects.create(
+            form=self.form,
+            text='Talla',
+            answer_type=FormQuestion.ANSWER_TYPE_SELECT,
+            options='S\nM\nL',
+            required=True,
+            position=2,
+        )
+        student = Student.objects.create(code=99, pin='A099', name='Alumna', phone='')
+        submission = FormSubmission.objects.create(form=self.form, student=student)
+        FormAnswer.objects.create(submission=submission, question=self.question, short_text='M')
+
+    def test_clone_copies_form_configuration_and_questions_without_responses(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse('registration_form_clone', args=[self.form.id]))
+
+        self.assertRedirects(response, '%s?state=all' % reverse('registration_forms'))
+        clone = Form.objects.exclude(pk=self.form.pk).get()
+        self.assertEqual(clone.title, 'Copia de Pedido de camiseta')
+        self.assertEqual(clone.description, self.form.description)
+        self.assertFalse(clone.is_published)
+        self.assertTrue(clone.allow_response_changes)
+        self.assertFalse(FormSubmission.objects.filter(form=clone).exists())
+        clone_question = clone.questions.get()
+        self.assertEqual(clone_question.text, self.question.text)
+        self.assertEqual(clone_question.answer_type, FormQuestion.ANSWER_TYPE_SELECT)
+        self.assertEqual(clone_question.options, 'S\nM\nL')
+        self.assertEqual(clone_question.position, 2)
 
 
 class ArticleWalletPaymentTests(TestCase):
