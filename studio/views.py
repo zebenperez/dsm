@@ -223,6 +223,7 @@ def registration_forms(request):
 def registration_form_responses(request, form_id):
     form = get_object_or_404(RegistrationForm, pk=form_id)
     questions = list(form.questions.all())
+    target_groups = list(form.target_groups.all())
     submission_list = list(
         FormSubmission.objects.filter(form=form)
         .select_related('student')
@@ -232,10 +233,27 @@ def registration_form_responses(request, form_id):
     for submission in submission_list:
         answers = {answer.question_id: answer.value for answer in submission.answers.all()}
         submission.answer_values = [answers.get(question.id, '—') for question in questions]
+
+    # Solo es posible saber quién está pendiente cuando el formulario está
+    # dirigido a grupos concretos. Una alumna con matrícula activa en cualquiera
+    # de esos grupos cuenta una única vez, aunque esté en más de uno.
+    pending_student_list = []
+    if target_groups:
+        pending_student_list = list(
+            Student.objects.filter(
+                enrolment__active=True,
+                enrolment__group__in=target_groups,
+            ).exclude(
+                form_submissions__form=form,
+            ).distinct().order_by('name')
+        )
+
     return render(request, 'forms/form_responses.html', {
         'form': form,
         'questions': questions,
         'submission_list': submission_list,
+        'target_groups': target_groups,
+        'pending_student_list': pending_student_list,
     })
 
 @group_required("reception")

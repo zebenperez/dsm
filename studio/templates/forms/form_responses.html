@@ -22,4 +22,31 @@
             {% endif %}
         </div>
     </div>
+    {% if target_groups %}
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <a role="button" data-toggle="collapse" href="#pending-students-{{ form.id }}" aria-expanded="false" aria-controls="pending-students-{{ form.id }}">
+                    <strong>{% trans "Pendientes de responder" %}</strong>
+                    <i class="glyphicon glyphicon-chevron-down" aria-hidden="true"></i>
+                </a>
+                <span class="badge">{{ pending_student_list|length }}</span>
+            </div>
+            <div id="pending-students-{{ form.id }}" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <p class="text-muted">
+                        {% trans "Alumnas con matrícula activa en los grupos destinatarios que aún no han respondido." %}
+                    </p>
+                    {% if pending_student_list %}
+                        <ul class="list-group">
+                            {% for student in pending_student_list %}
+                                <li class="list-group-item">{{ student.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-success"><i class="glyphicon glyphicon-ok"></i> {% trans "Todas han respondido." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

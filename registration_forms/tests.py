@@ -1,11 +1,13 @@
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import Group as AuthGroup
 from django.contrib.auth.models import User
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
 from registration_forms.admin import FormAdmin
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
-from studio.models import Student
+from studio.models import Enrolment, Group, Student, Teacher
 
 
 class FormAdminCloneTests(TestCase):
@@ -46,3 +48,46 @@ class FormAdminCloneTests(TestCase):
         self.assertEqual(clone_question.answer_type, FormQuestion.ANSWER_TYPE_SELECT)
         self.assertEqual(clone_question.options, 'S\nM\nL')
         self.assertEqual(clone_question.position, 2)
+
+
+class FormResponsePendingStudentsTests(TestCase):
+    def setUp(self):
+        teacher = Teacher.objects.create(code=1, name='Profesora', phone='')
+        self.target_group = Group.objects.create(
+            name='Grupo destinatario', teacher=teacher, ini_time='17:00', end_time='18:00',
+        )
+        other_group = Group.objects.create(
+            name='Otro grupo', teacher=teacher, ini_time='18:00', end_time='19:00',
+        )
+        self.responded_student = Student.objects.create(code=1, pin='A001', name='Respondida', phone='')
+        self.pending_student = Student.objects.create(code=2, pin='A002', name='Pendiente', phone='')
+        other_student = Student.objects.create(code=3, pin='A003', name='Otro grupo', phone='')
+        inactive_student = Student.objects.create(code=4, pin='A004', name='Matrícula inactiva', phone='')
+        Enrolment.objects.create(student=self.responded_student, group=self.target_group, active=True)
+        Enrolment.objects.create(student=self.pending_student, group=self.target_group, active=True)
+        Enrolment.objects.create(student=other_student, group=other_group, active=True)
+        Enrolment.objects.create(student=inactive_student, group=self.target_group, active=False)
+
+        self.targeted_form = Form.objects.create(title='Formulario dirigido')
+        self.targeted_form.target_groups.add(self.target_group)
+        FormSubmission.objects.create(form=self.targeted_form, student=self.responded_student)
+        self.general_form = Form.objects.create(title='Formulario general')
+
+        user = User.objects.create_user('reception', password='secret')
+        user.groups.add(AuthGroup.objects.create(name='reception'))
+        self.client.force_login(user)
+
+    def test_shows_only_active_target_group_students_who_have_not_responded(self):
+        response = self.client.get(reverse('registration_form_responses', args=[self.targeted_form.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Pendientes de responder')
+        self.assertContains(response, self.pending_student.name)
+        self.assertNotContains(response, 'Matrícula inactiva')
+        self.assertNotContains(response, 'Otro grupo')
+
+    def test_does_not_show_pending_section_for_a_general_form(self):
+        response = self.client.get(reverse('registration_form_responses', args=[self.general_form.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Pendientes de responder')
