@@ -320,7 +320,8 @@ def pay(request):
 		amount = Decimal(request.POST["amount"].replace(",", "."))
 		pay_date = datetime.datetime.strptime(request.POST["pay_date"], "%d-%m-%Y")
 		expire_date = datetime.datetime.strptime(request.POST["expire_date"], "%d-%m-%Y")
-		payment = Payment(date = today, pay_date = pay_date, expire_date = expire_date, amount = amount, student = e.student, enrolment = e) 
+		card = request.POST.get('payment_method') == 'card'
+		payment = Payment(date = today, pay_date = pay_date, expire_date = expire_date, amount = amount, student = e.student, enrolment = e, card = card)
 		payment.save()
 	return redirect('/studio/tpv/?current_code='+str(e.student.code))
 	#return redirect('/studio/tpv/')
@@ -376,8 +377,25 @@ def pay_with_wallet(request):
 def delete_payment(request, payment_id):
 	a = get_object_or_404(Payment, pk=payment_id)
 	code = a.student.code
-	a.delete()
-	return redirect('/studio/tpv/?current_code='+str(code))
+	was_paid_with_wallet = bool(a.wallet_movement_id)
+	with transaction.atomic():
+		if was_paid_with_wallet:
+			WalletMovement.record(
+				a.student,
+				abs(a.amount),
+				WalletMovement.TYPE_REFUND,
+				'Devolución cuota: %s' % a.enrolment.group,
+				'',
+				request.user,
+			)
+		a.delete()
+	query = {'current_code': code}
+	if was_paid_with_wallet:
+		query.update({
+			'wallet_message': 'Pago eliminado y saldo devuelto al monedero.',
+			'wallet_message_level': 'success',
+		})
+	return redirect('/studio/tpv/?' + urlencode(query))
 	#return redirect('/studio/')
 
 @login_required
@@ -553,9 +571,7 @@ def article_pay(request):
 		today = date.today()
 		amount = Decimal(request.POST["amount"].replace(",", "."))
 		concept = Concept.objects.get(code=request.POST["concept"])
-		card = False
-		if 'card' in request.POST:
-			card = True
+		card = request.POST.get('payment_method') == 'card'
 		
 	article_payment = ArticlePayment(note = request.POST["note"], date = today, amount = amount, article = a, concept = concept, card = card) 
 	article_payment.save()
@@ -670,6 +686,80 @@ def calculate_wallet_payments(current_date):
 	).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
 	return -total
 
+
+def _total(queryset):
+	"""Return a decimal total for a queryset of money values."""
+	return queryset.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+
+def calculate_cash_summary(current_date):
+	"""Build the daily close by *where money entered*, not by what was sold.
+
+	A wallet charge is a sale paid with money that had already entered on a
+	previous top-up.  It must therefore never be added to the cash drawer or
+	the card terminal a second time.
+	"""
+	date_min = datetime.datetime.combine(current_date, datetime.time.min)
+	date_max = date_min + datetime.timedelta(days=1)
+	direct_payments = Payment.objects.filter(
+		date__gte=date_min, date__lt=date_max, wallet_movement__isnull=True,
+	)
+	direct_articles = ArticlePayment.objects.filter(
+		date__gte=date_min, date__lt=date_max, wallet_movement__isnull=True,
+	)
+	teacher_payments = TeacherPayment.objects.filter(date__gte=date_min, date__lt=date_max)
+
+	cash_direct = (
+		_total(direct_payments.filter(card=False))
+		+ _total(direct_articles.filter(card=False))
+		+ _total(teacher_payments.filter(card=False))
+		+ _total(KioskPayment.objects.filter(
+			ticket__created_at__gte=date_min, ticket__created_at__lt=date_max,
+			method=KioskPayment.METHOD_CASH,
+		))
+	)
+	card_direct = (
+		_total(direct_payments.filter(card=True))
+		+ _total(direct_articles.filter(card=True))
+		+ _total(teacher_payments.filter(card=True))
+		+ _total(KioskPayment.objects.filter(
+			ticket__created_at__gte=date_min, ticket__created_at__lt=date_max,
+			method=KioskPayment.METHOD_CARD,
+		))
+	)
+	wallet_movements = WalletMovement.objects.filter(created_at__gte=date_min, created_at__lt=date_max)
+	wallet_cash_topups = _total(wallet_movements.filter(
+		movement_type=WalletMovement.TYPE_TOP_UP,
+		payment_method=WalletMovement.METHOD_CASH,
+	))
+	wallet_card_topups = _total(wallet_movements.filter(
+		movement_type=WalletMovement.TYPE_TOP_UP,
+		payment_method=WalletMovement.METHOD_CARD,
+	))
+	wallet_transfer_topups = _total(wallet_movements.filter(
+		movement_type=WalletMovement.TYPE_TOP_UP,
+		payment_method=WalletMovement.METHOD_TRANSFER,
+	))
+	wallet_spent = -_total(wallet_movements.filter(movement_type=WalletMovement.TYPE_PURCHASE))
+	wallet_refunds = _total(wallet_movements.filter(movement_type=WalletMovement.TYPE_REFUND))
+	wallet_adjustments = _total(wallet_movements.filter(movement_type=WalletMovement.TYPE_ADJUSTMENT))
+
+	return {
+		'cash_direct': cash_direct,
+		'card_direct': card_direct,
+		'wallet_cash_topups': wallet_cash_topups,
+		'wallet_card_topups': wallet_card_topups,
+		'wallet_transfer_topups': wallet_transfer_topups,
+		'cash_collected': cash_direct + wallet_cash_topups,
+		'card_collected': card_direct + wallet_card_topups,
+		'wallet_topups': wallet_cash_topups + wallet_card_topups + wallet_transfer_topups,
+		'wallet_spent': wallet_spent,
+		'wallet_refunds': wallet_refunds,
+		'wallet_adjustments': wallet_adjustments,
+		'wallet_net_change': wallet_cash_topups + wallet_card_topups + wallet_transfer_topups
+			- wallet_spent + wallet_refunds + wallet_adjustments,
+	}
+
 @login_required
 def cash(request, current_date = None, msg = None):
 	if current_date == None:
@@ -677,30 +767,36 @@ def cash(request, current_date = None, msg = None):
 	else: 
 		current_date = datetime.datetime.strptime(current_date, "%d-%m-%Y")
 
-	cashs = Cash.objects.order_by("id").filter(date__gte=current_date)
-	#cashs = Cash.objects.order_by("id").filter(date__year=current_date.year, date__month=current_date.month, date__day=current_date.day)
+	date_min = datetime.datetime.combine(current_date, datetime.time.min)
+	date_max = date_min + datetime.timedelta(days=1)
+	cashs = Cash.objects.order_by("id").filter(date__gte=date_min, date__lt=date_max)
 	if len(cashs) > 0:
 		cash = cashs[0]
 	else:
 		cash = Cash(date = current_date)
 		cash.save()
 
-	billing_positive = calculate_amount(current_date, True)
-	billing_negative = calculate_amount(current_date, False)
-	billing_card = calculate_card(current_date)
-	wallet_payments = calculate_wallet_payments(current_date)
-
-	i_total = cash.i_total if cash.i_total != None else 0
-	e_total = cash.e_total if cash.e_total != None else 0
-	e_card = cash.e_total if cash.e_total != None else 0
-
-	total_billing = billing_positive + billing_negative
-	total = i_total + billing_positive + billing_negative #Falta por controlar los pagos por tarjeta
-	total_cash = e_total + e_card
-	diff = total - total_cash
+	summary = calculate_cash_summary(current_date)
+	i_total = cash.i_total or Decimal('0.00')
+	e_total = cash.e_total or Decimal('0.00')
+	e_card = cash.e_card or Decimal('0.00')
+	summary['cash_expected'] = i_total + summary['cash_collected']
+	summary['cash_counted'] = e_total
+	summary['cash_difference'] = e_total - summary['cash_expected']
+	summary['card_expected'] = summary['card_collected']
+	summary['card_counted'] = e_card
+	summary['card_difference'] = e_card - summary['card_expected']
+	wallet_movements = WalletMovement.objects.filter(
+		created_at__gte=date_min, created_at__lt=date_max,
+	).select_related('student').order_by('-created_at', '-id')
 
 	form = CashForm(instance = cash)
-	return render(request, 'cash.html', {'form': form, 'cash': cash, 'current_date': current_date, 'amounts_positive': billing_positive, 'amounts_negative': billing_negative, 'total': total, 'total_cash': total_cash, 'total_billing': total_billing, 'billing_card': billing_card, 'wallet_payments': wallet_payments, 'diff': diff, 'msg': msg})
+	return render(request, 'cash.html', {
+		'form': form, 'cash': cash, 'current_date': current_date,
+		'summary': summary, 'msg': msg,
+		'wallet_topup_movements': wallet_movements.filter(movement_type=WalletMovement.TYPE_TOP_UP),
+		'wallet_payment_movements': wallet_movements.filter(movement_type=WalletMovement.TYPE_PURCHASE),
+	})
 
 @login_required
 def save_cash(request, cash_id):

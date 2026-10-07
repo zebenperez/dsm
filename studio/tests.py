@@ -16,7 +16,7 @@ from studio.models import (
     Article, ArticlePayment, Assistance, Concept, Enrolment, Group as StudioGroup,
     InsufficientWalletBalance, Payment, Student, Teacher, WalletMovement,
 )
-from studio.views import calculate_amount, calculate_wallet_payments
+from studio.views import calculate_amount, calculate_cash_summary, calculate_wallet_payments
 
 
 class WalletMovementTests(TestCase):
@@ -45,6 +45,24 @@ class WalletMovementTests(TestCase):
             )
 
         self.assertEqual(WalletMovement.objects.filter(student=self.student).count(), 2)
+
+    def test_daily_close_does_not_count_wallet_spending_as_a_second_card_charge(self):
+        """A €100 card top-up followed by a €40 wallet payment leaves €60 in wallet."""
+        WalletMovement.record(
+            self.student, Decimal('100.00'), WalletMovement.TYPE_TOP_UP,
+            'Recarga con tarjeta', WalletMovement.METHOD_CARD,
+        )
+        WalletMovement.record(
+            self.student, Decimal('-40.00'), WalletMovement.TYPE_PURCHASE,
+            'Matrícula',
+        )
+
+        summary = calculate_cash_summary(date.today())
+
+        self.assertEqual(summary['card_collected'], Decimal('100.00'))
+        self.assertEqual(summary['cash_collected'], Decimal('0.00'))
+        self.assertEqual(summary['wallet_spent'], Decimal('40.00'))
+        self.assertEqual(summary['wallet_net_change'], Decimal('60.00'))
 
 
 class DashboardTests(TestCase):
@@ -123,6 +141,32 @@ class ArticleWalletPaymentTests(TestCase):
         self.assertEqual(self.student.wallet_balance, Decimal('8.00'))
         self.assertEqual(calculate_amount(date.today(), True), Decimal('0.00'))
         self.assertEqual(calculate_wallet_payments(date.today()), Decimal('12.00'))
+
+    def test_deleting_a_wallet_paid_tuition_returns_the_balance(self):
+        teacher = Teacher.objects.create(code=20, name='Profesora de prueba', phone='')
+        dance_group = StudioGroup.objects.create(
+            name='Salsa', teacher=teacher, ini_time='18:00', end_time='19:00', monday=True,
+        )
+        enrolment = Enrolment.objects.create(student=self.student, group=dance_group, price=Decimal('15.00'))
+        wallet_charge = WalletMovement.record(
+            self.student, Decimal('-15.00'), WalletMovement.TYPE_PURCHASE, 'Cuota: Salsa',
+        )
+        payment = Payment.objects.create(
+            student=self.student, enrolment=enrolment, amount=Decimal('15.00'), note='',
+            date=date.today(), pay_date=date.today(), expire_date=date.today(),
+            wallet_movement=wallet_charge,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('delete_payment', args=[payment.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Payment.objects.filter(pk=payment.id).exists())
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.wallet_balance, Decimal('20.00'))
+        refund = WalletMovement.objects.latest('id')
+        self.assertEqual(refund.movement_type, WalletMovement.TYPE_REFUND)
+        self.assertEqual(refund.amount, Decimal('15.00'))
 
     def test_article_wallet_payment_does_not_sell_with_insufficient_balance(self):
         self.client.force_login(self.user)

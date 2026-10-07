@@ -209,6 +209,12 @@ class Payment(models.Model):
 	def __str__(self):
 		return str(self.amount)
 
+	@property
+	def payment_method_label(self):
+		if self.wallet_movement_id:
+			return 'Monedero'
+		return 'Tarjeta' if self.card else 'Efectivo'
+
 	class Meta:
 		verbose_name = "Pago"
 		verbose_name_plural = "Pagos"
@@ -256,6 +262,12 @@ class ArticlePayment(models.Model):
 	concept = models.ForeignKey(Concept, unique=False, on_delete=models.CASCADE, verbose_name="Concepto")
 	student = models.ForeignKey(Student, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="Alumno")
 	wallet_movement = models.OneToOneField('WalletMovement', blank=True, null=True, on_delete=models.SET_NULL, related_name='article_payment', verbose_name='Movimiento de monedero')
+
+	@property
+	def payment_method_label(self):
+		if self.wallet_movement_id:
+			return 'Monedero'
+		return 'Tarjeta' if self.card else 'Efectivo'
 
 	class Meta:
 		verbose_name = "Pago de artículos"
@@ -334,7 +346,7 @@ class WalletMovement(models.Model):
 	
 class Cash(models.Model):
 	i_card = models.IntegerField(verbose_name="Tarjeta apertura", blank=True, null=True, default=0)
-	e_card = models.IntegerField(verbose_name="Tarjeta cierre", blank=True, null=True)
+	e_card = models.DecimalField(max_digits=9, decimal_places=2, verbose_name="Tarjeta cierre", blank=True, null=True)
 	i_50000 = models.IntegerField(verbose_name="500", blank=True, null=True)
 	i_20000 = models.IntegerField(verbose_name="200", blank=True, null=True)
 	i_10000 = models.IntegerField(verbose_name="100", blank=True, null=True)

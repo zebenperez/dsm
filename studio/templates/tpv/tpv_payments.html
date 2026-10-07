@@ -10,6 +10,7 @@
 				<th>Pagado</th> 
 				<th>Caduca</th> 
 				<th> Cantidad</th>
+				<th> Método</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -21,6 +22,11 @@
 					<td> {{ st.pay_date|date:"d-m-Y" }} </td> 
 					<td> {{ st.expire_date|date:"d-m-Y" }} </td>
 					<td> {{ st.amount }} </td>
+					<td>
+						{% if st.wallet_movement_id %}<span class="label label-warning">Monedero</span>
+						{% elif st.card %}<span class="label label-primary">Tarjeta</span>
+						{% else %}<span class="label label-success">Efectivo</span>{% endif %}
+					</td>
 					<td> 
 						<a href="#" data-href="{% url "delete_payment" st.id %}" class="btn btn-danger btn-xs" title="delete" data-toggle="modal" data-target="#confirm-delete">
 							<span class="glyphicon glyphicon-trash" title="delete"></span>
@@ -46,7 +52,7 @@
                 Borrar Pago	
             </div>
             <div class="modal-body">
-                Está seguro que desea borrar este pago?
+				¿Está seguro que desea borrar este pago? Si se pagó con monedero, el importe se devolverá automáticamente al saldo de la pulsera.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>

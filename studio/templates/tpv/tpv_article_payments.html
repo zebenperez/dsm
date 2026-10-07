@@ -3,7 +3,7 @@
 {% if article_payment_list %}
 	<table class="table table-hover">
 		<thead>
-			<tr> <th>Nombre</th> <th>Fecha del pago</th> <th>Concepto</th> <th> Cantidad</th> <th> Notas </th></tr>
+			<tr> <th>Nombre</th> <th>Fecha del pago</th> <th>Concepto</th> <th> Cantidad</th> <th> Método </th> <th> Notas </th></tr>
 		</thead>
 		<tbody>
 			{% for st in article_payment_list %}
@@ -12,7 +12,12 @@
 					<td>{{ st.date|date:"d-m-Y" }}</td>
 					<td>{{ st.concept }}</td>
 					<td>{{ st.amount }}</td>
-					<td>{{st.notes}} </td>
+					<td>
+						{% if st.wallet_movement_id %}<span class="label label-warning">Monedero</span>
+						{% elif st.card %}<span class="label label-primary">Tarjeta</span>
+						{% else %}<span class="label label-success">Efectivo</span>{% endif %}
+					</td>
+					<td>{{ st.note }}</td>
 					<td><a href="{% url "delete_article_payment" st.id %}"><img src="{% static "images/delete.png" %}" alt="Borrar" title="Borrar"></a></td>
 				</tr>
 			{% endfor %}
@@ -21,4 +26,3 @@
 {% else %}
 	<p>No article are available.</p>
 {%	endif %}
-

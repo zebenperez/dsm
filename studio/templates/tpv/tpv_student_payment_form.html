@@ -12,6 +12,7 @@
 					<div class="col-md-2"><strong>{% trans "Pagado" %}</strong></div>
 					<div class="col-md-2"><strong>{% trans "Caduca" %}</strong></div>
 					<div class="col-md-1"><strong>{% trans "Importe" %}</strong></div>
+					<div class="col-md-2"><strong>{% trans "Cobro" %}</strong></div>
 				</div>
 				<hr/>
 				{% for e in enrolment_list %}
@@ -30,9 +31,10 @@
 							</div>
 							<div class="col-md-1"> <input type='text' name='amount' value='{{ e.price }}' class="form-control" size="4"/> </div>
 							<div class="col-md-2">
-								<button style="display:inline;" type="submit" class="btn btn-success"><span class="glyphicon glyphicon-euro"></span></button>
-								<button style="display:inline;" type="submit" formaction="{% url 'pay_with_wallet' %}" class="btn btn-warning" title="{% trans 'Cobrar desde el monedero' %} · {% trans 'Saldo' %}: {{ e.student.wallet_balance }} €"><span class="glyphicon glyphicon-credit-card"></span></button>
-								<a class='options btn btn-primary' data-placement='top' title="Acciones"><span class="glyphicon glyphicon-plus"></span></a>
+								<button style="display:inline;" type="submit" name="payment_method" value="cash" class="btn btn-success" title="Efectivo"><span class="glyphicon glyphicon-euro"></span></button>
+								<button style="display:inline;" type="submit" name="payment_method" value="card" class="btn btn-primary" title="Tarjeta"><span class="glyphicon glyphicon-credit-card"></span></button>
+								<button style="display:inline;" type="submit" name="payment_method" value="wallet" formaction="{% url 'pay_with_wallet' %}" class="btn btn-warning" title="Monedero"><span class="glyphicon glyphicon-credit-card"></span></button>
+								<a class='options btn btn-primary' data-placement='top' title="Acciones" style="display:none;"><span class="glyphicon glyphicon-plus"></span></a>
 								<div id="popover_content_wrapper" style="display: none">
 										<li class="list-group-item">
 											<a style="display:inline" class="btn btn-primary btn-xs" id="a_{{ e.student.id }}"  data-toggle="modal" data-target="#studentModal_{{e.id}}" onclick="$('.options').popover('hide')">
