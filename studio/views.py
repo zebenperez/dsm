@@ -224,17 +224,19 @@ def registration_form_responses(request, form_id):
     form = get_object_or_404(RegistrationForm, pk=form_id)
     questions = list(form.questions.all())
     target_groups = list(form.target_groups.all())
-    show_student_group = len(target_groups) > 1
+    # Con un único grupo destinatario la columna sería redundante. Para los
+    # formularios generales se muestran todos los grupos activos de la alumna.
+    show_student_group = len(target_groups) != 1
     submissions = FormSubmission.objects.filter(form=form).select_related('student').prefetch_related(
         'answers__question'
     )
     if show_student_group:
+        group_enrolments = Enrolment.objects.filter(active=True)
+        if target_groups:
+            group_enrolments = group_enrolments.filter(group__in=target_groups)
         submissions = submissions.prefetch_related(Prefetch(
             'student__enrolment',
-            queryset=Enrolment.objects.filter(
-                active=True,
-                group__in=target_groups,
-            ).select_related('group').order_by('group__name'),
+            queryset=group_enrolments.select_related('group').order_by('group__name'),
             to_attr='form_target_enrolments',
         ))
     submission_list = list(submissions.order_by('student__name'))

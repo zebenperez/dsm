@@ -118,3 +118,16 @@ class FormResponsePendingStudentsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, '<th>Grupo</th>', html=True)
+
+    def test_shows_group_column_for_general_form(self):
+        FormSubmission.objects.create(
+            form=self.general_form, student=self.responded_student,
+        )
+
+        response = self.client.get(
+            reverse('registration_form_responses', args=[self.general_form.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<th>Grupo</th>', html=True)
+        self.assertContains(response, self.target_group.name)
