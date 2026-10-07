@@ -9,10 +9,10 @@
             {% if submission_list %}
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered">
-                        <thead><tr><th>{% trans "Alumna" %}</th><th>{% trans "Enviado" %}</th>{% for question in questions %}<th>{{ question.text }}</th>{% endfor %}</tr></thead>
+                        <thead><tr><th>#</th><th>{% trans "Alumna" %}</th>{% if show_student_group %}<th>{% trans "Grupo" %}</th>{% endif %}<th>{% trans "Enviado" %}</th>{% for question in questions %}<th>{{ question.text }}</th>{% endfor %}</tr></thead>
                         <tbody>
                             {% for submission in submission_list %}
-                                <tr><td>{{ submission.student.name }}</td><td>{{ submission.submitted_at|date:"d-m-Y H:i" }}</td>{% for value in submission.answer_values %}<td>{{ value }}</td>{% endfor %}</tr>
+                                <tr><td>{{ forloop.counter }}</td><td>{{ submission.student.name }}</td>{% if show_student_group %}<td>{{ submission.student.form_target_group_names|join:", "|default:"—" }}</td>{% endif %}<td>{{ submission.submitted_at|date:"d-m-Y H:i" }}</td>{% for value in submission.answer_values %}<td>{{ value }}</td>{% endfor %}</tr>
                             {% endfor %}
                         </tbody>
                     </table>

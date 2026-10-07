@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal, InvalidOperation
 from collections import defaultdict
 from django.db import transaction
-from django.db.models import Q, Count, Min, Sum, Max, Avg
+from django.db.models import Q, Count, Min, Sum, Max, Avg, Prefetch
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -224,15 +224,28 @@ def registration_form_responses(request, form_id):
     form = get_object_or_404(RegistrationForm, pk=form_id)
     questions = list(form.questions.all())
     target_groups = list(form.target_groups.all())
-    submission_list = list(
-        FormSubmission.objects.filter(form=form)
-        .select_related('student')
-        .prefetch_related('answers__question')
-        .order_by('student__name')
+    show_student_group = len(target_groups) > 1
+    submissions = FormSubmission.objects.filter(form=form).select_related('student').prefetch_related(
+        'answers__question'
     )
+    if show_student_group:
+        submissions = submissions.prefetch_related(Prefetch(
+            'student__enrolment',
+            queryset=Enrolment.objects.filter(
+                active=True,
+                group__in=target_groups,
+            ).select_related('group').order_by('group__name'),
+            to_attr='form_target_enrolments',
+        ))
+    submission_list = list(submissions.order_by('student__name'))
     for submission in submission_list:
         answers = {answer.question_id: answer.value for answer in submission.answers.all()}
         submission.answer_values = [answers.get(question.id, '—') for question in questions]
+        if show_student_group:
+            submission.student.form_target_group_names = [
+                enrolment.group.name
+                for enrolment in submission.student.form_target_enrolments
+            ]
 
     # Solo es posible saber quién está pendiente cuando el formulario está
     # dirigido a grupos concretos. Una alumna con matrícula activa en cualquiera
@@ -252,6 +265,7 @@ def registration_form_responses(request, form_id):
         'form': form,
         'questions': questions,
         'submission_list': submission_list,
+        'show_student_group': show_student_group,
         'target_groups': target_groups,
         'pending_student_list': pending_student_list,
     })

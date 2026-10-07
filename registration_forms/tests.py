@@ -91,3 +91,30 @@ class FormResponsePendingStudentsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Pendientes de responder')
+
+    def test_numbers_responses_and_shows_target_groups_for_multi_group_form(self):
+        second_group = Group.objects.create(
+            name='Segundo grupo', teacher=self.target_group.teacher,
+            ini_time='19:00', end_time='20:00',
+        )
+        self.targeted_form.target_groups.add(second_group)
+        Enrolment.objects.create(
+            student=self.responded_student, group=second_group, active=True,
+        )
+
+        response = self.client.get(
+            reverse('registration_form_responses', args=[self.targeted_form.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<th>Grupo</th>', html=True)
+        self.assertContains(response, '<td>1</td>', html=True)
+        self.assertContains(response, 'Grupo destinatario, Segundo grupo')
+
+    def test_does_not_show_group_column_for_single_group_form(self):
+        response = self.client.get(
+            reverse('registration_form_responses', args=[self.targeted_form.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<th>Grupo</th>', html=True)
