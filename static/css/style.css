@@ -18,6 +18,36 @@
 	width: 97%;
 }
 
+/* Cabeceras ordenables de las tablas de respuestas de formularios. */
+.table-sort-button {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-weight: inherit;
+	text-align: left;
+}
+
+.table-sort-button:hover,
+.table-sort-button:focus {
+	text-decoration: underline;
+}
+
+.table-sort-button.is-ascending::after,
+.table-sort-button.is-descending::after {
+	margin-left: 5px;
+	font-size: .8em;
+}
+
+.table-sort-button.is-ascending::after {
+	content: "▲";
+}
+
+.table-sort-button.is-descending::after {
+	content: "▼";
+}
+
 /* Sticky footer styles
 -------------------------------------------------- */
 html,

@@ -8,7 +8,7 @@
         <div class="panel-body">
             {% if submission_list %}
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered">
+                    <table class="table table-hover table-bordered js-sortable-table">
                         <thead><tr><th>#</th><th>{% trans "Alumna" %}</th>{% if show_student_group %}<th>{% trans "Grupo" %}</th>{% endif %}<th>{% trans "Enviado" %}</th>{% for question in questions %}<th>{{ question.text }}</th>{% endfor %}</tr></thead>
                         <tbody>
                             {% for submission in submission_list %}
@@ -49,4 +49,91 @@
             </div>
         </div>
     {% endif %}
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+    <script>
+        (function ($) {
+            function sortableValue(cell) {
+                var value = $.trim($(cell).text());
+                var date = value.match(/^(\d{2})-(\d{2})-(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
+
+                if (date) {
+                    return new Date(
+                        Number(date[3]), Number(date[2]) - 1, Number(date[1]),
+                        Number(date[4] || 0), Number(date[5] || 0)
+                    ).getTime();
+                }
+
+                if (/^-?\d+(?:[.,]\d+)?$/.test(value)) {
+                    return Number(value.replace(',', '.'));
+                }
+
+                return value.toLocaleLowerCase();
+            }
+
+            function compareValues(first, second) {
+                if (first === second) {
+                    return 0;
+                }
+                if (first === '—' || first === '') {
+                    return 1;
+                }
+                if (second === '—' || second === '') {
+                    return -1;
+                }
+                if (typeof first === 'number' && typeof second === 'number') {
+                    return first - second;
+                }
+                return String(first).localeCompare(String(second));
+            }
+
+            $(function () {
+                $('.js-sortable-table').each(function () {
+                    var table = $(this);
+                    var headers = table.find('thead th');
+
+                    headers.each(function (column) {
+                        var header = $(this);
+                        var label = $.trim(header.text());
+
+                        // La primera columna solo numera las filas visibles.
+                        if (label === '#') {
+                            return;
+                        }
+
+                        var button = $('<button>', {
+                            type: 'button',
+                            'class': 'table-sort-button',
+                            text: label
+                        });
+                        header.empty().append(button);
+
+                        button.on('click', function () {
+                            var ascending = !button.hasClass('is-ascending');
+                            var rows = table.find('tbody tr').get();
+
+                            rows.sort(function (firstRow, secondRow) {
+                                var first = sortableValue($(firstRow).children('td').eq(column));
+                                var second = sortableValue($(secondRow).children('td').eq(column));
+                                var comparison = compareValues(first, second);
+                                return ascending ? comparison : -comparison;
+                            });
+
+                            $.each(rows, function (index, row) {
+                                $(row).children('td').first().text(index + 1);
+                                table.children('tbody').append(row);
+                            });
+                            headers.find('.table-sort-button')
+                                .removeClass('is-ascending is-descending');
+                            headers.attr('aria-sort', 'none');
+                            button.addClass(ascending ? 'is-ascending' : 'is-descending');
+                            header.attr('aria-sort', ascending ? 'ascending' : 'descending');
+                        });
+                    });
+                });
+            });
+        })(jQuery);
+    </script>
 {% endblock %}
