@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container" style="max-width: 650px;"><div class="alert alert-warning"><h3>{% trans "Eliminar alumno" %}</h3><p>{% blocktrans with name=student.name %}Vas a eliminar a {{ name }}. Esta acción no se puede deshacer.{% endblocktrans %}</p></div><form method="post">{% csrf_token %}<button class="btn btn-danger" type="submit">{% trans "Eliminar definitivamente" %}</button> <a class="btn btn-default" href="{% url 'student-update' student.id %}">{% trans "Cancelar" %}</a></form></div>
+{% endblock %}

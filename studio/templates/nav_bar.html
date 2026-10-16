@@ -5,7 +5,7 @@
         <img src="{% static 'images/logo_5db_transparent.png' %}" alt="5db Dance School">
     </a>
     {% if user.is_authenticated %}
-        {% if user.is_superuser or user|in_group:"reception" %}
+        {% if user.is_superuser or user|in_group:"reception" or user|in_group:"admins" %}
             <p class="studio-nav-heading">{% trans "Operativa" %}</p>
             <ul>
                 <li {% if "tpv"|contains:request.path %}class="active"{% endif %}><a href="{% url 'tpv' %}"><i class="glyphicon glyphicon-shopping-cart"></i> TPV</a></li>
@@ -19,9 +19,13 @@
                 <li {% if "article_payments"|contains:request.path %}class="active"{% endif %}><a href="{% url 'article_payments' %}"><i class="glyphicon glyphicon-list-alt"></i> {% trans "Ventas" %}</a></li>
                 <li {% if "assistances"|contains:request.path %}class="active"{% endif %}><a href="{% url 'assistances' %}"><i class="glyphicon glyphicon-check"></i> {% trans "Asistencias" %}</a></li>
                 <li {% if "no_assistance"|contains:request.path %}class="active"{% endif %}><a href="{% url 'no_assistance' %}"><i class="glyphicon glyphicon-ban-circle"></i> {% trans "Ausencias" %}</a></li>
+                <li {% if "attendance-follow-up"|contains:request.path %}class="active"{% endif %}><a href="{% url 'attendance-follow-up' %}"><i class="glyphicon glyphicon-eye-open"></i> {% trans "Inactividad" %}</a></li>
             </ul>
             <p class="studio-nav-heading">{% trans "Gestión" %}</p>
             <ul>
+				{% if user.is_superuser or user|in_group:"admins" %}
+					<li {% if "/studio/students/"|contains:request.path %}class="active"{% endif %}><a href="{% url 'students' %}"><i class="glyphicon glyphicon-user"></i> {% trans "Alumnos" %}</a></li>
+				{% endif %}
                 {% if user.is_superuser %}
                     <li {% if "payments"|contains:request.path %}class="active"{% endif %}><a href="{% url 'payments' %}"><i class="glyphicon glyphicon-credit-card"></i> {% trans "Pagos" %}</a></li>
                 {% endif %}
@@ -29,7 +33,9 @@
                 <li {% if "/studio/forms/"|contains:request.path %}class="active"{% endif %}><a href="{% url 'registration_forms' %}"><i class="glyphicon glyphicon-list-alt"></i> {% trans "Formularios" %}</a></li>
                 <li {% if "champs"|contains:request.path %}class="active"{% endif %}><a href="{% url 'champs' %}"><i class="glyphicon glyphicon-flag"></i> {% trans "Campeonatos" %}</a></li>
                 <li {% if "reconciliation"|contains:request.path %}class="active"{% endif %}><a href="{% url 'bank-reconciliation' %}"><i class="glyphicon glyphicon-transfer"></i> {% trans "Conciliación bancaria" %}</a></li>
-                <li {% if "admin"|contains:request.path %}class="active"{% endif %}><a href="{% url 'admin:index' %}"><i class="glyphicon glyphicon-cog"></i> Admin</a></li>
+                {% if user.is_superuser %}
+                    <li {% if "admin"|contains:request.path %}class="active"{% endif %}><a href="{% url 'admin:index' %}"><i class="glyphicon glyphicon-cog"></i> Admin</a></li>
+                {% endif %}
             </ul>
         {% endif %}
         {% if user.is_superuser or user|in_group:"managers" %}
@@ -45,6 +51,6 @@
                 <li {% if "champs"|contains:request.path %}class="active"{% endif %}><a href="{% url 'champs' %}"><i class="glyphicon glyphicon-flag"></i> {% trans "Mis campeonatos" %}</a></li>
             </ul>
         {% endif %}
-        <div class="studio-user-menu"><strong>{{ user.username }}</strong><a href="/logout/">{% trans "Cerrar sesión" %}</a></div>
+        <div class="studio-user-menu"><strong>{{ user.username }}</strong><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% trans "Cerrar sesión" %}</button></form></div>
     {% endif %}
 </nav>

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 700px;"><p><a href="{% url 'student-update' student.id %}"><span class="glyphicon glyphicon-chevron-left"></span> {{ student.name }}</a></p><h1>{% if enrolment %}{% trans "Editar matrícula" %}{% else %}{% trans "Nueva matrícula" %}{% endif %}</h1><form method="post" class="panel panel-default"><div class="panel-body">{% csrf_token %}{% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}{% for field in form %}<div class="form-group {% if field.errors %}has-error{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="help-block">{{ error }}</p>{% endfor %}</div>{% endfor %}<button class="btn btn-primary" type="submit">{% trans "Guardar" %}</button> <a class="btn btn-default" href="{% url 'student-update' student.id %}">{% trans "Cancelar" %}</a></div></form></div>
+{% endblock %}

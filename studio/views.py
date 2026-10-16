@@ -7,10 +7,11 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal, InvalidOperation
 from collections import defaultdict
 from django.db import transaction
-from django.db.models import Q, Count, Min, Sum, Max, Avg, Prefetch
+from django.db.models import Q, Count, Min, Sum, Max, Avg, Prefetch, Exists, OuterRef, Subquery
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.middleware import csrf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, reverse
@@ -272,7 +273,7 @@ def registration_form_responses(request, form_id):
         'pending_student_list': pending_student_list,
     })
 
-@group_required("reception")
+@group_required("reception", "admins")
 def tpv(request, current_date = None, msg = None):
     if (current_date == None):
         current_date = date.today()
@@ -898,6 +899,165 @@ def edit_student(request, student_id):
 	
 	return render(request, "edit_student.html", context);
 
+
+@group_required("admins")
+def students(request):
+	query = request.GET.get('q', '').strip()
+	status = request.GET.get('status', 'active')
+	selected_group = request.GET.get('group', '').strip()
+	licence_status = request.GET.get('licence', 'all')
+	if status not in ('active', 'without_enrolment', 'all'):
+		status = 'active'
+	if licence_status not in ('with_licence', 'without_licence', 'all'):
+		licence_status = 'all'
+	group_list = Group.objects.filter(active=True).select_related('teacher').order_by('name')
+	student_list = Student.objects.prefetch_related(Prefetch(
+		'enrolment',
+		queryset=Enrolment.objects.filter(active=True).select_related('group').order_by('group__name'),
+		to_attr='active_enrolment_list',
+	)).order_by('name')
+	if status == 'active':
+		student_list = student_list.filter(enrolment__active=True).distinct()
+	elif status == 'without_enrolment':
+		student_list = student_list.filter(enrolment__isnull=True)
+	if selected_group:
+		if selected_group.isdigit() and group_list.filter(pk=selected_group).exists():
+			selected_group = int(selected_group)
+			student_list = student_list.filter(
+				enrolment__group_id=selected_group,
+				enrolment__active=True,
+			).distinct()
+		else:
+			selected_group = ''
+	if licence_status == 'with_licence':
+		student_list = student_list.exclude(licence__isnull=True).exclude(licence='')
+	elif licence_status == 'without_licence':
+		student_list = student_list.filter(Q(licence__isnull=True) | Q(licence=''))
+	if query:
+		filters = Q(name__icontains=query) | Q(pin__icontains=query) | Q(band__icontains=query)
+		if query.isdigit():
+			filters |= Q(code=int(query))
+		student_list = student_list.filter(filters)
+	return render(request, 'students/students.html', {
+		'student_list': student_list,
+		'query': query,
+		'status': status,
+		'licence_status': licence_status,
+		'group_list': group_list,
+		'selected_group': selected_group,
+		'student_count': student_list.count(),
+	})
+
+
+@group_required("admins")
+def student_create(request):
+	form = StudentManagementForm(request.POST or None, request.FILES or None)
+	if request.method == 'POST' and form.is_valid():
+		student = form.save()
+		messages.success(request, _('Alumno creado correctamente.'))
+		return redirect('student-update', student_id=student.id)
+	return render(request, 'students/student_form.html', {'form': form, 'student': None})
+
+
+@group_required("admins")
+def student_detail(request, student_id):
+	student = get_object_or_404(Student, pk=student_id)
+	enrolment_form = EnrolmentManagementForm()
+	enrolment_form.fields['group'].queryset = Group.objects.filter(active=True)
+	return render(request, 'students/student_detail.html', {
+		'student': student,
+		'enrolment_list': student.enrolment.select_related('group', 'group__teacher').order_by('-active', 'group__name'),
+		'enrolment_form': enrolment_form,
+		'enrolment_forms': [(enrolment, EnrolmentManagementForm(instance=enrolment)) for enrolment in student.enrolment.all()],
+	})
+
+
+@group_required("admins")
+def student_update(request, student_id):
+	student = get_object_or_404(Student, pk=student_id)
+	student_age = None
+	if student.born_date:
+		today = date.today()
+		student_age = today.year - student.born_date.year - (
+			(today.month, today.day) < (student.born_date.month, student.born_date.day)
+		)
+	form = StudentManagementForm(request.POST or None, request.FILES or None, instance=student)
+	if request.method == 'POST' and form.is_valid():
+		form.save()
+		messages.success(request, _('Datos del alumno actualizados.'))
+		return redirect('student-update', student_id=student.id)
+	enrolment_form = EnrolmentManagementForm()
+	enrolment_form.fields['group'].queryset = Group.objects.filter(active=True)
+	return render(request, 'students/student_form.html', {
+		'form': form,
+		'student': student,
+		'student_age': student_age,
+		'student_has_picture': bool(student.picture and default_storage.exists(student.picture.name)),
+		'enrolment_list': student.enrolment.select_related('group', 'group__teacher').order_by('-active', 'group__name'),
+		'enrolment_form': enrolment_form,
+		'enrolment_forms': [(enrolment, EnrolmentManagementForm(instance=enrolment)) for enrolment in student.enrolment.all()],
+	})
+
+
+@group_required("admins")
+def student_delete(request, student_id):
+	student = get_object_or_404(Student, pk=student_id)
+	if request.method == 'POST':
+		if student.enrolment.exists() or Payment.objects.filter(student=student).exists() or student.wallet_movements.exists():
+			messages.error(request, _('No se puede borrar un alumno con matrículas, pagos o movimientos de monedero.'))
+			return redirect('student-update', student_id=student.id)
+		student.delete()
+		messages.success(request, _('Alumno eliminado.'))
+		return redirect('students')
+	return render(request, 'students/student_confirm_delete.html', {'student': student})
+
+
+@group_required("admins")
+def enrolment_create(request, student_id):
+	student = get_object_or_404(Student, pk=student_id)
+	form = EnrolmentManagementForm(request.POST or None)
+	form.fields['group'].queryset = Group.objects.filter(active=True)
+	if request.method == 'POST' and form.is_valid():
+		enrolment = form.save(commit=False)
+		enrolment.student = student
+		if enrolment.active and Enrolment.objects.filter(student=student, group=enrolment.group, active=True).exists():
+			form.add_error('group', _('El alumno ya tiene una matrícula activa en este grupo.'))
+		else:
+			enrolment.save()
+			messages.success(request, _('Matrícula creada correctamente.'))
+			return redirect('student-update', student_id=student.id)
+	return render(request, 'students/enrolment_form.html', {'form': form, 'student': student, 'enrolment': None})
+
+
+@group_required("admins")
+def enrolment_update(request, student_id, enrolment_id):
+	student = get_object_or_404(Student, pk=student_id)
+	enrolment = get_object_or_404(Enrolment, pk=enrolment_id, student=student)
+	form = EnrolmentManagementForm(request.POST or None, instance=enrolment)
+	if request.method == 'POST' and form.is_valid():
+		updated = form.save(commit=False)
+		if updated.active and Enrolment.objects.filter(student=student, group=updated.group, active=True).exclude(pk=updated.pk).exists():
+			form.add_error('group', _('El alumno ya tiene una matrícula activa en este grupo.'))
+		else:
+			updated.save()
+			messages.success(request, _('Matrícula actualizada.'))
+			return redirect('student-update', student_id=student.id)
+	return render(request, 'students/enrolment_form.html', {'form': form, 'student': student, 'enrolment': enrolment})
+
+
+@group_required("admins")
+def enrolment_delete(request, student_id, enrolment_id):
+	student = get_object_or_404(Student, pk=student_id)
+	enrolment = get_object_or_404(Enrolment, pk=enrolment_id, student=student)
+	if request.method == 'POST':
+		if Payment.objects.filter(enrolment=enrolment).exists():
+			messages.error(request, _('No se puede borrar una matrícula que tiene pagos. Desactívala para conservar el historial.'))
+		else:
+			enrolment.delete()
+			messages.success(request, _('Matrícula eliminada.'))
+		return redirect('student-update', student_id=student.id)
+	return render(request, 'students/enrolment_confirm_delete.html', {'student': student, 'enrolment': enrolment})
+
 @login_required
 def set_pins(request):
 	students = Student.objects.all()
@@ -1130,6 +1290,68 @@ def no_assistance(request):
 	}
 	return render(request, 'assistances/no_assistance.html', context)
 
+
+@group_required("reception", "admins")
+def attendance_follow_up(request):
+	"""List active students with no attendance in the selected period.
+
+	The report deliberately checks attendance across every active enrolment of a
+	student.  Someone attending any one of their current groups is therefore not
+	flagged as inactive.
+	"""
+	today = date.today()
+	default_start_date = today - relativedelta(months=3)
+
+	def parse_date(value, default):
+		try:
+			return datetime.datetime.strptime(value, '%Y-%m-%d').date()
+		except (TypeError, ValueError):
+			return default
+
+	start_date = parse_date(request.GET.get('start_date'), default_start_date)
+	end_date = parse_date(request.GET.get('end_date'), today)
+	if end_date < start_date:
+		end_date = start_date
+
+	attendance_in_period = Assistance.objects.filter(
+		date__range=(start_date, end_date),
+		enrolments__student_id=OuterRef('pk'),
+		enrolments__active=True,
+	)
+	last_payment = Payment.objects.filter(student_id=OuterRef('pk')).order_by('-pay_date', '-id')
+	active_enrolments = Enrolment.objects.filter(active=True).select_related('group').order_by('group__name')
+	student_list = list(
+		Student.objects.filter(enrolment__active=True).annotate(
+			has_attendance=Exists(attendance_in_period),
+			last_payment_date=Subquery(last_payment.values('pay_date')[:1]),
+			last_payment_expire_date=Subquery(last_payment.values('expire_date')[:1]),
+			last_payment_amount=Subquery(last_payment.values('amount')[:1]),
+		).filter(has_attendance=False).prefetch_related(Prefetch(
+			'enrolment', queryset=active_enrolments, to_attr='monitoring_enrolments',
+		)).distinct().order_by('name')
+	)
+
+	overdue_count = 0
+	for student in student_list:
+		student.monitoring_group_names = [enrolment.group.name for enrolment in student.monitoring_enrolments]
+		if not student.last_payment_date:
+			student.account_status = _('Sin pagos registrados')
+			student.account_status_class = 'danger'
+		elif student.last_payment_expire_date and student.last_payment_expire_date.date() < today:
+			student.account_status = _('Pago vencido')
+			student.account_status_class = 'danger'
+			overdue_count += 1
+		else:
+			student.account_status = _('Al día')
+			student.account_status_class = 'success'
+
+	return render(request, 'assistances/attendance_follow_up.html', {
+		'student_list': student_list,
+		'start_date': start_date,
+		'end_date': end_date,
+		'overdue_count': overdue_count,
+	})
+
 @login_required
 def assistances_baja(request):	
 	if request.method == 'POST':
@@ -1243,7 +1465,7 @@ def wristbands(request):
 	return render(request, 'wristbands/wristbands.html', {"student": student, "assistance_list": assistance_list})
 
 
-@group_required("reception")
+@group_required("reception", "admins")
 def wallet(request):
 	"""Reception wallet: look up an NFC band, then top up or charge it."""
 	student = None

@@ -48,6 +48,14 @@ urlpatterns = [
 
 	##STUDENTS
 	path ('student/edit/<int:student_id>/', views.edit_student,name="edit_student"),
+	path('students/', views.students, name='students'),
+	path('students/new/', views.student_create, name='student-create'),
+	path('students/<int:student_id>/', views.student_detail, name='student-detail'),
+	path('students/<int:student_id>/edit/', views.student_update, name='student-update'),
+	path('students/<int:student_id>/delete/', views.student_delete, name='student-delete'),
+	path('students/<int:student_id>/enrolments/new/', views.enrolment_create, name='enrolment-create'),
+	path('students/<int:student_id>/enrolments/<int:enrolment_id>/edit/', views.enrolment_update, name='enrolment-update'),
+	path('students/<int:student_id>/enrolments/<int:enrolment_id>/delete/', views.enrolment_delete, name='enrolment-delete'),
 
 	##ASSISTANCES
 	re_path ('assistances/(?P<search_date>\d{2}-\d{2}-\d{4})/', views.assistances, name='assistances'),
@@ -56,6 +64,7 @@ urlpatterns = [
 	path ('assistances_save/', views.assistances_save,name='assistances_save'),
 	path ('assistances_delete/<int:assistance_id>/', views.assistances_delete,name='assistances_delete'),
 	path ('no_assistance/', views.no_assistance, name='no_assistance'),
+	path('attendance-follow-up/', views.attendance_follow_up, name='attendance-follow-up'),
 	path ('assistances_baja/', views.assistances_baja, name='assistances_baja'),
 
 	##NOTIFICATIONS

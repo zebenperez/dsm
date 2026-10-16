@@ -6,7 +6,7 @@ Replace this with more appropriate tests for your application.
 """
 
 from decimal import Decimal
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
@@ -17,6 +17,132 @@ from studio.models import (
     InsufficientWalletBalance, Payment, Student, Teacher, WalletMovement,
 )
 from studio.views import calculate_amount, calculate_cash_summary, calculate_wallet_payments
+
+
+class AdminOperationalAccessTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='admin', password='secret')
+        admins, _ = Group.objects.get_or_create(name='admins')
+        self.user.groups.add(admins)
+        self.client.force_login(self.user)
+
+    def test_admin_group_sees_and_can_open_operational_section(self):
+        response = self.client.get(reverse('tpv'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TPV')
+        self.assertContains(response, 'Pulseras')
+        self.assertContains(response, 'Monedero')
+        self.assertContains(response, 'Caja')
+
+        response = self.client.get(reverse('wallet'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_logout_ends_the_session(self):
+        response = self.client.post(reverse('logout'))
+
+        self.assertRedirects(response, '/studio/')
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+
+class StudentManagementTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='admin', password='secret')
+        admins, _ = Group.objects.get_or_create(name='admins')
+        self.user.groups.add(admins)
+        self.teacher = Teacher.objects.create(code=1, name='Profesora', phone='')
+        self.group = StudioGroup.objects.create(
+            name='Bachata', teacher=self.teacher, ini_time='18:00', end_time='19:00', monday=True,
+        )
+        self.client.force_login(self.user)
+
+    def test_admin_can_create_student_and_manage_an_enrolment(self):
+        response = self.client.post(reverse('student-create'), {
+            'code': 100, 'name': 'Alumno de prueba', 'pin': 'A100', 'phone': '600000000',
+            'born_date': '', 'licence': '', 'email': '', 'band': '',
+        })
+
+        student = Student.objects.get(code=100)
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+
+        response = self.client.post(reverse('enrolment-create', args=[student.id]), {
+            'group': self.group.id, 'price': '30.00', 'percent_studio': 50,
+            'percent_teacher': 50, 'active': 'on',
+        })
+
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        enrolment = Enrolment.objects.get(student=student, group=self.group)
+        self.assertTrue(enrolment.active)
+
+        response = self.client.post(reverse('enrolment-update', args=[student.id, enrolment.id]), {
+            'group': self.group.id, 'price': '30.00', 'percent_studio': 50,
+            'percent_teacher': 50,
+        })
+
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        enrolment.refresh_from_db()
+        self.assertFalse(enrolment.active)
+
+    def test_students_can_be_filtered_by_active_group(self):
+        other_group = StudioGroup.objects.create(
+            name='Salsa', teacher=self.teacher, ini_time='19:00', end_time='20:00', tuesday=True,
+        )
+        bachata_student = Student.objects.create(code=101, pin='A101', name='Alumna Bachata', phone='')
+        salsa_student = Student.objects.create(code=102, pin='A102', name='Alumno Salsa', phone='')
+        inactive_student = Student.objects.create(code=103, pin='A103', name='Matrícula inactiva', phone='')
+        Enrolment.objects.create(student=bachata_student, group=self.group, active=True)
+        Enrolment.objects.create(student=salsa_student, group=other_group, active=True)
+        Enrolment.objects.create(student=inactive_student, group=self.group, active=False)
+
+        response = self.client.get(reverse('students'), {'group': self.group.id})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Alumna Bachata')
+        self.assertNotContains(response, 'Alumno Salsa')
+        self.assertNotContains(response, 'Matrícula inactiva')
+        self.assertEqual(response.context['student_count'], 1)
+
+    def test_students_can_be_filtered_by_licence_status(self):
+        licensed_student = Student.objects.create(
+            code=104, pin='A104', name='Alumna con licencia', phone='', licence='LIC-104',
+        )
+        unlicensed_student = Student.objects.create(
+            code=105, pin='A105', name='Alumna sin licencia', phone='', licence='',
+        )
+        Enrolment.objects.create(student=licensed_student, group=self.group, active=True)
+        Enrolment.objects.create(student=unlicensed_student, group=self.group, active=True)
+
+        response = self.client.get(reverse('students'), {'licence': 'with_licence'})
+
+        self.assertContains(response, 'Alumna con licencia')
+        self.assertNotContains(response, 'Alumna sin licencia')
+        self.assertEqual(response.context['student_count'], 1)
+
+        response = self.client.get(reverse('students'), {'licence': 'without_licence'})
+
+        self.assertNotContains(response, 'Alumna con licencia')
+        self.assertContains(response, 'Alumna sin licencia')
+        self.assertEqual(response.context['student_count'], 1)
+
+    def test_attendance_follow_up_excludes_students_with_attendance_and_marks_overdue_payments(self):
+        inactive_student = Student.objects.create(code=106, pin='A106', name='Sin asistencia', phone='600000106')
+        attended_student = Student.objects.create(code=107, pin='A107', name='Con asistencia', phone='600000107')
+        inactive_enrolment = Enrolment.objects.create(student=inactive_student, group=self.group, active=True)
+        attended_enrolment = Enrolment.objects.create(student=attended_student, group=self.group, active=True)
+        Assistance.objects.create(date=date.today(), group=self.group).enrolments.add(attended_enrolment)
+        Payment.objects.create(
+            student=inactive_student, enrolment=inactive_enrolment, amount=Decimal('30.00'), note='',
+            date=date.today(), pay_date=date.today(), expire_date=date.today() - timedelta(days=1),
+        )
+
+        response = self.client.get(reverse('attendance-follow-up'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Sin asistencia')
+        self.assertNotContains(response, 'Con asistencia')
+        self.assertContains(response, 'Pago vencido')
+        self.assertEqual(response.context['overdue_count'], 1)
 
 
 class WalletMovementTests(TestCase):

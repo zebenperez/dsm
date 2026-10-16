@@ -284,13 +284,49 @@ body {
 }
 
 .studio-user-menu strong,
-.studio-user-menu a {
+.studio-user-menu a,
+.studio-user-menu form {
 	display: block;
+}
+
+.studio-user-menu form {
+	margin: 4px 0 0;
 }
 
 .studio-user-menu a {
 	margin-top: 4px;
 	color: #ffc14d;
+}
+
+.studio-user-menu button {
+	color: #ffc14d;
+}
+
+.student-edit-page { max-width: 1000px; margin: 0 auto; }
+.student-edit-back { margin: 0 0 15px; }
+.student-edit-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+.student-edit-header h1 { margin: 0; color: #293e4f; }
+.student-edit-header p { margin: 5px 0 0; color: #74818c; }
+.student-edit-card { display: grid; grid-template-columns: 225px minmax(0, 1fr); overflow: hidden; border: 1px solid #dce3e8; border-radius: 8px; background: #fff; box-shadow: 0 2px 9px rgba(31, 51, 65, .08); }
+.student-edit-photo { padding: 28px 22px; background: #f4f7f9; text-align: center; }
+.student-edit-photo > img, .student-edit-photo > .glyphicon { display: block; width: 128px; height: 128px; margin: 0 auto 18px; border-radius: 50%; object-fit: cover; background: #d6e0e6; color: #6c7e8b; }
+.student-edit-photo > .glyphicon { padding-top: 37px; font-size: 52px; }
+.student-photo-field { text-align: left; }
+.student-photo-field input { max-width: 100%; font-size: 12px; }
+.student-edit-fields { padding: 26px 30px 8px; }
+.student-edit-fields h2 { margin: 0 0 16px; padding-bottom: 8px; border-bottom: 1px solid #e7ecef; color: #405565; font-size: 16px; font-weight: 700; text-transform: uppercase; }
+.student-edit-fields h2:not(:first-child) { margin-top: 23px; }
+.student-edit-actions { grid-column: 1 / -1; padding: 14px 25px; border-top: 1px solid #dce3e8; background: #fafbfc; text-align: right; }
+.student-edit-actions .btn { margin-left: 6px; }
+.student-enrolments { margin-top: 22px; overflow: hidden; border-radius: 8px; }
+@media (max-width: 650px) { .student-edit-header { align-items: flex-start; flex-direction: column; } .student-edit-card { grid-template-columns: 1fr; } .student-edit-photo { display: flex; align-items: center; gap: 18px; text-align: left; } .student-edit-photo > img, .student-edit-photo > .glyphicon { flex: 0 0 76px; width: 76px; height: 76px; margin: 0; } .student-edit-photo > .glyphicon { padding-top: 21px; font-size: 31px; } .student-photo-field { flex: 1; } .student-edit-fields { padding: 24px 20px 5px; } }
+
+.studio-user-menu button {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	font: inherit;
+	cursor: pointer;
 }
 
 .studio-mobile-header {

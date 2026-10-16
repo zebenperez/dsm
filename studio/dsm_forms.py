@@ -48,6 +48,37 @@ class StudentForm (forms.ModelForm):
 		model = Student;
 		fields = "__all__"
 
+
+class StudentManagementForm(forms.ModelForm):
+	"""Formulario reducido para la gestión diaria de alumnos."""
+	born_date = forms.DateField(
+		input_formats=settings.DATE_INPUT_FORMATS,
+		required=False,
+		widget=forms.DateInput(format='%d-%m-%Y', attrs={'placeholder': 'dd-mm-aaaa'}),
+	)
+
+	class Meta:
+		model = Student
+		fields = ['code', 'name', 'born_date', 'pin', 'phone', 'licence', 'email', 'band', 'picture']
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		for field in self.fields.values():
+			if not isinstance(field.widget, forms.CheckboxInput):
+				field.widget.attrs['class'] = 'form-control'
+
+
+class EnrolmentManagementForm(forms.ModelForm):
+	class Meta:
+		model = Enrolment
+		fields = ['group', 'price', 'percent_studio', 'percent_teacher', 'active']
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		for field in self.fields.values():
+			if not isinstance(field.widget, forms.CheckboxInput):
+				field.widget.attrs['class'] = 'form-control'
+
 class TeacherPaymentForm(forms.ModelForm):
 	date = forms.DateField(input_formats=settings.DATE_INPUT_FORMATS) 
 	#def __init__(self, *args, **kwargs):

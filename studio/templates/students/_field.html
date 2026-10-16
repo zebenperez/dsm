@@ -1,0 +1,6 @@
+<div class="form-group {% if field.errors %}has-error{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.name == "born_date" and student_age is not None %} ({{ student_age }} años){% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}<p class="help-block">{{ field.help_text }}</p>{% endif %}
+    {% for error in field.errors %}<p class="help-block">{{ error }}</p>{% endfor %}
+</div>
