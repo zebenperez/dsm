@@ -39,6 +39,11 @@ class AdminOperationalAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_admin_group_can_access_registration_forms(self):
+        response = self.client.get(reverse('registration_forms'))
+
+        self.assertEqual(response.status_code, 200)
+
     def test_logout_ends_the_session(self):
         response = self.client.post(reverse('logout'))
 

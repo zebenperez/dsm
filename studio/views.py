@@ -199,7 +199,7 @@ def dashboard(request):
     })
 
 
-@group_required("reception")
+@group_required("reception", "admins")
 def registration_forms(request):
     state = request.GET.get('state', 'open')
     now = django_timezone.now()
@@ -220,7 +220,7 @@ def registration_forms(request):
     })
 
 
-@group_required("reception")
+@group_required("reception", "admins")
 def registration_form_responses(request, form_id):
     form = get_object_or_404(RegistrationForm, pk=form_id)
     questions = list(form.questions.all())
