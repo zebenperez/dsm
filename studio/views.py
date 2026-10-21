@@ -100,13 +100,13 @@ def dashboard(request):
     trend_income = {}
     for row in Payment.objects.filter(
         date__date__gte=trend_start, date__date__lte=today,
-    ).values('date__year', 'date__month').annotate(total=Sum('amount')):
+    ).order_by().values('date__year', 'date__month').annotate(total=Sum('amount')):
         trend_income[(row['date__year'], row['date__month'])] = float(row['total'] or 0)
 
     trend_students = {}
     for row in Payment.objects.filter(
         date__date__gte=trend_start, date__date__lte=today, amount__gt=0,
-    ).values('date__year', 'date__month').annotate(total=Count('student_id', distinct=True)):
+    ).order_by().values('date__year', 'date__month').annotate(total=Count('student_id', distinct=True)):
         trend_students[(row['date__year'], row['date__month'])] = row['total']
 
     payment_trend = {

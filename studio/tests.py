@@ -236,7 +236,7 @@ class DashboardTests(TestCase):
         Payment.objects.create(
             student=self.student, enrolment=self.enrolment,
             amount=Decimal('15.00'), note='', date=date.today(),
-            pay_date=date.today(), expire_date=date.today(),
+            pay_date=date.today() + timedelta(days=1), expire_date=date.today(),
         )
         self.client.force_login(self.user)
 
