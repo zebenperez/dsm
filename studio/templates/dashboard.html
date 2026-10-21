@@ -16,6 +16,11 @@
                 <option value="3" {% if months == 3 %}selected{% endif %}>Último trimestre</option>
                 <option value="6" {% if months == 6 %}selected{% endif %}>Últimos 6 meses</option>
             </select>
+            <label for="trend_years">Comparativa</label>
+            <select class="form-control" name="trend_years" id="trend_years" onchange="this.form.submit()">
+                <option value="3" {% if payment_trend_years == 3 %}selected{% endif %}>3 años</option>
+                <option value="5" {% if payment_trend_years == 5 %}selected{% endif %}>5 años</option>
+            </select>
         </form>
     </div>
 
@@ -25,6 +30,25 @@
         <div class="col-sm-6 col-lg-3"><div class="dashboard-card"><span>Ingresos registrados</span><strong>{{ total_income|floatformat:2 }} €</strong><small>Cuotas, ventas y quiosco</small></div></div>
         <div class="col-sm-6 col-lg-3"><div class="dashboard-card"><span>Asistencia</span><strong>{% if attendance_rate is not None %}{{ attendance_rate }}%{% else %}—{% endif %}</strong><small>{{ sessions_count }} clases registradas</small></div></div>
     </div>
+
+    <section class="panel panel-default dashboard-panel dashboard-trend-panel">
+        <div class="panel-heading"><strong>Evolución de pagos por mes</strong></div>
+        <div class="panel-body">
+            <p class="help-block">Se compara cada mes de los últimos {{ payment_trend_years }} años. El alumnado cuenta una sola vez por mes si tiene al menos una cuota positiva registrada; los ingresos incluyen ajustes y devoluciones.</p>
+            <div class="dashboard-chart-legend" id="payment-trend-legend" aria-label="Años comparados"></div>
+            <div class="row">
+                <div class="col-md-6 dashboard-chart-wrap">
+                    <h3>Alumnado que ha pagado</h3>
+                    <canvas id="students-payment-chart" role="img" aria-label="Evolución mensual del alumnado que ha pagado"></canvas>
+                </div>
+                <div class="col-md-6 dashboard-chart-wrap">
+                    <h3>Ingresos de cuotas</h3>
+                    <canvas id="income-payment-chart" role="img" aria-label="Evolución mensual de los ingresos de cuotas"></canvas>
+                </div>
+            </div>
+        </div>
+        {{ payment_trend|json_script:"payment-trend-data" }}
+    </section>
 
     <div class="row">
         <div class="col-md-7">
@@ -79,4 +103,65 @@
         </div>
     </section>
 </div>
+<script>
+(function () {
+    var dataElement = document.getElementById('payment-trend-data');
+    if (!dataElement || !window.HTMLCanvasElement) return;
+    var trend = JSON.parse(dataElement.textContent);
+    var colours = ['#4c849f', '#c9841b', '#4c9a72', '#b8616d', '#7769a8'];
+    var legend = document.getElementById('payment-trend-legend');
+
+    trend.years.forEach(function (series, index) {
+        var item = document.createElement('span');
+        item.innerHTML = '<i style="background:' + colours[index] + '"></i>' + series.year;
+        legend.appendChild(item);
+    });
+
+    function drawChart(canvasId, key, suffix) {
+        var canvas = document.getElementById(canvasId);
+        var context = canvas.getContext('2d');
+        var bounds = canvas.getBoundingClientRect();
+        var ratio = window.devicePixelRatio || 1;
+        var width = Math.max(bounds.width, 280);
+        var height = 260;
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        context.scale(ratio, ratio);
+        context.clearRect(0, 0, width, height);
+
+        var left = 42, right = 12, top = 16, bottom = 35;
+        var chartWidth = width - left - right, chartHeight = height - top - bottom;
+        var values = [];
+        trend.years.forEach(function (series) { values = values.concat(series[key]); });
+        var maximum = Math.max.apply(null, values.concat([1]));
+        maximum = Math.ceil(maximum / 5) * 5;
+        context.font = '11px Arial, sans-serif';
+        context.fillStyle = '#6b7d89';
+        context.strokeStyle = '#e6ecef';
+        context.lineWidth = 1;
+        for (var step = 0; step <= 4; step++) {
+            var y = top + chartHeight - (chartHeight * step / 4);
+            context.beginPath(); context.moveTo(left, y); context.lineTo(width - right, y); context.stroke();
+            var value = maximum * step / 4;
+            context.fillText(key === 'income' ? value.toLocaleString('es-ES') + ' €' : Math.round(value), 2, y + 4);
+        }
+        trend.labels.forEach(function (label, index) {
+            var x = left + chartWidth * index / 11;
+            context.fillText(label, x - 8, height - 13);
+        });
+        trend.years.forEach(function (series, seriesIndex) {
+            context.beginPath();
+            series[key].forEach(function (value, index) {
+                var x = left + chartWidth * index / 11;
+                var y = top + chartHeight - (value / maximum * chartHeight);
+                index ? context.lineTo(x, y) : context.moveTo(x, y);
+            });
+            context.strokeStyle = colours[seriesIndex]; context.lineWidth = 2; context.stroke();
+        });
+    }
+    function drawAll() { drawChart('students-payment-chart', 'students', ''); drawChart('income-payment-chart', 'income', ' €'); }
+    drawAll();
+    window.addEventListener('resize', drawAll);
+}());
+</script>
 {% endblock %}

@@ -60,6 +60,11 @@ def dashboard(request):
     except (TypeError, ValueError):
         months = 1
     months = months if months in (1, 3, 6) else 1
+    try:
+        payment_trend_years = int(request.GET.get('trend_years', 5))
+    except (TypeError, ValueError):
+        payment_trend_years = 5
+    payment_trend_years = payment_trend_years if payment_trend_years in (3, 5) else 5
     period_start = today - relativedelta(months=months) + relativedelta(days=1)
 
     active_enrolments = Enrolment.objects.filter(active=True).select_related(
@@ -86,6 +91,32 @@ def dashboard(request):
         date__date__gte=period_start, date__date__lte=today
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     total_income = tuition_income + article_income + kiosk_income
+
+    # A paid student is deliberately derived from payments, rather than the
+    # current enrolment state.  This keeps the historic series useful when an
+    # old enrolment has not been marked inactive.
+    trend_years = list(range(today.year - payment_trend_years + 1, today.year + 1))
+    trend_start = date(trend_years[0], 1, 1)
+    trend_income = {}
+    for row in Payment.objects.filter(
+        date__date__gte=trend_start, date__date__lte=today,
+    ).values('date__year', 'date__month').annotate(total=Sum('amount')):
+        trend_income[(row['date__year'], row['date__month'])] = float(row['total'] or 0)
+
+    trend_students = {}
+    for row in Payment.objects.filter(
+        date__date__gte=trend_start, date__date__lte=today, amount__gt=0,
+    ).values('date__year', 'date__month').annotate(total=Count('student_id', distinct=True)):
+        trend_students[(row['date__year'], row['date__month'])] = row['total']
+
+    payment_trend = {
+        'labels': [calendar.month_abbr[month].capitalize() for month in range(1, 13)],
+        'years': [{
+            'year': year,
+            'students': [trend_students.get((year, month), 0) for month in range(1, 13)],
+            'income': [trend_income.get((year, month), 0) for month in range(1, 13)],
+        } for year in trend_years],
+    }
 
     sessions = list(Assistance.objects.filter(
         date__gte=period_start, date__lte=today
@@ -185,12 +216,14 @@ def dashboard(request):
         })
 
     return render(request, 'dashboard.html', {
-        'months': months, 'period_start': period_start, 'period_end': today,
+        'months': months, 'payment_trend_years': payment_trend_years,
+        'period_start': period_start, 'period_end': today,
         'active_students_count': active_students.count(),
         'active_enrolments_count': active_enrolments.count(),
         'new_enrolments': new_enrolments, 'total_income': total_income,
         'tuition_income': tuition_income, 'article_income': article_income,
         'kiosk_income': kiosk_income, 'teacher_cost': teacher_cost,
+        'payment_trend': payment_trend,
         'operating_balance': total_income - teacher_cost,
         'attendance_rate': attendance_rate, 'sessions_count': len(sessions),
         'group_rows': group_rows, 'overdue_students': overdue_students,

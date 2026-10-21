@@ -227,6 +227,27 @@ class DashboardTests(TestCase):
         self.assertEqual(response.context['total_income'], Decimal('30.00'))
         self.assertEqual(response.context['attendance_rate'], 100)
 
+    def test_dashboard_payment_trend_counts_each_paying_student_once_per_month(self):
+        Payment.objects.create(
+            student=self.student, enrolment=self.enrolment,
+            amount=Decimal('30.00'), note='', date=date.today(),
+            pay_date=date.today(), expire_date=date.today(),
+        )
+        Payment.objects.create(
+            student=self.student, enrolment=self.enrolment,
+            amount=Decimal('15.00'), note='', date=date.today(),
+            pay_date=date.today(), expire_date=date.today(),
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('dashboard'))
+
+        trend = response.context['payment_trend']
+        current_year = next(series for series in trend['years'] if series['year'] == date.today().year)
+        month_index = date.today().month - 1
+        self.assertEqual(current_year['students'][month_index], 1)
+        self.assertEqual(current_year['income'][month_index], 45.0)
+
     def test_dashboard_requires_manager_access(self):
         outsider = User.objects.create_user(username='outsider', password='secret')
         self.client.force_login(outsider)
