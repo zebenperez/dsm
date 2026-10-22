@@ -12,10 +12,10 @@
         <p>{{ championship.date|date:"d M Y" }}{% if championship.location %} · {{ championship.location }}{% endif %}</p>
     </header>
 
-    <section class="pwa-form-card">
+    <section class="pwa-form-card pwa-available-signup-card">
         <h2>{% trans "Inscríbete" %}</h2>
         {% if categories %}
-            <p>{% trans "Elige la categoría o las categorías en las que vas a participar." %}</p>
+            <p class="pwa-signup-intro">{% trans "Elige la categoría o las categorías en las que vas a participar." %}</p>
             <form method="post" class="pwa-championship-signup-form">
                 {% csrf_token %}
                 <fieldset>
@@ -23,7 +23,9 @@
                     {% for category in categories %}
                         <label class="pwa-category-choice" for="category-{{ category.id }}">
                             <input id="category-{{ category.id }}" type="checkbox" name="categories" value="{{ category.id }}">
-                            <span>{{ category.name }}</span>
+                            <span class="pwa-category-choice-icon"><i class="fas fa-trophy" aria-hidden="true"></i></span>
+                            <span class="pwa-category-choice-name">{{ category.name }}</span>
+                            <span class="pwa-category-choice-check"><i class="fas fa-check" aria-hidden="true"></i></span>
                         </label>
                     {% endfor %}
                 </fieldset>

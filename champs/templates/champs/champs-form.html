@@ -45,7 +45,7 @@
             <div class="col-md-6 text-center">
             {% if obj %}
                 <button type="button" class="btn btn-sm btn-success ark" data-dismiss="modal" data-url="{% url "champs-list" %}"
-                    data-target="div-container" data-obj_id="{{obj.id}}">{% trans "Guardar" %}</button>
+                    data-target="emp-list" data-obj_id="{{obj.id}}">{% trans "Guardar" %}</button>
             {% else %}
                 <button type="button" class="btn btn-sm btn-success ark_new_obj" data-dismiss="modal" data-url="{%url "champs-list"%}"
                     data-target="emp-list" data-url-save="{% url "autosave_fields" %}" data-args-save="name,date,publish"

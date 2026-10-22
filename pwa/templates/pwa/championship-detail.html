@@ -31,19 +31,20 @@
 
     <div class="tab-content pwa-championship-tab-content">
         <section class="tab-pane fade show active" id="categories" role="tabpanel" aria-labelledby="categories-tab">
-            <div class="pwa-result-card">
-                <span>{% trans "Resultado" %}</span>
-                <strong>{% if registration.position %}{{ registration.position }}{% else %}{% trans "Pendiente" %}{% endif %}</strong>
+            <div class="pwa-registration-status">
+                <span class="pwa-registration-status-icon"><i class="fas fa-check" aria-hidden="true"></i></span>
+                <div><strong>{% trans "Inscripción confirmada" %}</strong><span>{% trans "Ya formas parte de este campeonato." %}</span></div>
+                <div class="pwa-registration-position"><small>{% trans "Resultado" %}</small><strong>{% if registration.position %}{{ registration.position }}{% else %}{% trans "Pendiente" %}{% endif %}</strong></div>
             </div>
 
             <p class="pwa-section-label">{% trans "Categorías inscritas" %}</p>
-            <div class="pwa-mobile-list">
+            <div class="pwa-mobile-list pwa-registration-categories">
                 {% for detail in summary.category_details %}
-                    <div class="pwa-mobile-list-item">
-                        <div class="pwa-list-icon pwa-list-icon-warning"><i class="fas fa-trophy" aria-hidden="true"></i></div>
+                    <div class="pwa-mobile-list-item pwa-registration-category">
+                        <div class="pwa-list-icon pwa-list-icon-success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         <div class="pwa-list-body">
                             <strong>{{ detail.category.name }}</strong>
-                            <span>{% trans "Inscrita" %}</span>
+                            <span>{% trans "Participación confirmada" %}</span>
                         </div>
                     </div>
                 {% empty %}
@@ -68,10 +69,18 @@
                 </div>
             </section>
 
-            <section class="pwa-form-card">
-                <h2>{% trans "Transferencia bancaria" %}</h2>
-                <p>{% trans "Indica esta referencia en el concepto de la transferencia para identificar el pago automáticamente." %}</p>
-                <strong>{{ registration.payment_reference }}</strong>
+            <section class="pwa-form-card pwa-transfer-card">
+                <div class="pwa-transfer-heading">
+                    <span class="pwa-transfer-icon"><i class="fas fa-university" aria-hidden="true"></i></span>
+                    <div><h2>{% trans "Transferencia bancaria" %}</h2><p>{% trans "Usa esta referencia en el concepto para que identifiquemos tu pago." %}</p></div>
+                </div>
+                <div class="pwa-transfer-reference">
+                    <span>{% trans "Concepto de la transferencia" %}</span>
+                    <code id="payment-reference">{{ registration.payment_reference }} - {{ student.name }}</code>
+                    <button type="button" class="pwa-copy-reference" data-concept="{{ registration.payment_reference }} - {{ student.name }}" aria-describedby="payment-reference-copy-status"><i class="fas fa-copy" aria-hidden="true"></i> {% trans "Copiar concepto" %}</button>
+                    <small id="payment-reference-copy-status" aria-live="polite"></small>
+                </div>
+                <p class="pwa-transfer-note"><i class="fas fa-info-circle" aria-hidden="true"></i> {% trans "Copia el concepto completo exactamente igual antes de realizar la transferencia." %}</p>
             </section>
 
             <p class="pwa-section-label">{% trans "Detalle de costes" %}</p>
@@ -90,38 +99,28 @@
                 {% endfor %}
             </div>
 
-            <section class="pwa-form-card">
-                <h2>{% trans "Justificante de pago" %}</h2>
-                {% if registration.payment_proof %}
-                    <a class="pwa-proof-link" href="{{ registration.payment_proof.url }}" target="_blank" rel="noopener">
-                        <i class="fas fa-file-alt" aria-hidden="true"></i> {% trans "Ver justificante actual" %}
-                    </a>
-                {% endif %}
-                <form method="post" enctype="multipart/form-data" action="{% url 'pwa-championship-payment-proof' registration.id %}">
-                    {% csrf_token %}
-                    <label for="payment-proof">{% trans "Subir fichero o sacar una foto" %}</label>
-                    <input id="payment-proof" type="file" name="payment_proof" class="form-control" accept="image/*,.pdf" capture="environment" required>
-                    <button type="submit" class="btn btn-primary w-100">{% trans "Guardar justificante" %}</button>
-                </form>
-            </section>
         </section>
 
         <section class="tab-pane fade" id="companions" role="tabpanel" aria-labelledby="companions-tab">
             <p class="pwa-section-label">{% trans "Acompañantes del viaje" %}</p>
-            <div class="pwa-mobile-list">
+            <div class="pwa-mobile-list pwa-companion-list">
                 {% for detail in summary.companion_details %}
                     {% with companion=detail.companion %}
                     <div class="pwa-mobile-list-item pwa-companion-item">
                         <div class="pwa-list-icon pwa-list-icon-success"><i class="fas fa-user" aria-hidden="true"></i></div>
                         <div class="pwa-list-body">
                             <strong>{{ companion.full_name }}</strong>
-                            <span>{{ companion.dni }} · {{ companion.birth_date|date:"d-m-Y" }}</span>
-                            {% if companion.is_canary_resident %}<span>{% trans "Residente en Canarias" %}: {{ companion.municipality }}</span>{% endif %}
-                            <span>{% trans "Coste" %}: {{ detail.total_amount }} € · {% trans "Pagado" %}: {{ companion.paid_amount }} € · {% trans "Pendiente" %}: {{ detail.pending_amount }} €</span>
+                            <span class="pwa-companion-identification">{{ companion.dni }} · {{ companion.birth_date|date:"d-m-Y" }}</span>
+                            {% if companion.municipality %}<span>{% trans "Municipio" %}: {{ companion.municipality }}</span>{% endif %}
+                            <div class="pwa-companion-finances" aria-label="{% trans "Resumen de importes" %}">
+                                <p><span>{% trans "Coste" %}</span><strong>{{ detail.total_amount }} €</strong></p>
+                                <p><span>{% trans "Pagado" %}</span><strong>{{ companion.paid_amount }} €</strong></p>
+                                <p><span>{% trans "Pendiente" %}</span><strong>{{ detail.pending_amount }} €</strong></p>
+                            </div>
                         </div>
                         <form method="post" action="{% url 'pwa-championship-companion-delete' registration.id companion.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm" title="{% trans "Eliminar" %}"><i class="fas fa-trash"></i></button>
+                            <button type="submit" class="pwa-icon-danger-button" aria-label="{% trans "Eliminar acompañante" %}" title="{% trans "Eliminar" %}"><i class="fas fa-trash" aria-hidden="true"></i></button>
                         </form>
                     </div>
                     {% endwith %}
@@ -130,29 +129,23 @@
                 {% endfor %}
             </div>
 
-            <section class="pwa-form-card">
+            <section class="pwa-form-card pwa-companion-form-card">
                 <h2>{% trans "Añadir acompañante" %}</h2>
-                <form method="post" action="{% url 'pwa-championship-companion-add' registration.id %}">
+                <p class="pwa-form-intro">{% trans "Añade los datos de la persona que viajará contigo." %}</p>
+                <form method="post" class="pwa-companion-form" action="{% url 'pwa-championship-companion-add' registration.id %}">
                     {% csrf_token %}
-                    <label for="companion-full-name">{% trans "Nombre completo" %}</label>
-                    <input id="companion-full-name" name="full_name" type="text" class="form-control" required>
+                    <div class="pwa-form-field"><label for="companion-full-name">{% trans "Nombre completo" %}</label><input id="companion-full-name" name="full_name" type="text" class="form-control" autocomplete="name" required></div>
 
-                    <label for="companion-birth-date">{% trans "Fecha de nacimiento" %}</label>
-                    <input id="companion-birth-date" name="birth_date" type="date" class="form-control" required>
+                    <div class="pwa-form-field"><label for="companion-birth-date">{% trans "Fecha de nacimiento" %}</label><input id="companion-birth-date" name="birth_date" type="date" class="form-control" required></div>
 
-                    <label for="companion-dni">{% trans "DNI" %}</label>
-                    <input id="companion-dni" name="dni" type="text" class="form-control" required>
+                    <div class="pwa-form-field"><label for="companion-dni">{% trans "DNI" %}</label><input id="companion-dni" name="dni" type="text" class="form-control" autocapitalize="characters" required></div>
 
-                    <div class="form-check pwa-resident-check">
-                        <input id="companion-canary-resident" name="is_canary_resident" type="checkbox" class="form-check-input">
-                        <label for="companion-canary-resident" class="form-check-label">{% trans "Residente en Canarias" %}</label>
+                    <div class="pwa-form-field"><label for="companion-municipality">{% trans "Municipio de residencia" %}</label><input id="companion-municipality" name="municipality" type="text" class="form-control" autocomplete="address-level2" required></div>
+
+                    <div class="pwa-resident-check">
+                        <label for="companion-canary-resident"><input id="companion-canary-resident" name="is_canary_resident" type="checkbox"> <span>{% trans "Residente en Canarias" %}</span></label>
                     </div>
-
-                    <div id="companion-municipality-group" hidden>
-                        <label for="companion-municipality">{% trans "Municipio de residencia" %}</label>
-                        <input id="companion-municipality" name="municipality" type="text" class="form-control">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">{% trans "Añadir acompañante" %}</button>
+                    <button type="submit" class="pwa-primary-button">{% trans "Añadir acompañante" %}</button>
                 </form>
             </section>
         </section>
@@ -160,19 +153,28 @@
 
     <script>
         (function () {
-            var resident = document.getElementById('companion-canary-resident');
-            var municipalityGroup = document.getElementById('companion-municipality-group');
-            var municipality = document.getElementById('companion-municipality');
-            if (!resident) return;
-            resident.addEventListener('change', function () {
-                municipalityGroup.hidden = !this.checked;
-                municipality.required = this.checked;
-            });
-
             var activeTab = document.querySelector('[data-bs-target="' + window.location.hash + '"]');
             if (activeTab && window.bootstrap) {
                 window.bootstrap.Tab.getOrCreateInstance(activeTab).show();
             }
+
+            var copyReference = document.querySelector('.pwa-copy-reference');
+            var copyStatus = document.getElementById('payment-reference-copy-status');
+            if (copyReference && copyStatus) {
+                copyReference.addEventListener('click', function () {
+                    var concept = this.getAttribute('data-concept');
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(concept).then(function () {
+                            copyStatus.textContent = '{% trans "Concepto copiado" %}';
+                        }).catch(function () {
+                            copyStatus.textContent = '{% trans "No se pudo copiar. Mantén pulsado el concepto para copiarlo." %}';
+                        });
+                    } else {
+                        copyStatus.textContent = '{% trans "Mantén pulsado el concepto para copiarlo." %}';
+                    }
+                });
+            }
+
         }());
     </script>
 {% endblock %}

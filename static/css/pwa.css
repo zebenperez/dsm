@@ -869,8 +869,81 @@ body {
 	font-weight: 600;
 }
 
+.pwa-transfer-card { display: block; min-height: 0; padding: 18px; border-color: #d9e4ea; background: linear-gradient(145deg, #fff, #f8fbfc); }
+.pwa-transfer-card:hover, .pwa-transfer-card:focus { background: linear-gradient(145deg, #fff, #f8fbfc); }
+.pwa-transfer-heading { display: flex; align-items: flex-start; gap: 11px; }
+.pwa-transfer-icon { display: inline-flex; flex: 0 0 38px; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 11px; background: #e6f2f7; color: #24718d; }
+.pwa-transfer-heading h2 { margin: 0 0 3px; }
+.pwa-transfer-heading p { margin: 0; color: #667782; font-size: 13px; line-height: 1.4; }
+.pwa-transfer-reference { margin-top: 16px; padding: 13px; border: 1px solid #cddde4; border-radius: 11px; background: #fff; }
+.pwa-transfer-reference > span { display: block; margin-bottom: 6px; color: #60727d; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.pwa-transfer-reference code { display: block; overflow-wrap: anywhere; color: #1f4858; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 16px; font-weight: 700; letter-spacing: .02em; }
+.pwa-copy-reference { width: 100%; min-height: 44px; margin-top: 12px; border: 1px solid #78aebe; border-radius: 9px; background: #f2fafc; color: #246b84; font-size: 14px; font-weight: 700; }
+.pwa-copy-reference:active { background: #dff1f6; }
+.pwa-transfer-reference small { display: block; min-height: 17px; margin-top: 6px; color: #287348; font-size: 12px; font-weight: 600; text-align: center; }
+.pwa-transfer-note { margin: 12px 0 0; color: #61737e; font-size: 12px; line-height: 1.45; }
+.pwa-transfer-note i { margin-right: 4px; color: #397d95; }
+.pwa-proof-card { display: block; min-height: 0; padding: 18px; border-color: #dedfe8; background: linear-gradient(145deg, #fff, #fafafe); }
+.pwa-proof-card:hover, .pwa-proof-card:focus { background: linear-gradient(145deg, #fff, #fafafe); }
+.pwa-proof-heading { display: flex; align-items: flex-start; gap: 11px; }
+.pwa-proof-icon { display: inline-flex; flex: 0 0 38px; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 11px; background: #f0edfc; color: #6651a5; }
+.pwa-proof-heading h2 { margin: 0 0 3px; }
+.pwa-proof-heading p { margin: 0; color: #697381; font-size: 13px; line-height: 1.4; }
+.pwa-proof-saved { display: flex; align-items: center; gap: 7px; margin-top: 15px; padding: 10px 11px; border-radius: 9px; background: #eaf7ef; color: #287348; font-size: 13px; font-weight: 700; }
+.pwa-proof-saved a { margin-left: auto; color: #287348; font-size: 12px; text-decoration: underline; }
+.pwa-proof-form { margin-top: 15px; }
+.pwa-proof-form input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.pwa-file-picker { display: flex !important; align-items: center; gap: 10px; min-height: 58px; margin: 0 !important; padding: 10px 12px; border: 1px dashed #9fa6c5; border-radius: 11px; background: #fff; color: #4e3d8d !important; cursor: pointer; }
+.pwa-file-picker > i { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: #f0edfc; }
+.pwa-file-picker > span { flex: 1; font-size: 14px; font-weight: 700; }
+.pwa-file-picker > small { color: #788190; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.pwa-file-selection { min-height: 18px; margin: 8px 2px 0; overflow: hidden; color: #707b88; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.pwa-proof-form .pwa-primary-button { width: 100%; margin-top: 10px; }
+.pwa-proof-form .pwa-primary-button:disabled { cursor: not-allowed; opacity: .52; box-shadow: none; }
+
 .pwa-companion-item .pwa-list-body span + span {
 	margin-top: 1px;
+}
+
+.pwa-registration-status { display: flex; align-items: center; gap: 11px; margin: 0 0 18px; padding: 14px; border: 1px solid #c8e8d4; border-radius: 14px; background: linear-gradient(135deg, #f3fcf6, #e6f7ec); }
+.pwa-registration-status-icon { display: inline-flex; flex: 0 0 38px; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: #24965d; color: #fff; }
+.pwa-registration-status > div:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.pwa-registration-status > div:nth-child(2) strong { color: #276b44; font-size: 14px; }
+.pwa-registration-status > div:nth-child(2) span { margin-top: 2px; color: #56816a; font-size: 12px; }
+.pwa-registration-position { display: flex; align-items: flex-end; flex-direction: column; white-space: nowrap; }
+.pwa-registration-position small { color: #71917d; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.pwa-registration-position strong { color: #276b44; font-size: 14px; }
+.pwa-registration-category { min-height: 70px; border: 1px solid #dcece2; border-radius: 12px; background: #fff; }
+.pwa-registration-category + .pwa-registration-category { margin-top: 8px; }
+.pwa-companion-list { display: grid; gap: 10px; }
+.pwa-companion-list .pwa-companion-item { align-items: flex-start; padding: 14px; border: 1px solid #e1e6ea; border-radius: 13px; background: #fff; }
+.pwa-companion-identification { color: #71808e !important; }
+.pwa-companion-finances { margin-top: 11px; overflow: hidden; border: 1px solid #e3e8eb; border-radius: 9px; background: #fafbfc; }
+.pwa-companion-finances p { display: flex; align-items: center; justify-content: space-between; margin: 0; padding: 9px 10px; }
+.pwa-companion-finances p + p { border-top: 1px solid #e3e8eb; }
+.pwa-companion-finances span { color: #6d7985; font-size: 11px; font-weight: 600; }
+.pwa-companion-finances strong { color: #344454; font-size: 14px; white-space: nowrap; }
+.pwa-companion-finances p:nth-child(2) strong { color: #287348; }
+.pwa-companion-finances p:last-child strong { color: #b35a20; }
+.pwa-icon-danger-button { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; margin-left: 4px; padding: 0; border: 1px solid #f2c7c3; border-radius: 11px; background: #fff8f7; color: #bd4d46; }
+.pwa-companion-form-card { display: block; min-height: 0; padding: 18px; }
+.pwa-companion-form-card:hover, .pwa-companion-form-card:focus { background: #fff; }
+.pwa-companion-form-card h2 { margin-bottom: 6px; }
+.pwa-form-intro { margin: -5px 0 18px; color: #71808e; font-size: 13px; line-height: 1.45; }
+.pwa-companion-form .pwa-form-field { margin-top: 15px; }
+.pwa-companion-form .pwa-form-field label { margin-top: 0; }
+.pwa-companion-form .form-control { min-height: 48px; border-radius: 10px; font-size: 16px; }
+.pwa-resident-check { margin-top: 18px; }
+.pwa-resident-check label { display: flex !important; align-items: center; gap: 10px; min-height: 48px; margin: 0 !important; padding: 11px 12px; border: 1px solid #e1e6ea; border-radius: 10px; background: #fafbfc; cursor: pointer; }
+.pwa-resident-check input { width: 20px; height: 20px; accent-color: #e89900; }
+.pwa-companion-form .pwa-primary-button { width: 100%; margin-top: 20px; }
+
+@media (max-width: 360px) {
+	.pwa-registration-status { gap: 8px; padding: 12px; }
+	.pwa-registration-status-icon { flex-basis: 34px; width: 34px; height: 34px; }
+	.pwa-registration-status > div:nth-child(2) span { display: none; }
+	.pwa-companion-list .pwa-companion-item { padding: 12px; }
+	.pwa-companion-finances p { padding: 8px 9px; }
 }
 
 .pwa-home {
@@ -1052,9 +1125,21 @@ body {
 .pwa-field-error { margin: 6px 0 0; color: #b23933; font-size: 13px; font-weight: 600; }
 .pwa-upload-status { display: block; margin-top: 6px; color: #278456; font-size: 12px; }
 .pwa-upload-status i { margin-right: 4px; }
-.pwa-championship-signup-form fieldset { margin: 18px 0; padding: 0; border: 0; }
-.pwa-championship-signup-form legend { margin-bottom: 9px; color: #4d5966; font-size: 14px; font-weight: 700; }
-.pwa-category-choice { display: flex; align-items: center; gap: 10px; min-height: 48px; margin: 8px 0; padding: 10px 12px; border: 1px solid #e1e5e8; border-radius: 10px; color: #344454; font-weight: 600; cursor: pointer; }
-.pwa-category-choice:has(input:checked) { border-color: #eca300; background: #fff8e6; }
-.pwa-category-choice input { width: 18px; height: 18px; accent-color: #e89900; }
+.pwa-available-signup-card { display: block; min-height: 0; padding: 20px; }
+.pwa-available-signup-card:hover, .pwa-available-signup-card:focus { background: #fff; }
+.pwa-available-signup-card h2 { margin-bottom: 6px; }
+.pwa-signup-intro { margin: 0; color: #667582; font-size: 14px; line-height: 1.5; }
+.pwa-championship-signup-form fieldset { margin: 20px 0; padding: 0; border: 0; }
+.pwa-championship-signup-form legend { margin-bottom: 10px; color: #4d5966; font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.pwa-category-choice { position: relative; display: flex; align-items: center; gap: 11px; min-height: 62px; margin: 9px 0; padding: 10px 12px; border: 1px solid #e1e5e8; border-radius: 12px; background: #fff; color: #344454; font-weight: 600; cursor: pointer; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+.pwa-category-choice:hover { border-color: #e8bd62; background: #fffaf0; }
+.pwa-category-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.pwa-category-choice-icon { display: inline-flex; flex: 0 0 36px; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #fff1cd; color: #bf7900; }
+.pwa-category-choice-name { flex: 1; min-width: 0; font-size: 15px; line-height: 1.25; }
+.pwa-category-choice-check { display: inline-flex; flex: 0 0 22px; align-items: center; justify-content: center; width: 22px; height: 22px; border: 1px solid #cbd3d9; border-radius: 50%; color: transparent; }
+.pwa-category-choice:has(input:checked) { border-color: #e6a20b; background: #fff8e6; box-shadow: 0 2px 7px rgba(200, 135, 0, .12); }
+.pwa-category-choice:has(input:checked) .pwa-category-choice-icon { background: #f0a000; color: #fff; }
+.pwa-category-choice:has(input:checked) .pwa-category-choice-check { border-color: #d58d00; background: #d58d00; color: #fff; }
+.pwa-category-choice:has(input:focus-visible) { outline: 3px solid rgba(240, 160, 0, .28); outline-offset: 2px; }
+.pwa-championship-signup-form .pwa-primary-button { width: 100%; margin-top: 2px; }
 .pwa-pin-success { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #e0f4e9; color: #187743; font-size: 13px; font-weight: 600; text-align: center; }

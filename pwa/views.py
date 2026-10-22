@@ -402,10 +402,10 @@ def add_championship_companion(request, registration_id):
 		birth_date = request.POST.get('birth_date', '')
 		dni = request.POST.get('dni', '').strip().upper()
 		is_canary_resident = request.POST.get('is_canary_resident') == 'on'
-		municipality = request.POST.get('municipality', '').strip() if is_canary_resident else ''
+		municipality = request.POST.get('municipality', '').strip()
 		try:
 			birth_date = datetime.strptime(birth_date, '%Y-%m-%d').date()
-			if full_name and dni and (not is_canary_resident or municipality):
+			if full_name and dni and municipality:
 				TravelCompanion.objects.create(
 					registration=registration,
 					full_name=full_name,

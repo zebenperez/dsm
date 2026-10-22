@@ -40,10 +40,10 @@
                         <td class="text-right">
                             <button type="button"
                                     class="btn btn-primary ark"
-                                    data-url="{% url "champs-name-form" %}"
+                                    data-url="{% url "champs-form" %}"
                                     data-target-modal="common-modal"
-                                    data-champ_id="{{ item.id }}"
-                                    title="{% trans "Editar nombre" %}">
+                                    data-obj_id="{{ item.id }}"
+                                    title="{% trans "Editar campeonato y publicación" %}">
                                 <i class="glyphicon glyphicon-pencil"></i>
                             </button>
                             {% if item.can_delete %}
