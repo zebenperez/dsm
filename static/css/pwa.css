@@ -1117,10 +1117,13 @@ body {
 .pwa-change-pin-form > p:first-of-type { margin: 0 0 18px; color: #697581; font-size: 14px; line-height: 1.45; }
 .pwa-change-pin-form label { display: block; margin: 16px 0 7px; color: #4d5966; font-size: 14px; font-weight: 700; }
 .pwa-change-pin-form input { width: 100%; height: 48px; padding: 0 12px; border: 1px solid #d5dbe0; border-radius: 10px; color: #283645; font-size: 18px; font-weight: 700; letter-spacing: .25em; text-align: center; }
+.pwa-change-pin-form select { width: 100%; height: 48px; padding: 0 12px; border: 1px solid #d5dbe0; border-radius: 10px; background: #fff; color: #283645; font-size: 16px; font-weight: 700; }
 .pwa-change-pin-form input:focus { border-color: #eca300; outline: 0; box-shadow: 0 0 0 3px rgba(240, 160, 0, .15); }
+.pwa-change-pin-form select:focus { border-color: #eca300; outline: 0; box-shadow: 0 0 0 3px rgba(240, 160, 0, .15); }
 .pwa-change-pin-form .pwa-primary-button { width: 100%; margin-top: 20px; }
-.pwa-complementary-data-form input[type="text"] { letter-spacing: normal; text-align: left; }
+.pwa-complementary-data-form input[type="text"], .pwa-complementary-data-form input[type="email"], .pwa-complementary-data-form input[type="tel"], .pwa-complementary-data-form input[type="date"] { letter-spacing: normal; text-align: left; }
 .pwa-complementary-data-form input[type="file"] { height: auto; padding: 10px; font-size: 13px; font-weight: 500; letter-spacing: normal; text-align: left; }
+.pwa-form-section-title { margin: 28px 0 0; padding-top: 20px; border-top: 1px solid #e8ecef; color: #344454; font-size: 17px; font-weight: 700; }
 .pwa-readonly-field { display: block; width: 100%; height: 48px; padding: 13px 12px; border: 1px solid #e2e5e8; border-radius: 10px; background: #f5f6f7; color: #697581; font-size: 16px; font-weight: 600; }
 .pwa-field-error { margin: 6px 0 0; color: #b23933; font-size: 13px; font-weight: 600; }
 .pwa-upload-status { display: block; margin-top: 6px; color: #278456; font-size: 12px; }

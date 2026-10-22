@@ -13,18 +13,37 @@
 
     <form method="post" enctype="multipart/form-data" class="pwa-change-pin-form pwa-complementary-data-form">
         {% csrf_token %}
-        <p>{% trans "Necesitamos estos datos para mantener tu ficha actualizada." %}</p>
+        <p>{% trans "Completa estos datos para tramitar tu licencia federativa." %}</p>
 
+        <h2 class="pwa-form-section-title">{% trans "Otros datos" %}</h2>
         <label>{% trans "Fecha de nacimiento" %}</label>
         <output class="pwa-readonly-field">{% if student.born_date %}{{ student.born_date|date:"d/m/Y" }}{% else %}{% trans "No disponible" %}{% endif %}</output>
 
-        <label for="{{ form.postal_code.id_for_label }}">{% trans "Código postal" %}</label>
-        {{ form.postal_code }}
-        {% for error in form.postal_code.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+        <label for="{{ form.sex.id_for_label }}">{% trans "Sexo" %}</label>
+        {{ form.sex }}
+        {% for error in form.sex.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
 
-        <label for="{{ form.municipality.id_for_label }}">{% trans "Municipio de residencia" %}</label>
-        {{ form.municipality }}
-        {% for error in form.municipality.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+        <label for="{{ form.nationality.id_for_label }}">{% trans "Nacionalidad" %}</label>
+        {{ form.nationality }}
+        {% for error in form.nationality.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <h2 class="pwa-form-section-title">{% trans "Datos de contacto" %}</h2>
+        <label for="{{ form.email.id_for_label }}">{% trans "Email" %}</label>
+        {{ form.email }}
+        {% for error in form.email.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.phone.id_for_label }}">{% trans "Teléfono" %}</label>
+        {{ form.phone }}
+        {% for error in form.phone.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <h2 class="pwa-form-section-title">{% trans "Documento de identidad" %}</h2>
+        <label for="{{ form.dni.id_for_label }}">{% trans "DNI" %}</label>
+        {{ form.dni }}
+        {% for error in form.dni.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.dni_expiry_date.id_for_label }}">{% trans "Fecha de caducidad del DNI" %}</label>
+        {{ form.dni_expiry_date }}
+        {% for error in form.dni_expiry_date.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
 
         <label for="{{ form.dni_front.id_for_label }}">{% trans "DNI — anverso" %}</label>
         {{ form.dni_front }}
@@ -35,6 +54,27 @@
         {{ form.dni_back }}
         {% if student.dni_back %}<small class="pwa-upload-status"><i class="fas fa-check-circle" aria-hidden="true"></i>{% trans "Foto guardada. Puedes sustituirla si lo necesitas." %}</small>{% endif %}
         {% for error in form.dni_back.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <h2 class="pwa-form-section-title">{% trans "Dirección" %}</h2>
+        <label for="{{ form.address.id_for_label }}">{% trans "Dirección" %}</label>
+        {{ form.address }}
+        {% for error in form.address.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.postal_code.id_for_label }}">{% trans "Código postal" %}</label>
+        {{ form.postal_code }}
+        {% for error in form.postal_code.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.municipality.id_for_label }}">{% trans "Municipio de residencia" %}</label>
+        {{ form.municipality }}
+        {% for error in form.municipality.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.province.id_for_label }}">{% trans "Provincia" %}</label>
+        {{ form.province }}
+        {% for error in form.province.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.autonomous_community.id_for_label }}">{% trans "Comunidad Autónoma" %}</label>
+        {{ form.autonomous_community }}
+        {% for error in form.autonomous_community.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
 
         <button class="pwa-primary-button" type="submit">{% trans "Guardar datos" %}</button>
     </form>

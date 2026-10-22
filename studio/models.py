@@ -49,6 +49,12 @@ def get_year(student):
 		return ""
 
 class Student(models.Model):
+	SEX_CHOICES = (
+		('Masculino', 'Masculino'),
+		('Femenino', 'Femenino'),
+		('Otros', 'Otros'),
+	)
+
 	creation_date = models.DateTimeField(verbose_name="Fecha de creación", auto_now_add=True)
 	born_date = models.DateField(verbose_name="Fecha de nacimiento", blank=True, null=True)
 	code = models.BigIntegerField(verbose_name="Código",unique=True)
@@ -60,6 +66,13 @@ class Student(models.Model):
 	user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE, verbose_name="Usuario", blank=True, null=True)
 	picture = models.ImageField(upload_to=content_file_name, blank = True, null = True, verbose_name='Foto', help_text="Seleccione una foto para subir")
 	band = models.CharField(max_length=15, verbose_name="Pulsera", blank=True, default="")
+	dni = models.CharField(max_length=20, verbose_name="DNI", blank=True, default="")
+	dni_expiry_date = models.DateField(verbose_name="Fecha de caducidad del DNI", blank=True, null=True)
+	sex = models.CharField(max_length=30, verbose_name="Sexo", blank=True, default="", choices=SEX_CHOICES)
+	nationality = models.CharField(max_length=100, verbose_name="Nacionalidad", blank=True, default="")
+	province = models.CharField(max_length=100, verbose_name="Provincia", blank=True, default="Santa Cruz de Tenerife")
+	autonomous_community = models.CharField(max_length=100, verbose_name="Comunidad autónoma", blank=True, default="Canarias")
+	address = models.CharField(max_length=255, verbose_name="Dirección", blank=True, default="")
 	postal_code = models.CharField(max_length=5, verbose_name="Código postal", blank=True, default="")
 	municipality = models.CharField(max_length=120, verbose_name="Municipio de residencia", blank=True, default="")
 	dni_front = models.ImageField(upload_to=document_file_name, blank=True, null=True, verbose_name='DNI (anverso)')

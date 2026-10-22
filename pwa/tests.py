@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 from champs.models import Category, ChampCategory, Championship, Registration
+from pwa.forms import ComplementaryDataForm
 from studio.models import Enrolment, Group, Student, Teacher
 
 
@@ -205,14 +206,32 @@ class ComplementaryDataTests(TestCase):
 
         self.assertContains(response, reverse('pwa-complementary-data'))
 
+    def test_complementary_data_has_local_defaults_and_sex_options(self):
+        response = self.client.get(reverse('pwa-complementary-data'))
+
+        self.assertContains(response, 'value="Santa Cruz de Tenerife"', html=True)
+        self.assertContains(response, 'value="Canarias"', html=True)
+        self.assertContains(response, '<option value="Masculino">Masculino</option>', html=True)
+        self.assertContains(response, '<option value="Femenino">Femenino</option>', html=True)
+        self.assertContains(response, '<option value="Otros">Otros</option>', html=True)
+
     def test_complementary_data_shows_birth_date_and_saves_details(self):
         image = (
             b'GIF87a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04'
             b'\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
         )
         response = self.client.post(reverse('pwa-complementary-data'), {
+            'email': 'alumna@example.com',
+            'phone': '600000000',
+            'dni': '12345678z',
+            'dni_expiry_date': '2030-05-18',
+            'sex': 'Femenino',
+            'nationality': 'Española',
+            'address': 'Calle Ejemplo, 1',
             'postal_code': '35001',
             'municipality': 'Las Palmas de Gran Canaria',
+            'province': 'Las Palmas',
+            'autonomous_community': 'Canarias',
             'dni_front': SimpleUploadedFile('anverso.gif', image, content_type='image/gif'),
             'dni_back': SimpleUploadedFile('reverso.gif', image, content_type='image/gif'),
         })
@@ -221,6 +240,9 @@ class ComplementaryDataTests(TestCase):
         self.assertRedirects(response, reverse('pwa-complementary-data'))
         self.assertEqual(self.student.postal_code, '35001')
         self.assertEqual(self.student.municipality, 'Las Palmas de Gran Canaria')
+        self.assertEqual(self.student.dni, '12345678Z')
+        self.assertEqual(self.student.dni_expiry_date, date(2030, 5, 18))
+        self.assertEqual(self.student.address, 'Calle Ejemplo, 1')
         self.assertTrue(self.student.dni_front.name)
         self.assertTrue(self.student.dni_back.name)
 
@@ -228,11 +250,15 @@ class ComplementaryDataTests(TestCase):
         self.assertContains(response, '18/05/2000')
 
     def test_complementary_data_rejects_invalid_postal_code(self):
-        response = self.client.post(reverse('pwa-complementary-data'), {
-            'postal_code': '1234', 'municipality': 'Telde',
-        })
+        form = ComplementaryDataForm(data={
+            'email': 'alumna@example.com', 'phone': '600000000', 'dni': '12345678Z',
+            'dni_expiry_date': '2030-05-18', 'sex': 'Femenino', 'nationality': 'Española',
+            'address': 'Calle Ejemplo, 1', 'postal_code': '1234', 'municipality': 'Telde',
+            'province': 'Las Palmas', 'autonomous_community': 'Canarias',
+        }, instance=Student.objects.create(code=51, pin='A051', name='Otra alumna'))
 
-        self.assertContains(response, 'Introduce un código postal de cinco cifras.')
+        self.assertFalse(form.is_valid())
+        self.assertIn('Introduce un código postal de cinco cifras.', form.errors['postal_code'])
 
 
 class ChampionshipSignupTests(TestCase):

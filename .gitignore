@@ -139,6 +139,8 @@ studio/migrations/0012_wallet_movement.py
 !studio/migrations/
 studio/migrations/*
 !studio/migrations/0017_student_complementary_data.py
+!studio/migrations/0018_student_licence.py
+!studio/migrations/0019_student_federation_data.py
 kiosk/migrations/
 kiosk/migrations/*.py
 kiosk/migrations/
