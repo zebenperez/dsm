@@ -55,6 +55,10 @@ INSTALLED_APPS = [
 	'events.apps.EventsConfig',
 ]
 
+# Keep the primary-key type used by this legacy project.  Without this setting,
+# newer Django versions emit W042 for models that rely on an implicit primary key.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 MIDDLEWARE = [
 	'django.middleware.security.SecurityMiddleware',
 	'django.contrib.sessions.middleware.SessionMiddleware',

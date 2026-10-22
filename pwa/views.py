@@ -234,6 +234,7 @@ def get_championship_registration_summary(registration):
 	registration_costs = defaultdict(lambda: Decimal("0.00"))
 	companion_costs = defaultdict(lambda: Decimal("0.00"))
 	cost_details = []
+	registration_companions = companions_by_registration[registration.id]
 	for cost in cost_list:
 		if cost.scope == ChampCost.SCOPE_CATEGORY:
 			cost_registrations = registrations_by_category.get(cost.category.category_id, []) if cost.category_id else []
@@ -251,23 +252,34 @@ def get_championship_registration_summary(registration):
 		else:
 			amount_per_person = cost.amount
 
-		if registration in cost_registrations:
+		registration_included = registration in cost_registrations
+		included_companions = [
+			companion for companion in registration_companions
+			if companion in cost_companions
+		]
+		if registration_included:
 			registration_costs[registration.id] += amount_per_person
-			if cost.scope == ChampCost.SCOPE_CATEGORY and cost.category_id and cost.category.category:
+
+		for companion in included_companions:
+			companion_costs[companion.id] += amount_per_person
+
+		participant_count = int(registration_included) + len(included_companions)
+		if participant_count:
+			if registration_included and included_companions:
+				applies_to = _('Competidora y %(count)s acompañante(s)') % {
+					'count': len(included_companions),
+				}
+			elif included_companions:
+				applies_to = _('%(count)s acompañante(s)') % {'count': len(included_companions)}
+			elif cost.scope == ChampCost.SCOPE_CATEGORY and cost.category_id and cost.category.category:
 				applies_to = cost.category.category.name
-			elif cost.scope == ChampCost.SCOPE_ALL_TRAVELERS:
-				applies_to = _('Todos los viajeros')
 			else:
-				applies_to = _('Solo acompañantes')
+				applies_to = _('Competidora')
 			cost_details.append({
 				'name': cost.cost.name if cost.cost else _('Coste'),
 				'applies_to': applies_to,
-				'amount': amount_per_person,
+				'amount': amount_per_person * participant_count,
 			})
-
-		for companion in companions_by_registration[registration.id]:
-			if companion in cost_companions:
-				companion_costs[companion.id] += amount_per_person
 
 	category_details = []
 	category_cost_total = Decimal("0.00")
@@ -283,21 +295,42 @@ def get_championship_registration_summary(registration):
 				'amount': category_cost,
 			})
 
-	total_amount = registration_costs[registration.id] + category_cost_total
+	companion_total_amount = sum(
+		(companion_costs[companion.id] for companion in registration_companions),
+		Decimal("0.00"),
+	)
+	companion_paid_amount = sum(
+		(companion.paid_amount for companion in registration_companions),
+		Decimal("0.00"),
+	)
+	student_total_amount = registration_costs[registration.id] + category_cost_total
+	total_amount = student_total_amount + companion_total_amount
+	paid_amount = registration.paid_amount + companion_paid_amount
+	participant_cost_details = [{
+		'name': registration.student.name if registration.student else _('Alumna'),
+		'role': _('Alumna'),
+		'amount': student_total_amount,
+		'icon': 'fa-user',
+	}]
 	companion_details = []
-	for companion in companions_by_registration[registration.id]:
-		companion_total_amount = companion_costs[companion.id]
+	for companion in registration_companions:
+		participant_cost_details.append({
+			'name': companion.full_name,
+			'role': _('Acompañante'),
+			'amount': companion_costs[companion.id],
+			'icon': 'fa-user-friends',
+		})
 		companion_details.append({
 			'companion': companion,
-			'total_amount': companion_total_amount,
-			'pending_amount': max(companion_total_amount - companion.paid_amount, Decimal("0.00")),
 		})
 	return {
 		'category_details': category_details,
 		'cost_details': cost_details,
+		'participant_cost_details': participant_cost_details,
 		'companion_details': companion_details,
 		'total_amount': total_amount,
-		'pending_amount': max(total_amount - registration.paid_amount, Decimal("0.00")),
+		'paid_amount': paid_amount,
+		'pending_amount': max(total_amount - paid_amount, Decimal("0.00")),
 	}
 
 

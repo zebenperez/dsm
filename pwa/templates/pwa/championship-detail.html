@@ -61,7 +61,7 @@
                 </div>
                 <div class="pwa-championship-summary-row pwa-championship-summary-paid">
                     <span>{% trans "Importe abonado" %}</span>
-                    <strong>{{ registration.paid_amount }} €</strong>
+                    <strong>{{ summary.paid_amount }} €</strong>
                 </div>
                 <div class="pwa-championship-summary-row pwa-championship-summary-pending">
                     <span>{% trans "Pendiente" %}</span>
@@ -99,6 +99,20 @@
                 {% endfor %}
             </div>
 
+            <p class="pwa-section-label">{% trans "Desglose por persona" %}</p>
+            <div class="pwa-mobile-list pwa-participant-cost-list">
+                {% for participant in summary.participant_cost_details %}
+                    <div class="pwa-mobile-list-item">
+                        <div class="pwa-list-icon pwa-list-icon-success"><i class="fas {{ participant.icon }}" aria-hidden="true"></i></div>
+                        <div class="pwa-list-body">
+                            <strong>{{ participant.name }}</strong>
+                            <span>{{ participant.role }}</span>
+                        </div>
+                        <div class="pwa-list-amount">{{ participant.amount }} €</div>
+                    </div>
+                {% endfor %}
+            </div>
+
         </section>
 
         <section class="tab-pane fade" id="companions" role="tabpanel" aria-labelledby="companions-tab">
@@ -112,11 +126,6 @@
                             <strong>{{ companion.full_name }}</strong>
                             <span class="pwa-companion-identification">{{ companion.dni }} · {{ companion.birth_date|date:"d-m-Y" }}</span>
                             {% if companion.municipality %}<span>{% trans "Municipio" %}: {{ companion.municipality }}</span>{% endif %}
-                            <div class="pwa-companion-finances" aria-label="{% trans "Resumen de importes" %}">
-                                <p><span>{% trans "Coste" %}</span><strong>{{ detail.total_amount }} €</strong></p>
-                                <p><span>{% trans "Pagado" %}</span><strong>{{ companion.paid_amount }} €</strong></p>
-                                <p><span>{% trans "Pendiente" %}</span><strong>{{ detail.pending_amount }} €</strong></p>
-                            </div>
                         </div>
                         <form method="post" action="{% url 'pwa-championship-companion-delete' registration.id companion.id %}">
                             {% csrf_token %}

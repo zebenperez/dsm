@@ -6,6 +6,7 @@ Replace this with more appropriate tests for your application.
 """
 
 from datetime import date, time, timedelta
+from decimal import Decimal
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -13,8 +14,9 @@ from django.urls import reverse
 from django.utils import timezone
 
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
-from champs.models import Category, ChampCategory, Championship, Registration
+from champs.models import Category, ChampCategory, ChampCost, Championship, Cost, Registration, TravelCompanion
 from pwa.forms import ComplementaryDataForm
+from pwa.views import get_championship_registration_summary
 from studio.models import Enrolment, Group, Student, Teacher
 
 
@@ -317,3 +319,33 @@ class ChampionshipSignupTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+    def test_companion_costs_are_included_in_the_student_total(self):
+        registration = Registration.objects.create(
+            student=self.student, champ=self.available_championship,
+        )
+        TravelCompanion.objects.create(
+            registration=registration,
+            full_name='Acompañante',
+            birth_date=date(1990, 1, 1),
+            dni='12345678Z',
+            municipality='Santa Cruz de Tenerife',
+        )
+        travel_cost = Cost.objects.create(name='Autobús')
+        ChampCost.objects.create(
+            champ=self.available_championship,
+            cost=travel_cost,
+            amount=Decimal('30.00'),
+            scope=ChampCost.SCOPE_ALL_TRAVELERS,
+        )
+
+        summary = get_championship_registration_summary(registration)
+
+        self.assertEqual(summary['total_amount'], Decimal('60.00'))
+        self.assertEqual(summary['paid_amount'], Decimal('0.00'))
+        self.assertEqual(summary['pending_amount'], Decimal('60.00'))
+        self.assertEqual(summary['cost_details'][0]['amount'], Decimal('60.00'))
+        self.assertEqual(
+            [detail['amount'] for detail in summary['participant_cost_details']],
+            [Decimal('30.00'), Decimal('30.00')],
+        )
