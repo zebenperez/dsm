@@ -17,11 +17,13 @@ urlpatterns = [
 	path('forms/<int:form_id>', views.form_detail, name="pwa-form-detail"),
 	path('licence', views.licence, name="pwa-licence"),
 	path('championships', views.championships, name="pwa-championships"),
+	path('championships/available/<int:championship_id>', views.available_championship_detail, name="pwa-available-championship-detail"),
 	path('championships/<int:registration_id>', views.championship_detail, name="pwa-championship-detail"),
 	path('championships/<int:registration_id>/payment-proof', views.upload_championship_payment_proof, name="pwa-championship-payment-proof"),
 	path('championships/<int:registration_id>/companions', views.add_championship_companion, name="pwa-championship-companion-add"),
 	path('championships/<int:registration_id>/companions/<int:companion_id>/delete', views.delete_championship_companion, name="pwa-championship-companion-delete"),
 	path('set-pin', views.set_pin, name="pwa-set-pin"),
 	path('change-pin', views.change_pin, name="pwa-change-pin"),
+	path('datos-complementarios', views.complementary_data, name="pwa-complementary-data"),
 	path('change-photo', views.change_photo, name="pwa-change-photo"),
 ]

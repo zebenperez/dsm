@@ -5,13 +5,15 @@ when you run "manage.py test".
 Replace this with more appropriate tests for your application.
 """
 
-from datetime import time, timedelta
+from datetime import date, time, timedelta
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
+from champs.models import Category, ChampCategory, Championship, Registration
 from studio.models import Enrolment, Group, Student, Teacher
 
 
@@ -187,3 +189,105 @@ class ChangePinTests(TestCase):
         self.student.refresh_from_db()
         self.assertEqual(self.student.pin, 'A001')
         self.assertContains(response, 'Ese PIN ya está en uso. Elige otro.')
+
+
+class ComplementaryDataTests(TestCase):
+    def setUp(self):
+        self.student = Student.objects.create(
+            code=50, pin='A050', name='Alumna', phone='', born_date='2000-05-18',
+        )
+        session = self.client.session
+        session['student_id'] = self.student.pk
+        session.save()
+
+    def test_menu_links_to_complementary_data(self):
+        response = self.client.get(reverse('pwa-index'))
+
+        self.assertContains(response, reverse('pwa-complementary-data'))
+
+    def test_complementary_data_shows_birth_date_and_saves_details(self):
+        image = (
+            b'GIF87a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04'
+            b'\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+        )
+        response = self.client.post(reverse('pwa-complementary-data'), {
+            'postal_code': '35001',
+            'municipality': 'Las Palmas de Gran Canaria',
+            'dni_front': SimpleUploadedFile('anverso.gif', image, content_type='image/gif'),
+            'dni_back': SimpleUploadedFile('reverso.gif', image, content_type='image/gif'),
+        })
+
+        self.student.refresh_from_db()
+        self.assertRedirects(response, reverse('pwa-complementary-data'))
+        self.assertEqual(self.student.postal_code, '35001')
+        self.assertEqual(self.student.municipality, 'Las Palmas de Gran Canaria')
+        self.assertTrue(self.student.dni_front.name)
+        self.assertTrue(self.student.dni_back.name)
+
+        response = self.client.get(reverse('pwa-complementary-data'))
+        self.assertContains(response, '18/05/2000')
+
+    def test_complementary_data_rejects_invalid_postal_code(self):
+        response = self.client.post(reverse('pwa-complementary-data'), {
+            'postal_code': '1234', 'municipality': 'Telde',
+        })
+
+        self.assertContains(response, 'Introduce un código postal de cinco cifras.')
+
+
+class ChampionshipSignupTests(TestCase):
+    def setUp(self):
+        teacher = Teacher.objects.create(code=90, name='Profesora', phone='')
+        self.student_group = Group.objects.create(
+            name='Categoría de la alumna', teacher=teacher, ini_time=time(17), end_time=time(18),
+        )
+        other_group = Group.objects.create(
+            name='Otra categoría', teacher=teacher, ini_time=time(18), end_time=time(19),
+        )
+        self.student = Student.objects.create(code=90, pin='A090', name='Alumna', phone='')
+        Enrolment.objects.create(student=self.student, group=self.student_group, active=True)
+        tomorrow = date.today() + timedelta(days=1)
+        self.available_championship = Championship.objects.create(
+            name='Campeonato disponible', date=tomorrow, publish=True,
+        )
+        self.available_championship.target_groups.add(self.student_group)
+        self.category = Category.objects.create(name='Solo')
+        ChampCategory.objects.create(champ=self.available_championship, category=self.category)
+
+        self.other_championship = Championship.objects.create(
+            name='Campeonato de otra categoría', date=tomorrow, publish=True,
+        )
+        self.other_championship.target_groups.add(other_group)
+        self.unpublished_championship = Championship.objects.create(
+            name='Campeonato oculto', date=tomorrow, publish=False,
+        )
+        self.unpublished_championship.target_groups.add(self.student_group)
+
+        session = self.client.session
+        session['student_id'] = self.student.pk
+        session.save()
+
+    def test_home_only_shows_published_championships_for_student_group(self):
+        response = self.client.get(reverse('pwa-index'))
+
+        self.assertContains(response, self.available_championship.name)
+        self.assertNotContains(response, self.other_championship.name)
+        self.assertNotContains(response, self.unpublished_championship.name)
+        self.assertContains(response, reverse('pwa-available-championship-detail', args=[self.available_championship.id]))
+
+    def test_student_can_register_from_available_championship_detail(self):
+        response = self.client.post(
+            reverse('pwa-available-championship-detail', args=[self.available_championship.id]),
+            {'categories': [self.category.id]},
+        )
+
+        registration = Registration.objects.get(student=self.student, champ=self.available_championship)
+        self.assertRedirects(response, reverse('pwa-championship-detail', args=[registration.id]))
+        self.assertQuerySetEqual(registration.categories.all(), [self.category])
+
+    def test_student_cannot_access_an_unpublished_championship(self):
+        response = self.client.get(
+            reverse('pwa-available-championship-detail', args=[self.unpublished_championship.id]),
+        )
+
+        self.assertEqual(response.status_code, 404)

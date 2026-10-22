@@ -56,7 +56,7 @@ class TeacherAdmin(admin.ModelAdmin):
         return super(TeacherAdmin, self).add_view(request, form_url="", extra_context=extra_context)
 
 class StudentAdmin(admin.ModelAdmin):
-	fields = ['code', 'pin', 'name', 'born_date', 'phone', 'email', 'picture', 'user', 'band', 'licence']
+	fields = ['code', 'pin', 'name', 'born_date', 'phone', 'email', 'picture', 'postal_code', 'municipality', 'dni_front', 'dni_back', 'user', 'band', 'licence']
 	list_display = ('code', 'name', 'pin', 'phone')
 	search_fields = ['name', 'code']
 	#inlines = [PaymentInLine,]

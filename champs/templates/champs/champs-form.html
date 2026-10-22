@@ -23,10 +23,16 @@
                     data-url="{%url "autosave_field"%}" data-target="div-notification"/> <span id="date__msg"></span>
             </div>
             <div class="col-md-2">
-                {% trans "Publicado" %}
-                <input type="checkbox" class="form-check-input autosave" id="publish" name="publish" title="{{obj.publish}}" 
+                <label for="publish">{% trans "Visibilidad" %}</label>
+                <div class="checkbox" style="margin-top: 8px;">
+                    <label>
+                        <input type="checkbox" class="autosave" id="publish" name="publish" title="{{obj.publish}}"
                     data-model-name="champs.championship" data-obj-id="{{obj.id}}" data-url="{%url "autosave_field"%}" 
-                    data-bool="True" data-target="div-notification" {%if obj.publish%}checked{%endif%}/> 
+                    data-bool="True" data-target="div-notification" {%if obj.publish%}checked{%endif%}/>
+                        {% trans "Publicado" %}
+                    </label>
+                </div>
+                <small class="text-muted">{% trans "Márcalo para publicarlo; desmárcalo para retirarlo." %}</small>
                 <span id="publish__msg"></span>
             </div>
         </div>

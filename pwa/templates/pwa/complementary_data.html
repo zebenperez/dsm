@@ -1,0 +1,42 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Mis datos" %} · 5db Dance School{% endblock %}
+
+{% block content %}
+<section class="pwa-settings" aria-labelledby="complementary-data-title">
+    <a class="pwa-back-link" href="{% url 'pwa-index' %}">← {% trans "Inicio" %}</a>
+    <header class="pwa-screen-header">
+        <p>{% trans "Perfil" %}</p>
+        <h1 id="complementary-data-title">{% trans "Completa tus datos" %}</h1>
+    </header>
+
+    <form method="post" enctype="multipart/form-data" class="pwa-change-pin-form pwa-complementary-data-form">
+        {% csrf_token %}
+        <p>{% trans "Necesitamos estos datos para mantener tu ficha actualizada." %}</p>
+
+        <label>{% trans "Fecha de nacimiento" %}</label>
+        <output class="pwa-readonly-field">{% if student.born_date %}{{ student.born_date|date:"d/m/Y" }}{% else %}{% trans "No disponible" %}{% endif %}</output>
+
+        <label for="{{ form.postal_code.id_for_label }}">{% trans "Código postal" %}</label>
+        {{ form.postal_code }}
+        {% for error in form.postal_code.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.municipality.id_for_label }}">{% trans "Municipio de residencia" %}</label>
+        {{ form.municipality }}
+        {% for error in form.municipality.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.dni_front.id_for_label }}">{% trans "DNI — anverso" %}</label>
+        {{ form.dni_front }}
+        {% if student.dni_front %}<small class="pwa-upload-status"><i class="fas fa-check-circle" aria-hidden="true"></i>{% trans "Foto guardada. Puedes sustituirla si lo necesitas." %}</small>{% endif %}
+        {% for error in form.dni_front.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.dni_back.id_for_label }}">{% trans "DNI — reverso" %}</label>
+        {{ form.dni_back }}
+        {% if student.dni_back %}<small class="pwa-upload-status"><i class="fas fa-check-circle" aria-hidden="true"></i>{% trans "Foto guardada. Puedes sustituirla si lo necesitas." %}</small>{% endif %}
+        {% for error in form.dni_back.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <button class="pwa-primary-button" type="submit">{% trans "Guardar datos" %}</button>
+    </form>
+</section>
+{% endblock %}

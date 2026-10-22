@@ -11,6 +11,7 @@ from decimal import Decimal, ROUND_UP
 from studio.models import Article, Student, Payment, Assistance, Enrolment
 from champs.models import ChampCost, Championship, Registration, TravelCompanion
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
+from pwa.forms import ComplementaryDataForm
 
 
 def get_current_student(request):
@@ -58,6 +59,19 @@ def index(request):
 	submitted_form_ids = set(
 		FormSubmission.objects.filter(student=student).values_list('form_id', flat=True)
 	)
+	upcoming_championships = list(Championship.objects.for_student(student).filter(
+		publish=True,
+		date__gte=timezone.now().date(),
+	).prefetch_related('categories__category').order_by('date'))
+	registration_by_championship = {
+		registration['champ_id']: registration['id']
+		for registration in Registration.objects.filter(
+			student=student,
+			champ_id__in=[championship.id for championship in upcoming_championships],
+		).values('id', 'champ_id')
+	}
+	for championship in upcoming_championships:
+		championship.registration_id = registration_by_championship.get(championship.id)
 	return render(request, 'pwa/index.html', {
 		"student": student,
 		"wallet_balance": student.wallet_balance,
@@ -66,12 +80,7 @@ def index(request):
 		).order_by('name'),
 		"published_forms": Form.objects.filter(is_published=True).for_student(student).order_by('-created_at')[:3],
 		"submitted_form_ids": submitted_form_ids,
-		"upcoming_registrations": Registration.objects.filter(
-			student=student,
-			champ__in=Championship.objects.for_student(student),
-			champ__publish=True,
-			champ__date__gte=timezone.now().date(),
-		).select_related('champ').order_by('champ__date')[:3],
+		"upcoming_championships": upcoming_championships,
 	})
 
 def payments(request):
@@ -190,6 +199,20 @@ def licence(request):
 	student = get_current_student(request)
 	return render(request, 'pwa/licence.html', {'student': student})
 
+
+def complementary_data(request):
+	if not check_student(request):
+		return redirect(login)
+	student = get_current_student(request)
+	if request.method == 'POST':
+		form = ComplementaryDataForm(request.POST, request.FILES, instance=student)
+		if form.is_valid():
+			form.save()
+			return redirect('pwa-complementary-data')
+	else:
+		form = ComplementaryDataForm(instance=student)
+	return render(request, 'pwa/complementary_data.html', {'student': student, 'form': form})
+
 def get_championship_registration_summary(registration):
 	champ = registration.champ
 	cost_list = list(champ.costs.select_related('cost', 'category__category')) if champ else []
@@ -306,6 +329,45 @@ def championship_detail(request, registration_id):
 		'student': student,
 		'registration': registration,
 		'summary': get_championship_registration_summary(registration),
+	})
+
+
+def available_championship_detail(request, championship_id):
+	"""Show a published championship the current student may enter."""
+	if not check_student(request):
+		return redirect(login)
+	student = get_current_student(request)
+	championship = get_object_or_404(
+		Championship.objects.for_student(student).filter(
+			publish=True, date__gte=timezone.now().date(),
+		).prefetch_related('categories__category'),
+		pk=championship_id,
+	)
+	registration = Registration.objects.filter(student=student, champ=championship).first()
+	if registration:
+		return redirect('pwa-championship-detail', registration_id=registration.id)
+
+	available_categories = [
+		champ_category.category for champ_category in championship.categories.all()
+		if champ_category.category_id
+	]
+	if request.method == 'POST':
+		selected_category_ids = {int(category_id) for category_id in request.POST.getlist('categories') if category_id.isdigit()}
+		valid_categories = [category for category in available_categories if category.id in selected_category_ids]
+		if valid_categories:
+			registration = Registration.objects.create(student=student, champ=championship)
+			registration.categories.add(*valid_categories)
+			return redirect('pwa-championship-detail', registration_id=registration.id)
+		return render(request, 'pwa/available_championship_detail.html', {
+			'student': student,
+			'championship': championship,
+			'categories': available_categories,
+			'error': _('Selecciona al menos una categoría para inscribirte.'),
+		})
+	return render(request, 'pwa/available_championship_detail.html', {
+		'student': student,
+		'championship': championship,
+		'categories': available_categories,
 	})
 
 

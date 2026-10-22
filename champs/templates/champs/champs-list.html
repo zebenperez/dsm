@@ -18,6 +18,7 @@
             <thead> <tr> 
                 <th>Nombre</th> 
                 <th>Fecha</th> 
+                <th>{% trans "Estado" %}</th>
                 <th>Categorías</th> 
                 <th>Gastos</th> 
                 <th></th>
@@ -27,6 +28,13 @@
                     <tr>
                         <td>{{ item.name }}</td>
                         <td>{{ item.date|date:"d-m-Y" }}</td>
+                        <td>
+                            {% if item.publish %}
+                                <span class="label label-success"><i class="glyphicon glyphicon-eye-open"></i> {% trans "Publicado" %}</span>
+                            {% else %}
+                                <span class="label label-default"><i class="glyphicon glyphicon-eye-close"></i> {% trans "No publicado" %}</span>
+                            {% endif %}
+                        </td>
                         <td>{% for cat in item.categories.all %}{{cat.category.name}}<br/>{% endfor %}</td>
                         <td>{% for cos in item.costs.all %}{{cos.cost.name}}<br/>{% endfor %}</td>
                         <td class="text-right">

@@ -38,6 +38,9 @@ def content_file_name(instance, filename):
 	instance.filename = filename
 	return '/'.join(['students/pictures', datetime.datetime.now().strftime("%Y%m%d%H%M%S") + filename])
 
+def document_file_name(instance, filename):
+	return '/'.join(['students/documents', datetime.datetime.now().strftime("%Y%m%d%H%M%S%f") + '_' + filename])
+
 def get_year(student):
 	try:
 		res = datetime.date.today() - student.born_date
@@ -57,6 +60,10 @@ class Student(models.Model):
 	user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE, verbose_name="Usuario", blank=True, null=True)
 	picture = models.ImageField(upload_to=content_file_name, blank = True, null = True, verbose_name='Foto', help_text="Seleccione una foto para subir")
 	band = models.CharField(max_length=15, verbose_name="Pulsera", blank=True, default="")
+	postal_code = models.CharField(max_length=5, verbose_name="Código postal", blank=True, default="")
+	municipality = models.CharField(max_length=120, verbose_name="Municipio de residencia", blank=True, default="")
+	dni_front = models.ImageField(upload_to=document_file_name, blank=True, null=True, verbose_name='DNI (anverso)')
+	dni_back = models.ImageField(upload_to=document_file_name, blank=True, null=True, verbose_name='DNI (reverso)')
 
 	def __str__(self):
 		#return "%s (%s)"%(self.name, get_year(self))

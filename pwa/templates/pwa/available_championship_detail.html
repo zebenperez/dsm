@@ -1,0 +1,38 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ championship.name }} · 5db Dance School{% endblock %}
+
+{% block content %}
+<section class="pwa-settings" aria-labelledby="championship-title">
+    <a class="pwa-back-link" href="{% url 'pwa-index' %}"><i class="fas fa-chevron-left" aria-hidden="true"></i>{% trans "Inicio" %}</a>
+    <header class="pwa-screen-header pwa-championship-header">
+        <p>{% trans "Campeonato" %}</p>
+        <h1 id="championship-title">{{ championship.name }}</h1>
+        <p>{{ championship.date|date:"d M Y" }}{% if championship.location %} · {{ championship.location }}{% endif %}</p>
+    </header>
+
+    <section class="pwa-form-card">
+        <h2>{% trans "Inscríbete" %}</h2>
+        {% if categories %}
+            <p>{% trans "Elige la categoría o las categorías en las que vas a participar." %}</p>
+            <form method="post" class="pwa-championship-signup-form">
+                {% csrf_token %}
+                <fieldset>
+                    <legend>{% trans "Categorías" %}</legend>
+                    {% for category in categories %}
+                        <label class="pwa-category-choice" for="category-{{ category.id }}">
+                            <input id="category-{{ category.id }}" type="checkbox" name="categories" value="{{ category.id }}">
+                            <span>{{ category.name }}</span>
+                        </label>
+                    {% endfor %}
+                </fieldset>
+                {% if error %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endif %}
+                <button type="submit" class="pwa-primary-button">{% trans "Confirmar inscripción" %}</button>
+            </form>
+        {% else %}
+            <p>{% trans "Todavía no hay categorías disponibles para este campeonato. Contacta con la escuela para inscribirte." %}</p>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}
