@@ -131,6 +131,17 @@ class StudentManagementTests(TestCase):
         self.assertContains(response, 'Alumna sin licencia')
         self.assertEqual(response.context['student_count'], 1)
 
+    def test_students_list_shows_birth_date_and_current_age(self):
+        student = Student.objects.create(
+            code=109, pin='A109', name='Alumna con fecha', phone='', born_date=date(2000, 1, 1),
+        )
+        Enrolment.objects.create(student=student, group=self.group, active=True)
+
+        response = self.client.get(reverse('students'))
+
+        self.assertContains(response, 'Fecha de nacimiento')
+        self.assertContains(response, '01/01/2000 (%s años)' % (date.today().year - 2000))
+
     def test_admin_can_review_and_edit_federation_data(self):
         student = Student.objects.create(
             code=108, pin='A108', name='Alumna federada', phone='600000108',

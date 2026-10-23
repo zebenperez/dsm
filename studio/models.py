@@ -82,6 +82,16 @@ class Student(models.Model):
 		#return "%s (%s)"%(self.name, get_year(self))
 		return "%s"%(self.name)
 
+	@property
+	def age(self):
+		"""Return the student's current age in completed years."""
+		if not self.born_date:
+			return None
+		today = datetime.date.today()
+		return today.year - self.born_date.year - (
+			(today.month, today.day) < (self.born_date.month, self.born_date.day)
+		)
+
 	def get_name(self):
 		name = self.name.split(" ")
 		return f'{name[0]} {name[1]}' if len(name) > 3 else name[0]
