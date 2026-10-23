@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.http import FileResponse
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.db import IntegrityError, transaction
@@ -11,7 +12,8 @@ from decimal import Decimal, ROUND_UP
 from studio.models import Article, Student, Payment, Assistance, Enrolment
 from champs.models import ChampCost, Championship, Registration, TravelCompanion
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
-from pwa.forms import ComplementaryDataForm
+from pwa.forms import ComplementaryDataForm, StudentDocumentUploadForm
+from pwa.models import DocumentTemplate, StudentDocument
 
 
 def get_current_student(request):
@@ -212,6 +214,53 @@ def complementary_data(request):
 	else:
 		form = ComplementaryDataForm(instance=student)
 	return render(request, 'pwa/complementary_data.html', {'student': student, 'form': form})
+
+
+def documents(request):
+	if not check_student(request):
+		return redirect(login)
+	student = get_current_student(request)
+	if request.method == 'POST':
+		form = StudentDocumentUploadForm(request.POST, request.FILES, student=student)
+		if form.is_valid():
+			template = form.cleaned_data['template']
+			uploaded_file = form.cleaned_data['file']
+			document, created = StudentDocument.objects.get_or_create(
+				student=student, template=template,
+				defaults={'file': uploaded_file, 'original_filename': uploaded_file.name[:255]},
+			)
+			if not created:
+				document.file = uploaded_file
+				document.original_filename = uploaded_file.name[:255]
+				document.save()
+			return redirect('pwa-documents')
+	else:
+		form = StudentDocumentUploadForm(student=student)
+	return render(request, 'pwa/documents.html', {
+		'student': student,
+		'form': form,
+		'templates': DocumentTemplate.available_for_student(student),
+		'selected_template_id': request.POST.get('template', '') if request.method == 'POST' else '',
+		'documents': StudentDocument.objects.filter(student=student).select_related('template'),
+	})
+
+
+def download_document(request, document_id):
+	if not check_student(request):
+		return redirect(login)
+	document = get_object_or_404(
+		StudentDocument, pk=document_id, student=get_current_student(request),
+	)
+	return FileResponse(document.file.open('rb'), as_attachment=True, filename=document.original_filename)
+
+
+def download_document_template(request, template_id):
+	if not check_student(request):
+		return redirect(login)
+	template = get_object_or_404(
+		DocumentTemplate.available_for_student(get_current_student(request)), pk=template_id,
+	)
+	return FileResponse(template.template_file.open('rb'), as_attachment=True, filename='%s.pdf' % template.title)
 
 def get_championship_registration_summary(registration):
 	champ = registration.champ

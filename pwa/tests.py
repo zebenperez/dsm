@@ -16,6 +16,7 @@ from django.utils import timezone
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 from champs.models import Category, ChampCategory, ChampCost, Championship, Cost, Registration, TravelCompanion
 from pwa.forms import ComplementaryDataForm
+from pwa.models import DocumentTemplate, StudentDocument
 from pwa.views import get_championship_registration_summary
 from studio.models import Enrolment, Group, Student, Teacher
 
@@ -207,6 +208,74 @@ class ComplementaryDataTests(TestCase):
         response = self.client.get(reverse('pwa-index'))
 
         self.assertContains(response, reverse('pwa-complementary-data'))
+
+
+class StudentDocumentTests(TestCase):
+    def setUp(self):
+        self.student = Student.objects.create(code=60, pin='A060', name='Alumna', phone='')
+        self.other_student = Student.objects.create(code=61, pin='A061', name='Otra alumna', phone='')
+        session = self.client.session
+        session['student_id'] = self.student.pk
+        session.save()
+        self.template = DocumentTemplate.objects.create(
+            title='Autorización de imágenes',
+            template_file=SimpleUploadedFile('plantilla.pdf', b'%PDF-1.4 template', content_type='application/pdf'),
+        )
+
+    def test_menu_links_to_student_documents(self):
+        response = self.client.get(reverse('pwa-index'))
+
+        self.assertContains(response, reverse('pwa-documents'))
+
+    def test_student_can_upload_a_signed_pdf_and_download_her_own_copy(self):
+        response = self.client.post(reverse('pwa-documents'), {
+            'template': self.template.id,
+            'file': SimpleUploadedFile('autorizacion.pdf', b'%PDF-1.4 signed document', content_type='application/pdf'),
+        })
+
+        self.assertRedirects(response, reverse('pwa-documents'))
+        document = StudentDocument.objects.get(student=self.student)
+        self.assertEqual(document.template, self.template)
+        self.assertEqual(document.original_filename, 'autorizacion.pdf')
+
+        response = self.client.get(reverse('pwa-document-download', args=[document.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_student_cannot_download_another_students_document(self):
+        document = StudentDocument.objects.create(
+            student=self.other_student,
+            template=self.template,
+            file=SimpleUploadedFile('otra.pdf', b'%PDF-1.4 signed document', content_type='application/pdf'),
+            original_filename='otra.pdf',
+        )
+
+        response = self.client.get(reverse('pwa-document-download', args=[document.id]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_student_can_download_an_available_template(self):
+        response = self.client.get(reverse('pwa-document-template-download', args=[self.template.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_documents_page_exposes_the_selected_template_download_url(self):
+        response = self.client.get(reverse('pwa-documents'))
+
+        self.assertContains(
+            response, reverse('pwa-document-template-download', args=[self.template.id]),
+        )
+
+
+class ComplementaryDataBehaviorTests(TestCase):
+    def setUp(self):
+        self.student = Student.objects.create(
+            code=50, pin='A050', name='Alumna', phone='', born_date='2000-05-18',
+        )
+        session = self.client.session
+        session['student_id'] = self.student.pk
+        session.save()
 
     def test_complementary_data_has_local_defaults_and_sex_options(self):
         response = self.client.get(reverse('pwa-complementary-data'))

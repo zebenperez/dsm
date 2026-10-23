@@ -1,0 +1,110 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Mis documentos" %} · 5db Dance School{% endblock %}
+
+{% block content %}
+<section class="pwa-settings pwa-documents" aria-labelledby="documents-title">
+    <a class="pwa-back-link" href="{% url 'pwa-index' %}">← {% trans "Inicio" %}</a>
+    <header class="pwa-screen-header">
+        <p>{% trans "Perfil" %}</p>
+        <h1 id="documents-title">{% trans "Mis documentos" %}</h1>
+    </header>
+    <p class="pwa-form-intro">{% trans "Sube el PDF ya rellenado y firmado. Si vuelves a subir el mismo tipo de documento, sustituirá al anterior." %}</p>
+
+    {% if templates %}
+    <form method="post" enctype="multipart/form-data" class="pwa-change-pin-form">
+        {% csrf_token %}
+        <label for="{{ form.template.id_for_label }}">{% trans "Documento" %}</label>
+        <select name="template" id="{{ form.template.id_for_label }}" required>
+            <option value="">{% trans "Selecciona un documento" %}</option>
+            {% for template in templates %}
+                <option value="{{ template.id }}" data-download-url="{% url 'pwa-document-template-download' template.id %}"{% if selected_template_id == template.id|stringformat:"s" %} selected{% endif %}>{{ template.title }}</option>
+            {% endfor %}
+        </select>
+        {% for error in form.template.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+        <p id="selected-template-download" class="pwa-selected-template-download" hidden>
+            <i class="fas fa-file-pdf" aria-hidden="true"></i>
+            <span><strong id="selected-template-title"></strong><small>{% trans "Descarga esta plantilla, rellénala y vuelve aquí para subirla firmada." %}</small></span>
+            <a id="selected-template-link" class="pwa-secondary-button" href="#"><i class="fas fa-download" aria-hidden="true"></i> {% trans "Descargar" %}</a>
+        </p>
+
+        <label for="{{ form.file.id_for_label }}">{% trans "PDF firmado" %}</label>
+        {{ form.file }}
+        <small class="pwa-upload-hint">{% trans "Solo PDF, máximo 10 MB." %}</small>
+        <p id="selected-upload-file" class="pwa-selected-upload-file" hidden><i class="fas fa-check-circle" aria-hidden="true"></i><span></span></p>
+        {% for error in form.file.errors %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endfor %}
+        <button class="pwa-primary-button" type="submit">{% trans "Subir documento" %}</button>
+    </form>
+    {% endif %}
+
+    <h2 class="pwa-form-section-title">{% trans "Plantillas disponibles" %}</h2>
+    {% if templates %}
+        <div class="pwa-document-list">
+            {% for template in templates %}
+                <a class="pwa-document-item" href="{% url 'pwa-document-template-download' template.id %}">
+                    <i class="fas fa-file-download" aria-hidden="true"></i>
+                    <span><strong>{{ template.title }}</strong>{% if template.description %}<small>{{ template.description|truncatechars:100 }}</small>{% else %}<small>{% trans "Descargar plantilla PDF" %}</small>{% endif %}</span>
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="pwa-section-empty">{% trans "No hay plantillas disponibles para ti." %}</p>
+    {% endif %}
+
+    <h2 class="pwa-form-section-title">{% trans "Documentos enviados" %}</h2>
+    {% if documents %}
+        <div class="pwa-document-list">
+            {% for document in documents %}
+                <a class="pwa-document-item" href="{% url 'pwa-document-download' document.id %}">
+                    <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                    <span><strong>{{ document.template.title }}</strong><small>{% trans "Subido el" %} {{ document.uploaded_at|date:"d/m/Y, H:i" }}</small></span>
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="pwa-section-empty">{% trans "Todavía no has subido documentos." %}</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block head_tag %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var select = document.getElementById('{{ form.template.id_for_label }}');
+    var download = document.getElementById('selected-template-download');
+    var link = document.getElementById('selected-template-link');
+    var title = document.getElementById('selected-template-title');
+    var fileInput = document.getElementById('{{ form.file.id_for_label }}');
+    var selectedFile = document.getElementById('selected-upload-file');
+    if (!select) {
+        return;
+    }
+    function updateTemplateDownload() {
+        var option = select.options[select.selectedIndex];
+        var url = option.getAttribute('data-download-url');
+        if (!url) {
+            download.hidden = true;
+            link.removeAttribute('href');
+            return;
+        }
+        title.textContent = option.text;
+        link.href = url;
+        download.hidden = false;
+    }
+    select.addEventListener('change', updateTemplateDownload);
+    updateTemplateDownload();
+    fileInput.addEventListener('change', function () {
+        var file = fileInput.files && fileInput.files[0];
+        if (!file) {
+            selectedFile.hidden = true;
+            return;
+        }
+        selectedFile.querySelector('span').textContent = file.name;
+        selectedFile.hidden = false;
+    });
+});
+</script>
+{% endblock %}

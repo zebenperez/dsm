@@ -56,10 +56,19 @@ class StudentManagementForm(forms.ModelForm):
 		required=False,
 		widget=forms.DateInput(format='%d-%m-%Y', attrs={'placeholder': 'dd-mm-aaaa'}),
 	)
+	dni_expiry_date = forms.DateField(
+		input_formats=settings.DATE_INPUT_FORMATS,
+		required=False,
+		widget=forms.DateInput(format='%d-%m-%Y', attrs={'placeholder': 'dd-mm-aaaa'}),
+	)
 
 	class Meta:
 		model = Student
-		fields = ['code', 'name', 'born_date', 'pin', 'phone', 'licence', 'email', 'band', 'picture']
+		fields = [
+			'code', 'name', 'born_date', 'pin', 'phone', 'licence', 'email', 'band', 'picture',
+			'dni', 'dni_expiry_date', 'sex', 'nationality', 'address', 'postal_code',
+			'municipality', 'province', 'autonomous_community', 'dni_front', 'dni_back',
+		]
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)

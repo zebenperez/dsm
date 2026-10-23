@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.middleware import csrf
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import FileResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.utils.translation import gettext as _
 from django.utils import timezone as django_timezone
@@ -35,6 +35,7 @@ from studio.common_lib import get_student
 from fcm_django.models import FCMDevice
 from registration_forms.models import Form as RegistrationForm, FormSubmission
 from kiosk.models import KioskPayment
+from pwa.models import StudentDocument
 
 '''
 	TPV
@@ -1026,10 +1027,20 @@ def student_update(request, student_id):
 		'student': student,
 		'student_age': student_age,
 		'student_has_picture': bool(student.picture and default_storage.exists(student.picture.name)),
+		'student_documents': student.uploaded_documents.select_related('template').all(),
 		'enrolment_list': student.enrolment.select_related('group', 'group__teacher').order_by('-active', 'group__name'),
 		'enrolment_form': enrolment_form,
 		'enrolment_forms': [(enrolment, EnrolmentManagementForm(instance=enrolment)) for enrolment in student.enrolment.all()],
 	})
+
+
+@group_required("admins")
+def student_document_download(request, student_id, document_id):
+	"""Serve a signed document only to an authorised studio user."""
+	document = get_object_or_404(
+		StudentDocument.objects.select_related('student'), pk=document_id, student_id=student_id,
+	)
+	return FileResponse(document.file.open('rb'), as_attachment=True, filename=document.original_filename)
 
 
 @group_required("admins")

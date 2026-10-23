@@ -9,6 +9,7 @@ from decimal import Decimal
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
@@ -129,6 +130,46 @@ class StudentManagementTests(TestCase):
         self.assertNotContains(response, 'Alumna con licencia')
         self.assertContains(response, 'Alumna sin licencia')
         self.assertEqual(response.context['student_count'], 1)
+
+    def test_admin_can_review_and_edit_federation_data(self):
+        student = Student.objects.create(
+            code=108, pin='A108', name='Alumna federada', phone='600000108',
+        )
+        image = (
+            b'GIF87a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04'
+            b'\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+        )
+
+        response = self.client.post(reverse('student-update', args=[student.id]), {
+            'code': student.code,
+            'name': student.name,
+            'pin': student.pin,
+            'born_date': '18-05-2000',
+            'phone': student.phone,
+            'licence': 'LIC-108',
+            'email': 'alumna@example.com',
+            'band': '',
+            'dni': '12345678Z',
+            'dni_expiry_date': '18-05-2030',
+            'sex': 'Femenino',
+            'nationality': 'Española',
+            'address': 'Calle Ejemplo, 1',
+            'postal_code': '38001',
+            'municipality': 'Santa Cruz de Tenerife',
+            'province': 'Santa Cruz de Tenerife',
+            'autonomous_community': 'Canarias',
+            'dni_front': SimpleUploadedFile('anverso.gif', image, content_type='image/gif'),
+            'dni_back': SimpleUploadedFile('reverso.gif', image, content_type='image/gif'),
+        })
+
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        student.refresh_from_db()
+        self.assertEqual(student.dni, '12345678Z')
+        self.assertEqual(student.dni_expiry_date, date(2030, 5, 18))
+        self.assertEqual(student.sex, 'Femenino')
+        self.assertEqual(student.province, 'Santa Cruz de Tenerife')
+        self.assertTrue(student.dni_front.name)
+        self.assertTrue(student.dni_back.name)
 
     def test_attendance_follow_up_excludes_students_with_attendance_and_marks_overdue_payments(self):
         inactive_student = Student.objects.create(code=106, pin='A106', name='Sin asistencia', phone='600000106')

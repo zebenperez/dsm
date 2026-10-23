@@ -7,22 +7,59 @@
     {% include "students/_messages.html" %}
     <header class="student-edit-header">
         <div><h1>{% if student %}{{ student.name }}{% else %}{% trans "Nuevo alumno" %}{% endif %}</h1>{% if student %}<p>{% if student_age is not None %}{{ student_age }} años · {% endif %}{% trans "Código" %} {{ student.code }} · PIN {{ student.pin }}</p>{% else %}<p>{% trans "Completa los datos para dar de alta al alumno." %}</p>{% endif %}</div>
+        <div class="student-edit-header-actions"><button class="btn btn-primary" type="submit" form="student-edit-form"><span class="glyphicon glyphicon-floppy-disk"></span> {% trans "Guardar cambios" %}</button><a class="btn btn-default" href="{% url 'students' %}">{% trans "Cancelar" %}</a></div>
     </header>
-    <form method="post" enctype="multipart/form-data" class="student-edit-card">
+    <form id="student-edit-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <section class="student-edit-photo">
-            {% if student_has_picture %}<img src="{{ student.picture.url }}" alt="{{ student.name }}">{% else %}<span class="glyphicon glyphicon-user" aria-hidden="true"></span>{% endif %}
-            <div class="student-photo-field"><label for="{{ form.picture.id_for_label }}">{% trans "Foto" %}</label>{{ form.picture }}{% for error in form.picture.errors %}<p class="help-block">{{ error }}</p>{% endfor %}</div>
-        </section>
-        <section class="student-edit-fields">
-            <h2>{% trans "Datos personales" %}</h2>
-            <div class="row"><div class="col-sm-4">{% include "students/_field.html" with field=form.code %}</div><div class="col-sm-8">{% include "students/_field.html" with field=form.name %}</div></div>
-            <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.pin %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.born_date %}</div></div>
-            <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.licence %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.band %}</div></div>
-            <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.phone %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.email %}</div></div>
-        </section>
-        <footer class="student-edit-actions"><button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-floppy-disk"></span> {% trans "Guardar cambios" %}</button><a class="btn btn-default" href="{% url 'students' %}">{% trans "Cancelar" %}</a></footer>
+        <div class="student-edit-card">
+            <section class="student-edit-photo">
+                {% if student_has_picture %}<img src="{{ student.picture.url }}" alt="{{ student.name }}">{% else %}<span class="glyphicon glyphicon-user" aria-hidden="true"></span>{% endif %}
+                <div class="student-photo-field"><label for="{{ form.picture.id_for_label }}">{% trans "Foto" %}</label>{{ form.picture }}{% for error in form.picture.errors %}<p class="help-block">{{ error }}</p>{% endfor %}</div>
+            </section>
+            <section class="student-edit-fields">
+                <h2>{% trans "Datos personales" %}</h2>
+                <div class="row"><div class="col-sm-4">{% include "students/_field.html" with field=form.code %}</div><div class="col-sm-8">{% include "students/_field.html" with field=form.name %}</div></div>
+                <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.pin %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.born_date %}</div></div>
+                <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.licence %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.band %}</div></div>
+                <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.phone %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.email %}</div></div>
+            </section>
+        </div>
+        {% if student %}
+            <section class="student-federation-card" aria-labelledby="student-federation-title">
+                <h2 id="student-federation-title">{% trans "Datos federativos" %}</h2>
+                <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.dni %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.dni_expiry_date %}</div></div>
+                <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.sex %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.nationality %}</div></div>
+                <div class="row"><div class="col-sm-12">{% include "students/_field.html" with field=form.address %}</div></div>
+                <div class="row"><div class="col-sm-4">{% include "students/_field.html" with field=form.postal_code %}</div><div class="col-sm-4">{% include "students/_field.html" with field=form.municipality %}</div><div class="col-sm-4">{% include "students/_field.html" with field=form.province %}</div></div>
+                <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.autonomous_community %}</div></div>
+                <div class="row">
+                    <div class="col-sm-6">{% include "students/_field.html" with field=form.dni_front %}{% if student.dni_front %}<p><a href="{{ student.dni_front.url }}" target="_blank" rel="noopener">{% trans "Ver anverso actual" %}</a></p>{% endif %}</div>
+                    <div class="col-sm-6">{% include "students/_field.html" with field=form.dni_back %}{% if student.dni_back %}<p><a href="{{ student.dni_back.url }}" target="_blank" rel="noopener">{% trans "Ver reverso actual" %}</a></p>{% endif %}</div>
+                </div>
+            </section>
+        {% endif %}
     </form>
+    {% if student %}
+        <section class="student-documents-card" aria-labelledby="student-documents-title">
+            <h2 id="student-documents-title"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span> {% trans "Documentos subidos" %}</h2>
+            {% if student_documents %}
+                <table class="table table-condensed student-documents-table">
+                    <thead><tr><th>{% trans "Documento" %}</th><th>{% trans "Subido el" %}</th><th></th></tr></thead>
+                    <tbody>
+                        {% for document in student_documents %}
+                            <tr>
+                                <td><strong>{{ document.template.title }}</strong><small>{{ document.original_filename }}</small></td>
+                                <td>{{ document.uploaded_at|date:"d/m/Y, H:i" }}</td>
+                                <td class="text-right"><a class="btn btn-default btn-sm" href="{% url 'student-document-download' student.id document.id %}"><span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> {% trans "Descargar" %}</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="student-documents-empty">{% trans "Esta alumna todavía no ha subido documentos." %}</p>
+            {% endif %}
+        </section>
+    {% endif %}
     {% if student %}{% include "students/_enrolments.html" %}{% endif %}
 </div>
 {% endblock %}

@@ -9,6 +9,7 @@
 	</summary>
 	<nav aria-label="{% trans 'Opciones de cuenta' %}">
 		<a href="{% url 'pwa-complementary-data' %}"><i class="fas fa-id-card" aria-hidden="true"></i>{% trans 'Mis datos' %}</a>
+		<a href="{% url 'pwa-documents' %}"><i class="fas fa-file-upload" aria-hidden="true"></i>{% trans 'Mis documentos' %}</a>
 		<a href="{% url 'pwa-change-pin' %}"><i class="fas fa-key" aria-hidden="true"></i>{% trans 'Cambiar PIN' %}</a>
 		<a class="pwa-account-menu-logout" href="{% url 'pwa-logout' %}"><i class="fas fa-sign-out-alt" aria-hidden="true"></i>{% trans 'Cerrar sesión' %}</a>
 	</nav>

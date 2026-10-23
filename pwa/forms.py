@@ -1,7 +1,10 @@
+import os
+
 from django import forms
 from django.core.exceptions import ValidationError
 
 from studio.models import Student
+from pwa.models import DocumentTemplate, StudentDocument
 
 
 class ComplementaryDataForm(forms.ModelForm):
@@ -78,3 +81,31 @@ class ComplementaryDataForm(forms.ModelForm):
             elif image and image.size > 10 * 1024 * 1024:
                 self.add_error(field_name, 'La imagen no puede superar los 10 MB.')
         return cleaned_data
+
+
+class StudentDocumentUploadForm(forms.ModelForm):
+    class Meta:
+        model = StudentDocument
+        fields = ('template', 'file')
+        widgets = {
+            'file': forms.ClearableFileInput(attrs={'accept': 'application/pdf,.pdf'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        student = kwargs.pop('student')
+        super().__init__(*args, **kwargs)
+        self.fields['template'].queryset = DocumentTemplate.available_for_student(student)
+
+    def clean_file(self):
+        uploaded_file = self.cleaned_data['file']
+        if uploaded_file.size > 10 * 1024 * 1024:
+            raise ValidationError('El PDF no puede superar los 10 MB.')
+        if os.path.splitext(uploaded_file.name)[1].lower() != '.pdf':
+            raise ValidationError('Sube un archivo PDF.')
+
+        # The content type is supplied by the browser, so also inspect its header.
+        header = uploaded_file.read(5)
+        uploaded_file.seek(0)
+        if header != b'%PDF-':
+            raise ValidationError('El archivo seleccionado no parece ser un PDF válido.')
+        return uploaded_file

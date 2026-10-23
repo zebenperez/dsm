@@ -132,6 +132,10 @@ collect_static**
 logs**
 settings_local.py
 migrations
+!pwa/migrations/
+!pwa/migrations/__init__.py
+!pwa/migrations/0001_studentdocument.py
+!pwa/migrations/0002_documenttemplate_studentdocument_template.py
 studio/migrations/
 studio/migrations/0012_wallet_movement.py
 studio/migrations/

@@ -25,5 +25,8 @@ urlpatterns = [
 	path('set-pin', views.set_pin, name="pwa-set-pin"),
 	path('change-pin', views.change_pin, name="pwa-change-pin"),
 	path('datos-complementarios', views.complementary_data, name="pwa-complementary-data"),
+	path('mis-documentos', views.documents, name="pwa-documents"),
+	path('mis-documentos/plantillas/<int:template_id>/descargar', views.download_document_template, name="pwa-document-template-download"),
+	path('mis-documentos/<int:document_id>/descargar', views.download_document, name="pwa-document-download"),
 	path('change-photo', views.change_photo, name="pwa-change-photo"),
 ]
