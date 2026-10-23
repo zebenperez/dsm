@@ -320,6 +320,18 @@ class ComplementaryDataBehaviorTests(TestCase):
         response = self.client.get(reverse('pwa-complementary-data'))
         self.assertContains(response, '18/05/2000')
 
+    def test_complementary_data_renders_existing_dni_expiry_date_for_html_date_input(self):
+        self.student.dni_expiry_date = date(2030, 5, 18)
+        self.student.save(update_fields=['dni_expiry_date'])
+
+        response = self.client.get(reverse('pwa-complementary-data'))
+
+        self.assertContains(
+            response,
+            'name="dni_expiry_date" type="date" value="2030-05-18"',
+            html=True,
+        )
+
     def test_complementary_data_rejects_invalid_postal_code(self):
         form = ComplementaryDataForm(data={
             'email': 'alumna@example.com', 'phone': '600000000', 'dni': '12345678Z',

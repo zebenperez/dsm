@@ -21,7 +21,10 @@ class ComplementaryDataForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'autocomplete': 'email'}),
             'phone': forms.TextInput(attrs={'inputmode': 'tel', 'autocomplete': 'tel'}),
             'dni': forms.TextInput(attrs={'autocapitalize': 'characters'}),
-            'dni_expiry_date': forms.DateInput(attrs={'type': 'date'}),
+            # HTML date inputs only accept their value in ISO-8601 format.  Without
+            # this, Django uses the first configured local input format (dd-mm-aaaa),
+            # which makes an existing expiry date appear empty in the PWA.
+            'dni_expiry_date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'sex': forms.Select(choices=(
                 ('', 'Selecciona una opción'),
                 ('Masculino', 'Masculino'),
