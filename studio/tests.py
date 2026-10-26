@@ -45,6 +45,15 @@ class AdminOperationalAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_admin_group_can_access_wallet_payment_endpoints(self):
+        response = self.client.post(reverse('pay_with_wallet'))
+
+        self.assertIn('/studio/tpv/', response['Location'])
+
+        response = self.client.post(reverse('article_pay_with_wallet'))
+
+        self.assertIn('/studio/tpv/', response['Location'])
+
     def test_logout_ends_the_session(self):
         response = self.client.post(reverse('logout'))
 

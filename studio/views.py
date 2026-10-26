@@ -378,7 +378,7 @@ def pay(request):
 	#return redirect('/studio/tpv/')
 
 
-@group_required("reception")
+@group_required("reception", "admins")
 def pay_with_wallet(request):
 	student_code = ''
 	message = ''
@@ -631,7 +631,7 @@ def article_pay(request):
 	return redirect('/studio/tpv/?t=article')
 
 
-@group_required("reception")
+@group_required("reception", "admins")
 def article_pay_with_wallet(request):
 	"""Sell an article and charge it to the selected student's wallet."""
 	message = ''
