@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from studio.models import *
+from champs.models import FederationLicencePayment
 from studio.dsm_forms import *
 from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
@@ -944,11 +945,16 @@ def students(request):
 		status = 'active'
 	if licence_status not in ('with_licence', 'without_licence', 'all'):
 		licence_status = 'all'
+	licence_year = django_timezone.localdate().year
 	group_list = Group.objects.filter(active=True).select_related('teacher').order_by('name')
 	student_list = Student.objects.prefetch_related(Prefetch(
 		'enrolment',
 		queryset=Enrolment.objects.filter(active=True).select_related('group').order_by('group__name'),
 		to_attr='active_enrolment_list',
+	), Prefetch(
+		'federation_licence_payments',
+		queryset=FederationLicencePayment.objects.filter(year=licence_year),
+		to_attr='current_federation_licence_payments',
 	)).order_by('name')
 	if status == 'active':
 		student_list = student_list.filter(enrolment__active=True).distinct()
@@ -964,9 +970,9 @@ def students(request):
 		else:
 			selected_group = ''
 	if licence_status == 'with_licence':
-		student_list = student_list.exclude(licence__isnull=True).exclude(licence='')
+		student_list = student_list.filter(federation_licence_payments__year=licence_year)
 	elif licence_status == 'without_licence':
-		student_list = student_list.filter(Q(licence__isnull=True) | Q(licence=''))
+		student_list = student_list.exclude(federation_licence_payments__year=licence_year)
 	if query:
 		filters = Q(name__icontains=query) | Q(pin__icontains=query) | Q(band__icontains=query)
 		if query.isdigit():
@@ -977,6 +983,7 @@ def students(request):
 		'query': query,
 		'status': status,
 		'licence_status': licence_status,
+		'licence_year': licence_year,
 		'group_list': group_list,
 		'selected_group': selected_group,
 		'student_count': student_list.count(),

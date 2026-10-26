@@ -9,6 +9,7 @@ urlpatterns = [
     path('champs-list/', views.champs_list, name="champs-list"),
     path('reconciliation/', views.bank_reconciliation, name="bank-reconciliation"),
     path('reconciliation/import/', views.import_bank_transactions, name="import-bank-transactions"),
+    path('reconciliation/<int:transaction_id>/discard/', views.discard_bank_transaction, name="discard-bank-transaction"),
     path('reconciliation/<int:transaction_id>/confirm/', views.confirm_bank_allocation, name="confirm-bank-allocation"),
     path('champs-form/', views.champs_form, name="champs-form"),
     path('champs-name-form/', views.champ_name_form, name="champs-name-form"),

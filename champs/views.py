@@ -6,6 +6,7 @@ from io import TextIOWrapper
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
 
 from datetime import date, datetime
 from collections import defaultdict
@@ -13,7 +14,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP, ROUND_UP
 
 from studio.decorators import group_required
 from studio.models import Group, Student
-from .models import BankTransaction, Category, ChampCategory, ChampCost, Championship, ChampFile, ChampioshipInfo, Cost, PaymentAllocation, Registration, RegistrationFile, TravelCompanion
+from .models import BankTransaction, Category, ChampCategory, ChampCost, Championship, ChampFile, ChampioshipInfo, Cost, FederationLicencePayment, PaymentAllocation, Registration, RegistrationFile, TravelCompanion
 from .commons import show_exc, get_or_none, get_param
 
 
@@ -208,10 +209,32 @@ def suggested_registration(reference):
     normalized_reference = (reference or '').lower()
     if not normalized_reference:
         return None
-    for registration in Registration.objects.exclude(payment_reference__isnull=True).exclude(payment_reference=''):
+    registrations = Registration.objects.exclude(payment_reference__isnull=True).exclude(payment_reference='')
+    for registration in registrations:
         pattern = r'(?<![a-z0-9])%s(?![a-z0-9])' % re.escape(registration.payment_reference.lower())
         if re.search(pattern, normalized_reference):
             return registration
+
+    # Algunos bancos o personas eliminan los guiones de la referencia, por
+    # ejemplo, ``5DB-C12-R34`` pasa a ser ``5DBC12R34``. Al retirar todos los
+    # separadores también toleramos texto antes o después de la referencia.
+    compact_reference = re.sub(r'[^a-z0-9]', '', normalized_reference)
+    matches = [
+        registration for registration in registrations
+        if re.sub(r'[^a-z0-9]', '', registration.payment_reference.lower()) in compact_reference
+    ]
+    if matches:
+        return max(matches, key=lambda registration: len(registration.payment_reference))
+    return None
+
+
+def suggested_licence_student(reference, year):
+    compact_reference = re.sub(r'[^a-z0-9]', '', (reference or '').lower())
+    if not compact_reference:
+        return None
+    for student in Student.objects.all():
+        if 'lic%s%s' % (year, student.code) in compact_reference:
+            return student
     return None
 
 
@@ -226,17 +249,21 @@ def parse_bank_date(value):
 
 @group_required("admins", "reception")
 def bank_reconciliation(request):
-    transactions = list(BankTransaction.objects.prefetch_related('allocations').all())
+    transactions = list(BankTransaction.objects.filter(discarded_at__isnull=True).select_related('federation_licence_payment').prefetch_related('allocations'))
     registrations = list(Registration.objects.select_related('student', 'champ').order_by('-champ__date', 'student__name'))
     companions = list(TravelCompanion.objects.select_related('registration__student', 'registration__champ').order_by('registration__student__name', 'full_name'))
+    licence_students = list(Student.objects.order_by('name'))
     for bank_transaction in transactions:
         allocated = sum((allocation.amount for allocation in bank_transaction.allocations.all()), Decimal('0.00'))
-        bank_transaction.remaining_amount = bank_transaction.amount - allocated
+        licence_payment = getattr(bank_transaction, 'federation_licence_payment', None)
+        bank_transaction.remaining_amount = bank_transaction.amount - allocated - (licence_payment.amount if licence_payment else Decimal('0.00'))
         bank_transaction.suggested_registration = suggested_registration(bank_transaction.reference)
+        bank_transaction.suggested_licence_student = suggested_licence_student(bank_transaction.reference, bank_transaction.booking_date.year)
     return render(request, 'champs/bank-reconciliation.html', {
         'transactions': transactions,
         'registrations': registrations,
         'companions': companions,
+        'licence_students': licence_students,
     })
 
 
@@ -296,43 +323,86 @@ def import_bank_transactions(request):
 
 
 @group_required("admins", "reception")
+def discard_bank_transaction(request, transaction_id):
+    if request.method != 'POST':
+        return redirect('bank-reconciliation')
+
+    with transaction.atomic():
+        bank_transaction = get_object_or_404(BankTransaction.objects.select_for_update(), pk=transaction_id)
+        if bank_transaction.allocations.exists() or hasattr(bank_transaction, 'federation_licence_payment'):
+            messages.error(request, 'No se puede descartar un movimiento que ya tiene importes conciliados.')
+        elif bank_transaction.discarded_at:
+            messages.error(request, 'El movimiento ya estaba descartado.')
+        else:
+            bank_transaction.discarded_at = timezone.now()
+            bank_transaction.discarded_by = request.user
+            bank_transaction.save(update_fields=['discarded_at', 'discarded_by'])
+            messages.success(request, 'Movimiento descartado.')
+    return redirect('bank-reconciliation')
+
+
+@group_required("admins", "reception")
 def confirm_bank_allocation(request, transaction_id):
     if request.method != 'POST':
         return redirect('bank-reconciliation')
     bank_transaction = get_object_or_404(BankTransaction.objects.prefetch_related('allocations'), pk=transaction_id)
+    if bank_transaction.discarded_at:
+        messages.error(request, 'No se puede conciliar un movimiento descartado.')
+        return redirect('bank-reconciliation')
     target = request.POST.get('target', '')
     try:
         amount = parse_bank_amount(request.POST.get('amount'))
         target_type, target_id = target.split(':', 1)
         registration = None
         companion = None
+        licence_student = None
         if target_type == 'registration':
             registration = get_object_or_404(Registration, pk=target_id)
         elif target_type == 'companion':
             companion = get_object_or_404(TravelCompanion, pk=target_id)
+        elif target_type == 'licence':
+            licence_student = get_object_or_404(Student, pk=target_id)
         else:
             raise ValueError
         with transaction.atomic():
             allocated = sum((allocation.amount for allocation in bank_transaction.allocations.select_for_update()), Decimal('0.00'))
-            remaining = bank_transaction.amount - allocated
+            licence_payment = getattr(bank_transaction, 'federation_licence_payment', None)
+            remaining = bank_transaction.amount - allocated - (licence_payment.amount if licence_payment else Decimal('0.00'))
             if amount <= 0 or amount > remaining:
                 raise ValueError('El importe debe ser mayor que cero y no superar el importe pendiente del movimiento.')
-            allocation = PaymentAllocation(
-                transaction=bank_transaction,
-                registration=registration,
-                companion=companion,
-                amount=amount,
-                confirmed_by=request.user,
-            )
-            allocation.full_clean()
-            allocation.save()
-            if registration:
-                registration.paid_amount += amount
-                registration.save(update_fields=['paid_amount'])
+            if licence_student:
+                if amount != FederationLicencePayment.ANNUAL_FEE:
+                    raise ValueError('La licencia federativa anual debe conciliarse por 50 €.')
+                year = bank_transaction.booking_date.year
+                if FederationLicencePayment.objects.filter(student=licence_student, year=year).exists():
+                    raise ValueError('Esta alumna ya tiene la licencia federativa pagada para %s.' % year)
+                FederationLicencePayment.objects.create(
+                    student=licence_student,
+                    year=year,
+                    amount=amount,
+                    paid_on=bank_transaction.booking_date,
+                    bank_transaction=bank_transaction,
+                    confirmed_by=request.user,
+                )
+                message = 'Licencia federativa de %s para %s registrada.' % (licence_student, year)
             else:
-                companion.paid_amount += amount
-                companion.save(update_fields=['paid_amount'])
-        messages.success(request, 'Movimiento conciliado por %s €.' % amount)
+                allocation = PaymentAllocation(
+                    transaction=bank_transaction,
+                    registration=registration,
+                    companion=companion,
+                    amount=amount,
+                    confirmed_by=request.user,
+                )
+                allocation.full_clean()
+                allocation.save()
+                if registration:
+                    registration.paid_amount += amount
+                    registration.save(update_fields=['paid_amount'])
+                else:
+                    companion.paid_amount += amount
+                    companion.save(update_fields=['paid_amount'])
+                message = 'Movimiento conciliado por %s €.' % amount
+        messages.success(request, message)
     except (ValueError, InvalidOperation) as error:
         messages.error(request, 'No se ha conciliado el movimiento: %s' % error)
     return redirect('bank-reconciliation')

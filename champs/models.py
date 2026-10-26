@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from studio.models import Group, Student
 
 import datetime
+from decimal import Decimal
 
 
 class Cost(models.Model):
@@ -176,6 +177,8 @@ class BankTransaction(models.Model):
     reference = models.CharField(max_length=255, blank=True, default='', verbose_name='Concepto')
     imported_at = models.DateTimeField(auto_now_add=True)
     imported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='imported_bank_transactions')
+    discarded_at = models.DateTimeField(null=True, blank=True, verbose_name='Descartado el')
+    discarded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='discarded_bank_transactions', verbose_name='Descartado por')
 
     class Meta:
         verbose_name = 'Movimiento bancario'
@@ -184,6 +187,29 @@ class BankTransaction(models.Model):
 
     def __str__(self):
         return '%s · %s € · %s' % (self.booking_date, self.amount, self.reference)
+
+
+class FederationLicencePayment(models.Model):
+    """Annual federation licence paid through a reconciled bank transfer."""
+    ANNUAL_FEE = Decimal('50.00')
+
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='federation_licence_payments', verbose_name='Alumno')
+    year = models.PositiveIntegerField(verbose_name='Año de vigencia')
+    amount = models.DecimalField(max_digits=6, decimal_places=2, default=ANNUAL_FEE, verbose_name='Importe')
+    paid_on = models.DateField(verbose_name='Fecha de pago')
+    bank_transaction = models.OneToOneField(BankTransaction, on_delete=models.SET_NULL, null=True, blank=True, related_name='federation_licence_payment', verbose_name='Movimiento bancario')
+    confirmed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='confirmed_federation_licence_payments', verbose_name='Confirmado por')
+    confirmed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Pago de licencia federativa'
+        verbose_name_plural = 'Pagos de licencias federativas'
+        constraints = [
+            models.UniqueConstraint(fields=['student', 'year'], name='unique_student_federation_licence_year'),
+        ]
+
+    def __str__(self):
+        return '%s · %s · %s €' % (self.student, self.year, self.amount)
 
 
 class PaymentAllocation(models.Model):

@@ -67,6 +67,8 @@
                                             <select name="target" class="form-control input-sm" required>
                                                 {% if bank_transaction.suggested_registration %}
                                                     <option value="registration:{{ bank_transaction.suggested_registration.id }}">{{ bank_transaction.suggested_registration.student.name }} · {{ bank_transaction.suggested_registration.champ.name }} ({{ bank_transaction.suggested_registration.payment_reference }})</option>
+                                                {% elif bank_transaction.suggested_licence_student %}
+                                                    <option value="licence:{{ bank_transaction.suggested_licence_student.id }}">Licencia federativa {{ bank_transaction.booking_date|date:"Y" }} · {{ bank_transaction.suggested_licence_student.name }} (50 €)</option>
                                                 {% else %}
                                                     <option value="">{% trans "Selecciona destinatario" %}</option>
                                                 {% endif %}
@@ -78,10 +80,21 @@
                                                 {% for companion in companions %}
                                                     <option value="companion:{{ companion.id }}">{{ companion.full_name }} · {{ companion.registration.student.name }} ({{ companion.registration.champ.name }})</option>
                                                 {% endfor %}
+                                                {% for student in licence_students %}
+                                                    {% if student.id != bank_transaction.suggested_licence_student.id %}
+                                                        <option value="licence:{{ student.id }}">Licencia federativa {{ bank_transaction.booking_date|date:"Y" }} · {{ student.name }} (50 €)</option>
+                                                    {% endif %}
+                                                {% endfor %}
                                             </select>
                                             <input type="number" name="amount" class="form-control input-sm" min="0.01" max="{{ bank_transaction.remaining_amount }}" step="0.01" value="{{ bank_transaction.remaining_amount }}" required>
                                             <button class="btn btn-success btn-sm" type="submit">{% trans "Confirmar" %}</button>
                                         </form>
+                                        {% if bank_transaction.remaining_amount == bank_transaction.amount %}
+                                            <form method="post" action="{% url 'discard-bank-transaction' bank_transaction.id %}" class="form-inline" style="margin-top: 6px;">
+                                                {% csrf_token %}
+                                                <button class="btn btn-default btn-sm" type="submit">{% trans "Descartar" %}</button>
+                                            </form>
+                                        {% endif %}
                                     {% else %}
                                         <span class="label label-success">{% trans "Conciliado" %}</span>
                                     {% endif %}

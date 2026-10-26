@@ -11,7 +11,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_UP
 
 from studio.models import Article, Student, Payment, Assistance, Enrolment
-from champs.models import ChampCost, Championship, Registration, TravelCompanion
+from champs.models import ChampCost, Championship, FederationLicencePayment, Registration, TravelCompanion
 from registration_forms.models import Form, FormAnswer, FormQuestion, FormSubmission
 from pwa.forms import ComplementaryDataForm, StudentDocumentUploadForm
 from pwa.models import DocumentTemplate, StudentDocument
@@ -200,7 +200,15 @@ def licence(request):
 	if not check_student(request):
 		return redirect(login)
 	student = get_current_student(request)
-	return render(request, 'pwa/licence.html', {'student': student})
+	licence_year = timezone.localdate().year
+	federation_licence = FederationLicencePayment.objects.filter(
+		student=student, year=licence_year,
+	).first()
+	return render(request, 'pwa/licence.html', {
+		'student': student,
+		'licence_year': licence_year,
+		'federation_licence': federation_licence,
+	})
 
 
 def complementary_data(request):
