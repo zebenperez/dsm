@@ -945,7 +945,7 @@ def students(request):
 		status = 'active'
 	if licence_status not in ('with_licence', 'without_licence', 'all'):
 		licence_status = 'all'
-	licence_year = django_timezone.localdate().year
+	licence_year = date.today().year
 	group_list = Group.objects.filter(active=True).select_related('teacher').order_by('name')
 	student_list = Student.objects.prefetch_related(Prefetch(
 		'enrolment',

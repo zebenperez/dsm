@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.db import IntegrityError, transaction
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, ROUND_UP
 
 from studio.models import Article, Student, Payment, Assistance, Enrolment
@@ -200,7 +200,7 @@ def licence(request):
 	if not check_student(request):
 		return redirect(login)
 	student = get_current_student(request)
-	licence_year = timezone.localdate().year
+	licence_year = date.today().year
 	federation_licence = FederationLicencePayment.objects.filter(
 		student=student, year=licence_year,
 	).first()
