@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User, Group
+from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import FileResponse
@@ -210,6 +211,7 @@ def complementary_data(request):
 		form = ComplementaryDataForm(request.POST, request.FILES, instance=student)
 		if form.is_valid():
 			form.save()
+			messages.success(request, _("Datos guardados correctamente."))
 			return redirect('pwa-complementary-data')
 	else:
 		form = ComplementaryDataForm(instance=student)

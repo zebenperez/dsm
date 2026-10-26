@@ -11,10 +11,14 @@
         <h1 id="complementary-data-title">{% trans "Completa tus datos" %}</h1>
     </header>
 
+    {% if messages %}
+        {% for message in messages %}
+            <p class="pwa-success-message" role="status"><i class="fas fa-check-circle" aria-hidden="true"></i>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
     <form method="post" enctype="multipart/form-data" class="pwa-change-pin-form pwa-complementary-data-form">
         {% csrf_token %}
-        <p>{% trans "Completa estos datos para tramitar tu licencia federativa." %}</p>
-
         <h2 class="pwa-form-section-title">{% trans "Otros datos" %}</h2>
         <label>{% trans "Fecha de nacimiento" %}</label>
         <output class="pwa-readonly-field">{% if student.born_date %}{{ student.born_date|date:"d/m/Y" }}{% else %}{% trans "No disponible" %}{% endif %}</output>

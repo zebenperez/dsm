@@ -319,6 +319,7 @@ class ComplementaryDataBehaviorTests(TestCase):
 
         response = self.client.get(reverse('pwa-complementary-data'))
         self.assertContains(response, '18/05/2000')
+        self.assertContains(response, 'Datos guardados correctamente.')
 
     def test_complementary_data_renders_existing_dni_expiry_date_for_html_date_input(self):
         self.student.dni_expiry_date = date(2030, 5, 18)
