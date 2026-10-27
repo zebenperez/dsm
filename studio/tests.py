@@ -14,6 +14,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from champs.models import FederationLicencePayment
+from pwa.models import DocumentTemplate, StudentDocument
 
 from studio.models import (
     Article, ArticlePayment, Assistance, Concept, Enrolment, Group as StudioGroup,
@@ -213,6 +214,30 @@ class StudentManagementTests(TestCase):
         response = self.client.post(reverse('federation-licence-payment-delete', args=[student.id, payment.id]))
         self.assertRedirects(response, reverse('student-update', args=[student.id]))
         self.assertFalse(FederationLicencePayment.objects.filter(pk=payment.id).exists())
+
+    def test_admin_can_delete_a_student_document_from_student_page(self):
+        student = Student.objects.create(code=111, pin='A111', name='Documento erróneo', phone='')
+        template = DocumentTemplate.objects.create(
+            title='Autorización',
+            template_file=SimpleUploadedFile('plantilla.pdf', b'%PDF-1.4', content_type='application/pdf'),
+        )
+        document = StudentDocument.objects.create(
+            student=student,
+            template=template,
+            file=SimpleUploadedFile('subido-por-error.pdf', b'%PDF-1.4 firmado', content_type='application/pdf'),
+            original_filename='subido-por-error.pdf',
+        )
+        file_name = document.file.name
+
+        response = self.client.get(reverse('student-update', args=[student.id]))
+        self.assertContains(response, reverse('student-document-delete', args=[student.id, document.id]))
+        self.assertContains(response, '¿Eliminar este documento? Esta acción no se puede deshacer.')
+
+        response = self.client.post(reverse('student-document-delete', args=[student.id, document.id]))
+
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        self.assertFalse(StudentDocument.objects.filter(pk=document.id).exists())
+        self.assertFalse(document.file.storage.exists(file_name))
 
     def test_attendance_follow_up_excludes_students_with_attendance_and_marks_overdue_payments(self):
         inactive_student = Student.objects.create(code=106, pin='A106', name='Sin asistencia', phone='600000106')

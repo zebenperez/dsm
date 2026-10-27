@@ -55,6 +55,7 @@ urlpatterns = [
 	path('students/<int:student_id>/licence-payments/add/', views.federation_licence_payment_add, name='federation-licence-payment-add'),
 	path('students/<int:student_id>/licence-payments/<int:payment_id>/delete/', views.federation_licence_payment_delete, name='federation-licence-payment-delete'),
 	path('students/<int:student_id>/documents/<int:document_id>/download/', views.student_document_download, name='student-document-download'),
+	path('students/<int:student_id>/documents/<int:document_id>/delete/', views.student_document_delete, name='student-document-delete'),
 	path('students/<int:student_id>/delete/', views.student_delete, name='student-delete'),
 	path('students/<int:student_id>/enrolments/new/', views.enrolment_create, name='enrolment-create'),
 	path('students/<int:student_id>/enrolments/<int:enrolment_id>/edit/', views.enrolment_update, name='enrolment-update'),

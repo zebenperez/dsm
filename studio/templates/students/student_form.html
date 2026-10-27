@@ -66,7 +66,7 @@
                             <tr>
                                 <td><strong>{{ document.template.title }}</strong><small>{{ document.original_filename }}</small></td>
                                 <td>{{ document.uploaded_at|date:"d/m/Y, H:i" }}</td>
-                                <td class="text-right"><a class="btn btn-default btn-sm" href="{% url 'student-document-download' student.id document.id %}"><span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> {% trans "Descargar" %}</a></td>
+                                <td class="text-right"><a class="btn btn-default btn-sm" href="{% url 'student-document-download' student.id document.id %}"><span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> {% trans "Descargar" %}</a> <form method="post" action="{% url 'student-document-delete' student.id document.id %}" class="inline-form" style="display:inline;" onsubmit="return confirm('{% trans "¿Eliminar este documento? Esta acción no se puede deshacer." %}');">{% csrf_token %}<button class="btn btn-danger btn-sm" type="submit"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> {% trans "Eliminar" %}</button></form></td>
                             </tr>
                         {% endfor %}
                     </tbody>

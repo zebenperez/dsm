@@ -1102,6 +1102,18 @@ def student_document_download(request, student_id, document_id):
 
 
 @group_required("admins")
+def student_document_delete(request, student_id, document_id):
+	"""Delete a student's signed document and its stored file."""
+	student = get_object_or_404(Student, pk=student_id)
+	if request.method == 'POST':
+		document = get_object_or_404(StudentDocument, pk=document_id, student=student)
+		document.file.delete(save=False)
+		document.delete()
+		messages.success(request, _('Documento eliminado.'))
+	return redirect('student-update', student_id=student.id)
+
+
+@group_required("admins")
 def student_delete(request, student_id):
 	student = get_object_or_404(Student, pk=student_id)
 	if request.method == 'POST':
