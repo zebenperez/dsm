@@ -104,3 +104,14 @@ class FederationLicenceReconciliationTests(TestCase):
         )
 
         self.assertEqual(suggested, self.student)
+
+    def test_suggests_licence_from_federation_concept_ignoring_case_and_accents(self):
+        self.student.name = 'Irina Caballero Cabello'
+        self.student.save(update_fields=['name'])
+
+        suggested = suggested_licence_student(
+            'TRANSFERENCIA: fEdErAcIóN Irina Caballero Cabello',
+            date.today().year,
+        )
+
+        self.assertEqual(suggested, self.student)

@@ -1,6 +1,7 @@
 import csv
 import hashlib
 import re
+import unicodedata
 from io import TextIOWrapper
 
 from django.contrib import messages
@@ -229,12 +230,28 @@ def suggested_registration(reference):
 
 
 def suggested_licence_student(reference, year):
-    compact_reference = re.sub(r'[^a-z0-9]', '', (reference or '').lower())
+    def compact(value):
+        normalized = unicodedata.normalize('NFKD', value or '')
+        without_accents = ''.join(char for char in normalized if not unicodedata.combining(char))
+        return re.sub(r'[^a-z0-9]', '', without_accents.lower())
+
+    compact_reference = compact(reference)
     if not compact_reference:
         return None
     for student in Student.objects.all():
         if 'lic%s%s' % (year, student.code) in compact_reference:
             return student
+
+    # Bank concepts normally include the student's full name after the word
+    # "Federación".  Match it without depending on capitalisation or accents.
+    if 'federacion' not in compact_reference:
+        return None
+    matches = [
+        student for student in Student.objects.all()
+        if compact(student.name) and compact(student.name) in compact_reference
+    ]
+    if len(matches) == 1:
+        return matches[0]
     return None
 
 
