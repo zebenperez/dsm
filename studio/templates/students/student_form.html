@@ -51,8 +51,8 @@
             </form>
             {% if licence_payments %}
                 <table class="table table-condensed student-documents-table student-licence-payments-table">
-                    <thead><tr><th>{% trans "Año" %}</th><th>{% trans "Fecha" %}</th><th>{% trans "Importe" %}</th><th>{% trans "Registrado por" %}</th><th></th></tr></thead>
-                    <tbody>{% for payment in licence_payments %}<tr><td>{{ payment.year }}</td><td>{{ payment.paid_on|date:"d/m/Y" }}</td><td>{{ payment.amount }} €</td><td>{{ payment.confirmed_by|default:"—" }}</td><td class="text-right"><form method="post" action="{% url 'federation-licence-payment-delete' student.id payment.id %}" onsubmit="return confirm('{% trans "¿Eliminar este pago de licencia?" %}');">{% csrf_token %}<button class="btn btn-danger btn-xs" type="submit"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> {% trans "Eliminar" %}</button></form></td></tr>{% endfor %}</tbody>
+                    <thead><tr><th>{% trans "Año" %}</th><th>{% trans "Fecha" %}</th><th>{% trans "Importe" %}</th><th></th></tr></thead>
+                    <tbody>{% for payment in licence_payments %}<tr><td>{{ payment.year }}</td><td>{{ payment.paid_on|date:"d/m/Y" }}</td><td>{{ payment.amount }} €</td><td class="text-right"><form method="post" action="{% url 'federation-licence-payment-delete' student.id payment.id %}" onsubmit="return confirm('{% trans "¿Eliminar este pago de licencia?" %}');">{% csrf_token %}<button class="btn btn-danger btn-xs" type="submit"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> {% trans "Eliminar" %}</button></form></td></tr>{% endfor %}</tbody>
                 </table>
             {% else %}<p class="student-documents-empty">{% trans "No hay pagos de licencia federativa registrados." %}</p>{% endif %}
         </section>
