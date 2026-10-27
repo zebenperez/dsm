@@ -40,6 +40,22 @@
         {% endif %}
     </form>
     {% if student %}
+        <section class="student-documents-card" aria-labelledby="licence-payments-title">
+            <h2 id="licence-payments-title"><span class="glyphicon glyphicon-certificate" aria-hidden="true"></span> {% trans "Pagos de licencia federativa" %}</h2>
+            <form method="post" action="{% url 'federation-licence-payment-add' student.id %}" class="form-inline student-licence-payment-form">
+                {% csrf_token %}
+                <div class="form-group"><label for="{{ licence_payment_form.year.id_for_label }}">{% trans "Año" %}</label> {{ licence_payment_form.year }}</div>
+                <div class="form-group"><label for="{{ licence_payment_form.paid_on.id_for_label }}">{% trans "Fecha de pago" %}</label> {{ licence_payment_form.paid_on }}</div>
+                <span class="student-licence-payment-amount">50,00 €</span>
+                <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans "Añadir pago" %}</button>
+            </form>
+            {% if licence_payments %}
+                <table class="table table-condensed student-documents-table student-licence-payments-table">
+                    <thead><tr><th>{% trans "Año" %}</th><th>{% trans "Fecha" %}</th><th>{% trans "Importe" %}</th><th>{% trans "Registrado por" %}</th><th></th></tr></thead>
+                    <tbody>{% for payment in licence_payments %}<tr><td>{{ payment.year }}</td><td>{{ payment.paid_on|date:"d/m/Y" }}</td><td>{{ payment.amount }} €</td><td>{{ payment.confirmed_by|default:"—" }}</td><td class="text-right"><form method="post" action="{% url 'federation-licence-payment-delete' student.id payment.id %}" onsubmit="return confirm('{% trans "¿Eliminar este pago de licencia?" %}');">{% csrf_token %}<button class="btn btn-danger btn-xs" type="submit"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> {% trans "Eliminar" %}</button></form></td></tr>{% endfor %}</tbody>
+                </table>
+            {% else %}<p class="student-documents-empty">{% trans "No hay pagos de licencia federativa registrados." %}</p>{% endif %}
+        </section>
         <section class="student-documents-card" aria-labelledby="student-documents-title">
             <h2 id="student-documents-title"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span> {% trans "Documentos subidos" %}</h2>
             {% if student_documents %}

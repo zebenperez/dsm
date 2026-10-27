@@ -13,6 +13,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
+from champs.models import FederationLicencePayment
+
 from studio.models import (
     Article, ArticlePayment, Assistance, Concept, Enrolment, Group as StudioGroup,
     InsufficientWalletBalance, Payment, Student, Teacher, WalletMovement,
@@ -190,6 +192,27 @@ class StudentManagementTests(TestCase):
         self.assertEqual(student.province, 'Santa Cruz de Tenerife')
         self.assertTrue(student.dni_front.name)
         self.assertTrue(student.dni_back.name)
+
+    def test_admin_can_manage_federation_licence_payments_from_student_page(self):
+        student = Student.objects.create(code=110, pin='A110', name='Pago manual', phone='')
+
+        response = self.client.post(reverse('federation-licence-payment-add', args=[student.id]), {
+            'year': date.today().year,
+            'paid_on': '20-10-2026',
+        })
+
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        payment = FederationLicencePayment.objects.get(student=student, year=date.today().year)
+        self.assertEqual(payment.amount, Decimal('50.00'))
+        self.assertEqual(payment.paid_on, date(2026, 10, 20))
+
+        response = self.client.get(reverse('student-update', args=[student.id]))
+        self.assertContains(response, 'Pagos de licencia federativa')
+        self.assertContains(response, '20/10/2026')
+
+        response = self.client.post(reverse('federation-licence-payment-delete', args=[student.id, payment.id]))
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        self.assertFalse(FederationLicencePayment.objects.filter(pk=payment.id).exists())
 
     def test_attendance_follow_up_excludes_students_with_attendance_and_marks_overdue_payments(self):
         inactive_student = Student.objects.create(code=106, pin='A106', name='Sin asistencia', phone='600000106')

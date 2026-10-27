@@ -7,7 +7,7 @@ from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal, InvalidOperation
 from collections import defaultdict
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q, Count, Min, Sum, Max, Avg, Prefetch, Exists, OuterRef, Subquery
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -37,6 +37,25 @@ from fcm_django.models import FCMDevice
 from registration_forms.models import Form as RegistrationForm, FormSubmission
 from kiosk.models import KioskPayment
 from pwa.models import StudentDocument
+
+class FederationLicencePaymentManagementForm(forms.ModelForm):
+	"""Manual registration of an annual federation licence payment."""
+	paid_on = forms.DateField(
+		input_formats=('%d-%m-%Y', '%Y-%m-%d'),
+		widget=forms.DateInput(format='%d-%m-%Y', attrs={'class': 'form-control', 'placeholder': 'dd-mm-aaaa'}),
+	)
+
+	class Meta:
+		model = FederationLicencePayment
+		fields = ['year', 'paid_on']
+		widgets = {'year': forms.NumberInput(attrs={'class': 'form-control', 'min': 2000, 'max': 2100})}
+
+	def save(self, commit=True):
+		payment = super().save(commit=False)
+		payment.amount = FederationLicencePayment.ANNUAL_FEE
+		if commit:
+			payment.save()
+		return payment
 
 '''
 	TPV
@@ -1014,6 +1033,36 @@ def student_detail(request, student_id):
 
 
 @group_required("admins")
+def federation_licence_payment_add(request, student_id):
+	student = get_object_or_404(Student, pk=student_id)
+	if request.method != 'POST':
+		return redirect('student-update', student_id=student.id)
+	form = FederationLicencePaymentManagementForm(request.POST)
+	if form.is_valid():
+		payment = form.save(commit=False)
+		payment.student = student
+		payment.confirmed_by = request.user
+		try:
+			payment.save()
+			messages.success(request, _('Pago de licencia federativa registrado.'))
+		except IntegrityError:
+			messages.error(request, _('Ya existe un pago de licencia federativa para ese año.'))
+	else:
+		messages.error(request, _('No se ha podido registrar el pago. Revisa los datos introducidos.'))
+	return redirect('student-update', student_id=student.id)
+
+
+@group_required("admins")
+def federation_licence_payment_delete(request, student_id, payment_id):
+	student = get_object_or_404(Student, pk=student_id)
+	if request.method == 'POST':
+		payment = get_object_or_404(FederationLicencePayment, pk=payment_id, student=student)
+		payment.delete()
+		messages.success(request, _('Pago de licencia federativa eliminado.'))
+	return redirect('student-update', student_id=student.id)
+
+
+@group_required("admins")
 def student_update(request, student_id):
 	student = get_object_or_404(Student, pk=student_id)
 	student_age = None
@@ -1038,6 +1087,8 @@ def student_update(request, student_id):
 		'enrolment_list': student.enrolment.select_related('group', 'group__teacher').order_by('-active', 'group__name'),
 		'enrolment_form': enrolment_form,
 		'enrolment_forms': [(enrolment, EnrolmentManagementForm(instance=enrolment)) for enrolment in student.enrolment.all()],
+		'licence_payment_form': FederationLicencePaymentManagementForm(initial={'year': date.today().year, 'paid_on': date.today()}),
+		'licence_payments': student.federation_licence_payments.select_related('confirmed_by', 'bank_transaction').order_by('-year', '-paid_on', '-id'),
 	})
 
 
