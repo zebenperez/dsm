@@ -363,6 +363,8 @@ class ChampionshipSignupTests(TestCase):
         self.available_championship.target_groups.add(self.student_group)
         self.category = Category.objects.create(name='Solo')
         ChampCategory.objects.create(champ=self.available_championship, category=self.category)
+        self.second_category = Category.objects.create(name='Dúo')
+        ChampCategory.objects.create(champ=self.available_championship, category=self.second_category)
 
         self.other_championship = Championship.objects.create(
             name='Campeonato de otra categoría', date=tomorrow, publish=True,
@@ -401,6 +403,43 @@ class ChampionshipSignupTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+    def test_student_can_edit_the_categories_of_an_upcoming_registration(self):
+        registration = Registration.objects.create(student=self.student, champ=self.available_championship)
+        registration.categories.add(self.category)
+
+        response = self.client.get(
+            reverse('pwa-championship-registration-edit', args=[registration.id]),
+        )
+        self.assertContains(
+            response,
+            'name="categories" value="%s" checked' % self.category.id,
+            html=True,
+        )
+
+        response = self.client.post(
+            reverse('pwa-championship-registration-edit', args=[registration.id]),
+            {'categories': [self.category.id, self.second_category.id]},
+        )
+
+        self.assertRedirects(response, reverse('pwa-championship-detail', args=[registration.id]))
+        registration.refresh_from_db()
+        self.assertSetEqual(
+            set(registration.categories.values_list('id', flat=True)),
+            {self.category.id, self.second_category.id},
+        )
+
+    def test_student_cannot_save_a_registration_without_categories(self):
+        registration = Registration.objects.create(student=self.student, champ=self.available_championship)
+        registration.categories.add(self.category)
+
+        response = self.client.post(
+            reverse('pwa-championship-registration-edit', args=[registration.id]),
+            {},
+        )
+
+        self.assertContains(response, 'Selecciona al menos una categoría para mantener la inscripción.')
+        self.assertQuerySetEqual(registration.categories.all(), [self.category])
 
     def test_companion_costs_are_included_in_the_student_total(self):
         registration = Registration.objects.create(

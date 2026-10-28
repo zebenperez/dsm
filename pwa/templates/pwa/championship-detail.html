@@ -34,7 +34,10 @@
             <div class="pwa-registration-status">
                 <span class="pwa-registration-status-icon"><i class="fas fa-check" aria-hidden="true"></i></span>
                 <div><strong>{% trans "Inscripción confirmada" %}</strong><span>{% trans "Ya formas parte de este campeonato." %}</span></div>
-                <div class="pwa-registration-position"><small>{% trans "Resultado" %}</small><strong>{% if registration.position %}{{ registration.position }}{% else %}{% trans "Pendiente" %}{% endif %}</strong></div>
+            </div>
+            <div class="pwa-registration-position">
+                <small>{% trans "Clasificación" %}</small>
+                <strong>{% if registration.position %}{{ registration.position }}{% else %}{% trans "Pendiente" %}{% endif %}</strong>
             </div>
 
             <p class="pwa-section-label">{% trans "Categorías inscritas" %}</p>
@@ -51,6 +54,9 @@
                     <div class="pwa-empty-state"><p>{% trans "No hay categorías asociadas a esta inscripción." %}</p></div>
                 {% endfor %}
             </div>
+            {% if can_edit_categories %}
+                <a class="pwa-secondary-button pwa-registration-edit-link" href="{% url 'pwa-championship-registration-edit' registration.id %}"><i class="fas fa-pen" aria-hidden="true"></i> {% trans "Modificar categorías" %}</a>
+            {% endif %}
         </section>
 
         <section class="tab-pane fade" id="costs" role="tabpanel" aria-labelledby="costs-tab">

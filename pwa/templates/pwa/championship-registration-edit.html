@@ -1,0 +1,35 @@
+{% extends "pwa/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Modificar inscripción" %} · 5db Dance School{% endblock %}
+
+{% block content %}
+<section class="pwa-settings" aria-labelledby="championship-title">
+    <a class="pwa-back-link" href="{% url 'pwa-championship-detail' registration.id %}"><i class="fas fa-chevron-left" aria-hidden="true"></i>{% trans "Inscripción" %}</a>
+    <header class="pwa-screen-header pwa-championship-header">
+        <p>{% trans "Campeonato" %}</p>
+        <h1 id="championship-title">{{ registration.champ.name }}</h1>
+        <p>{% trans "Modifica las categorías en las que participarás." %}</p>
+    </header>
+
+    <section class="pwa-form-card pwa-available-signup-card">
+        <h2>{% trans "Categorías" %}</h2>
+        <form method="post" class="pwa-championship-signup-form">
+            {% csrf_token %}
+            <fieldset>
+                <legend>{% trans "Selecciona una o varias categorías" %}</legend>
+                {% for category in categories %}
+                    <label class="pwa-category-choice" for="category-{{ category.id }}">
+                        <input id="category-{{ category.id }}" type="checkbox" name="categories" value="{{ category.id }}"{% if category.id in selected_category_ids %} checked{% endif %}>
+                        <span class="pwa-category-choice-icon"><i class="fas fa-trophy" aria-hidden="true"></i></span>
+                        <span class="pwa-category-choice-name">{{ category.name }}</span>
+                        <span class="pwa-category-choice-check"><i class="fas fa-check" aria-hidden="true"></i></span>
+                    </label>
+                {% endfor %}
+            </fieldset>
+            {% if error %}<p class="pwa-field-error" role="alert">{{ error }}</p>{% endif %}
+            <button type="submit" class="pwa-primary-button">{% trans "Guardar cambios" %}</button>
+        </form>
+    </section>
+</section>
+{% endblock %}

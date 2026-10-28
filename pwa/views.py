@@ -421,6 +421,7 @@ def championship_detail(request, registration_id):
 		'student': student,
 		'registration': registration,
 		'summary': get_championship_registration_summary(registration),
+		'can_edit_categories': registration.champ.publish and registration.champ.date >= timezone.now().date(),
 	})
 
 
@@ -460,6 +461,47 @@ def available_championship_detail(request, championship_id):
 		'student': student,
 		'championship': championship,
 		'categories': available_categories,
+	})
+
+
+def edit_championship_registration(request, registration_id):
+	"""Let a student amend the categories of an upcoming published championship."""
+	if not check_student(request):
+		return redirect(login)
+	student = get_current_student(request)
+	registration = get_object_or_404(
+		Registration.objects.select_related('champ').prefetch_related('categories'),
+		pk=registration_id,
+		student=student,
+		champ__in=Championship.objects.for_student(student).filter(
+			publish=True, date__gte=timezone.now().date(),
+		),
+	)
+	available_categories = [
+		champ_category.category for champ_category in registration.champ.categories.select_related('category').order_by('category__name')
+		if champ_category.category_id
+	]
+	selected_category_ids = set(registration.categories.values_list('id', flat=True))
+	if request.method == 'POST':
+		selected_category_ids = {
+			int(category_id) for category_id in request.POST.getlist('categories') if category_id.isdigit()
+		}
+		valid_categories = [category for category in available_categories if category.id in selected_category_ids]
+		if valid_categories:
+			registration.categories.set(valid_categories)
+			return redirect('pwa-championship-detail', registration_id=registration.id)
+		return render(request, 'pwa/championship-registration-edit.html', {
+			'student': student,
+			'registration': registration,
+			'categories': available_categories,
+			'selected_category_ids': selected_category_ids,
+			'error': _('Selecciona al menos una categoría para mantener la inscripción.'),
+		})
+	return render(request, 'pwa/championship-registration-edit.html', {
+		'student': student,
+		'registration': registration,
+		'categories': available_categories,
+		'selected_category_ids': selected_category_ids,
 	})
 
 
