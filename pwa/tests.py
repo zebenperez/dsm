@@ -242,6 +242,21 @@ class StudentDocumentTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
 
+    def test_student_can_upload_a_jpg_or_png_document(self):
+        for filename, content, content_type in (
+            ('autorizacion.jpg', b'\xff\xd8\xff signed image', 'image/jpeg'),
+            ('autorizacion.png', b'\x89PNG\r\n\x1a\n signed image', 'image/png'),
+        ):
+            with self.subTest(filename=filename):
+                response = self.client.post(reverse('pwa-documents'), {
+                    'template': self.template.id,
+                    'file': SimpleUploadedFile(filename, content, content_type=content_type),
+                })
+
+                self.assertRedirects(response, reverse('pwa-documents'))
+                document = StudentDocument.objects.get(student=self.student)
+                self.assertEqual(document.original_filename, filename)
+
     def test_student_cannot_download_another_students_document(self):
         document = StudentDocument.objects.create(
             student=self.other_student,

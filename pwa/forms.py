@@ -87,11 +87,20 @@ class ComplementaryDataForm(forms.ModelForm):
 
 
 class StudentDocumentUploadForm(forms.ModelForm):
+    ALLOWED_FILE_TYPES = {
+        '.pdf': (b'%PDF-', 'PDF'),
+        '.jpg': (b'\xff\xd8\xff', 'JPG'),
+        '.jpeg': (b'\xff\xd8\xff', 'JPG'),
+        '.png': (b'\x89PNG\r\n\x1a\n', 'PNG'),
+    }
+
     class Meta:
         model = StudentDocument
         fields = ('template', 'file')
         widgets = {
-            'file': forms.ClearableFileInput(attrs={'accept': 'application/pdf,.pdf'}),
+            'file': forms.ClearableFileInput(attrs={
+                'accept': 'application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -102,13 +111,17 @@ class StudentDocumentUploadForm(forms.ModelForm):
     def clean_file(self):
         uploaded_file = self.cleaned_data['file']
         if uploaded_file.size > 10 * 1024 * 1024:
-            raise ValidationError('El PDF no puede superar los 10 MB.')
-        if os.path.splitext(uploaded_file.name)[1].lower() != '.pdf':
-            raise ValidationError('Sube un archivo PDF.')
+            raise ValidationError('El archivo no puede superar los 10 MB.')
 
-        # The content type is supplied by the browser, so also inspect its header.
-        header = uploaded_file.read(5)
+        extension = os.path.splitext(uploaded_file.name)[1].lower()
+        file_type = self.ALLOWED_FILE_TYPES.get(extension)
+        if not file_type:
+            raise ValidationError('Sube un archivo PDF, JPG o PNG.')
+
+        # The content type is supplied by the browser, so also inspect the file signature.
+        signature, label = file_type
+        header = uploaded_file.read(len(signature))
         uploaded_file.seek(0)
-        if header != b'%PDF-':
-            raise ValidationError('El archivo seleccionado no parece ser un PDF válido.')
+        if header != signature:
+            raise ValidationError('El archivo seleccionado no parece ser un %s válido.' % label)
         return uploaded_file
