@@ -114,10 +114,18 @@
 </style>
 
 <div class="page-header">
-    <h1>
-        {{ obj.name }}
-        <small>{% trans "Campeonato" %}</small>
-    </h1>
+    <div class="clearfix">
+        {% if obj %}
+            <a class="btn btn-success pull-right" href="{% url 'champs-export-travelers' obj.id %}">
+                <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+                {% trans "Exportar viajeros" %}
+            </a>
+        {% endif %}
+        <h1>
+            {{ obj.name }}
+            <small>{% trans "Campeonato" %}</small>
+        </h1>
+    </div>
 </div>
 
 {% if obj %}

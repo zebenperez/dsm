@@ -6,7 +6,9 @@ from io import TextIOWrapper
 
 from django.contrib import messages
 from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils.text import slugify
 from django.utils import timezone
 
 from datetime import date, datetime
@@ -187,6 +189,66 @@ def get_champ_details_context(obj):
         'champ_pending_amount': champ_pending_amount,
         'target_group_list': list(obj.target_groups.select_related('teacher').all()) if obj else [],
     }
+
+
+def registration_category_names(registration):
+    return ', '.join(sorted(category.name for category in registration.categories.all()))
+
+
+@group_required("admins")
+def export_champ_travelers(request, obj_id):
+    """Export the competitors and travel companions for a championship."""
+    championship = get_object_or_404(Championship, pk=obj_id)
+    registrations = list(
+        Registration.objects.filter(champ=championship)
+        .select_related('student')
+        .prefetch_related('categories')
+        .order_by('student__name')
+    )
+    companions = list(
+        TravelCompanion.objects.filter(registration__champ=championship)
+        .select_related('registration__student')
+        .prefetch_related('registration__categories')
+        .order_by('full_name')
+    )
+
+    headers = [
+        'Tipo', 'Nombre y apellidos', 'Municipio', 'Número de DNI',
+        'Fecha de nacimiento', 'Categoría', 'Competidora a la que acompaña',
+    ]
+    rows = [headers]
+
+    for registration in registrations:
+        student = registration.student
+        rows.append([
+            'Competidora',
+            student.name if student else '',
+            student.municipality if student else '',
+            student.dni if student else '',
+            student.born_date.strftime('%d/%m/%Y') if student and student.born_date else '',
+            registration_category_names(registration),
+            '',
+        ])
+
+    for companion in companions:
+        registration = companion.registration
+        rows.append([
+            'Acompañante',
+            companion.full_name,
+            companion.municipality,
+            companion.dni,
+            companion.birth_date.strftime('%d/%m/%Y'),
+            registration_category_names(registration),
+            registration.student.name if registration.student else '',
+        ])
+
+    filename = '%s-viajeros.csv' % (slugify(championship.name) or 'campeonato')
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+    response.write('\ufeff')
+    writer = csv.writer(response)
+    writer.writerows(rows)
+    return response
 
 
 def parse_bank_amount(value):

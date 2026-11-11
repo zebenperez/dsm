@@ -25,6 +25,7 @@ from operator import attrgetter
 from urllib.parse import urlencode
 
 import calendar
+import unicodedata
 from dateutil.relativedelta import relativedelta
  
 from django import forms
@@ -37,6 +38,14 @@ from fcm_django.models import FCMDevice
 from registration_forms.models import Form as RegistrationForm, FormSubmission
 from kiosk.models import KioskPayment
 from pwa.models import StudentDocument
+
+
+def _normalise_student_search_text(value):
+	"""Return text suitable for case- and accent-insensitive comparisons."""
+	return ''.join(
+		character for character in unicodedata.normalize('NFD', str(value or '').casefold())
+		if not unicodedata.combining(character)
+	)
 
 class FederationLicencePaymentManagementForm(forms.ModelForm):
 	"""Manual registration of an annual federation licence payment."""
@@ -993,10 +1002,17 @@ def students(request):
 	elif licence_status == 'without_licence':
 		student_list = student_list.exclude(federation_licence_payments__year=licence_year)
 	if query:
-		filters = Q(name__icontains=query) | Q(pin__icontains=query) | Q(band__icontains=query)
-		if query.isdigit():
-			filters |= Q(code=int(query))
-		student_list = student_list.filter(filters)
+		normalised_query = _normalise_student_search_text(query)
+		student_list = [
+			student for student in student_list
+			if (
+				normalised_query in _normalise_student_search_text(student.name)
+				or normalised_query in _normalise_student_search_text(student.pin)
+				or normalised_query in _normalise_student_search_text(student.band)
+				or (query.isdigit() and student.code == int(query))
+			)
+		]
+	student_count = len(student_list) if query else student_list.count()
 	return render(request, 'students/students.html', {
 		'student_list': student_list,
 		'query': query,
@@ -1005,7 +1021,7 @@ def students(request):
 		'licence_year': licence_year,
 		'group_list': group_list,
 		'selected_group': selected_group,
-		'student_count': student_list.count(),
+		'student_count': student_count,
 	})
 
 

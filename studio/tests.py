@@ -102,6 +102,37 @@ class StudentManagementTests(TestCase):
         enrolment.refresh_from_db()
         self.assertFalse(enrolment.active)
 
+    def test_enrolment_forms_hide_percentages_and_preserve_them_on_update(self):
+        student = Student.objects.create(code=110, pin='A110', name='Alumno de prueba', phone='')
+        enrolment = Enrolment.objects.create(
+            student=student, group=self.group, price='30.00', percent_studio=60, percent_teacher=40,
+        )
+
+        response = self.client.get(reverse('student-update', args=[student.id]))
+
+        self.assertNotContains(response, 'name="percent_studio"', html=False)
+        self.assertNotContains(response, 'name="percent_teacher"', html=False)
+
+        response = self.client.post(reverse('enrolment-update', args=[student.id, enrolment.id]), {
+            'group': self.group.id, 'price': '35.00', 'active': 'on',
+        })
+
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        enrolment.refresh_from_db()
+        self.assertEqual(enrolment.percent_studio, 60)
+        self.assertEqual(enrolment.percent_teacher, 40)
+
+        new_group = StudioGroup.objects.create(
+            name='Salsa', teacher=self.teacher, ini_time='19:00', end_time='20:00', tuesday=True,
+        )
+        self.client.post(reverse('enrolment-create', args=[student.id]), {
+            'group': new_group.id, 'price': '30.00', 'active': 'on',
+        })
+
+        enrolment = Enrolment.objects.get(student=student, group=new_group)
+        self.assertEqual(enrolment.percent_studio, 50)
+        self.assertEqual(enrolment.percent_teacher, 50)
+
     def test_students_can_be_filtered_by_active_group(self):
         other_group = StudioGroup.objects.create(
             name='Salsa', teacher=self.teacher, ini_time='19:00', end_time='20:00', tuesday=True,
@@ -119,6 +150,22 @@ class StudentManagementTests(TestCase):
         self.assertContains(response, 'Alumna Bachata')
         self.assertNotContains(response, 'Alumno Salsa')
         self.assertNotContains(response, 'Matrícula inactiva')
+        self.assertEqual(response.context['student_count'], 1)
+
+    def test_students_search_ignores_case_and_accents(self):
+        matching_student = Student.objects.create(
+            code=111, pin='ÁNGELA', name='Ángela Muñoz', phone='', band='',
+        )
+        other_student = Student.objects.create(
+            code=112, pin='A112', name='Otro alumno', phone='', band='',
+        )
+        Enrolment.objects.create(student=matching_student, group=self.group, active=True)
+        Enrolment.objects.create(student=other_student, group=self.group, active=True)
+
+        response = self.client.get(reverse('students'), {'q': 'ANGELA MUNOZ'})
+
+        self.assertContains(response, 'Ángela Muñoz')
+        self.assertNotContains(response, 'Otro alumno')
         self.assertEqual(response.context['student_count'], 1)
 
     def test_students_can_be_filtered_by_licence_status(self):

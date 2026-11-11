@@ -1,12 +1,14 @@
+import csv
 from datetime import date
 from decimal import Decimal
+from io import StringIO
 
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from champs.models import BankTransaction, Championship, FederationLicencePayment, Registration
+from champs.models import BankTransaction, Category, Championship, FederationLicencePayment, Registration, TravelCompanion
 from champs.views import get_champ_list_context, suggested_licence_student, suggested_registration
 from studio.models import Student
 
@@ -72,6 +74,45 @@ class BankReferenceSuggestionTests(TestCase):
         suggested = suggested_registration('Pago de Marta %s muchas gracias' % reference_with_spaces)
 
         self.assertEqual(suggested, self.registration)
+
+
+class ChampionshipTravelersExportTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='travel-admin', password='secret')
+        admins, _ = Group.objects.get_or_create(name='admins')
+        self.user.groups.add(admins)
+        self.client.force_login(self.user)
+        self.championship = Championship.objects.create(name='Viaje nacional')
+        self.category = Category.objects.create(name='Dúo juvenil')
+        self.student = Student.objects.create(
+            code=903, pin='V903', name='María Pérez García', phone='', municipality='La Laguna',
+            dni='12345678A', born_date=date(2010, 4, 3),
+        )
+        self.registration = Registration.objects.create(student=self.student, champ=self.championship)
+        self.registration.categories.add(self.category)
+        TravelCompanion.objects.create(
+            registration=self.registration, full_name='Ana Pérez García', municipality='La Laguna',
+            dni='87654321B', birth_date=date(1980, 2, 1),
+        )
+
+    def test_export_contains_competitors_and_companions(self):
+        response = self.client.get(reverse('champs-export-travelers', args=[self.championship.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        rows = list(csv.reader(StringIO(response.content.decode('utf-8-sig'))))
+        self.assertEqual(rows[0], [
+            'Tipo', 'Nombre y apellidos', 'Municipio', 'Número de DNI',
+            'Fecha de nacimiento', 'Categoría', 'Competidora a la que acompaña',
+        ])
+        self.assertIn(
+            ['Competidora', 'María Pérez García', 'La Laguna', '12345678A', '03/04/2010', 'Dúo juvenil', ''],
+            rows,
+        )
+        self.assertIn(
+            ['Acompañante', 'Ana Pérez García', 'La Laguna', '87654321B', '01/02/1980', 'Dúo juvenil', 'María Pérez García'],
+            rows,
+        )
 
 
 class FederationLicenceReconciliationTests(TestCase):

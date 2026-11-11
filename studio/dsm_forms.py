@@ -78,15 +78,15 @@ class StudentManagementForm(forms.ModelForm):
 
 
 class EnrolmentManagementForm(forms.ModelForm):
-	class Meta:
-		model = Enrolment
-		fields = ['group', 'price', 'percent_studio', 'percent_teacher', 'active']
-
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		for field in self.fields.values():
 			if not isinstance(field.widget, forms.CheckboxInput):
 				field.widget.attrs['class'] = 'form-control'
+
+	class Meta:
+		model = Enrolment
+		fields = ['group', 'price', 'active']
 
 class TeacherPaymentForm(forms.ModelForm):
 	date = forms.DateField(input_formats=settings.DATE_INPUT_FORMATS) 

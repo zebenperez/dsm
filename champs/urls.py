@@ -21,6 +21,7 @@ urlpatterns = [
     path('champs-category-delete-form/', views.champ_category_delete_form, name="champs-category-delete-form"),
     path('delete-champ-category/', views.delete_champ_category, name="delete-champ-category"),
     path('champs-form/<int:obj_id>/', views.champs_details, name="champs-details"),
+    path('champs-form/<int:obj_id>/export-travelers/', views.export_champ_travelers, name="champs-export-travelers"),
     path('champs-info-form/', views.champ_info_form, name="champs-info-form"),
     path('save-champ-info/', views.save_champ_info, name="save-champ-info"),
     path('champs-registration-form/', views.champ_registration_form, name="champs-registration-form"),
