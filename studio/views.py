@@ -23,6 +23,7 @@ from web.utils import *
 
 from operator import attrgetter
 from urllib.parse import urlencode
+from random import choice
 
 import calendar
 import unicodedata
@@ -46,6 +47,62 @@ def _normalise_student_search_text(value):
 		character for character in unicodedata.normalize('NFD', str(value or '').casefold())
 		if not unicodedata.combining(character)
 	)
+
+
+def birthday(request):
+	"""Public celebration page for currently enrolled students born today."""
+	today = date.today()
+	students = Student.objects.filter(
+		born_date__month=today.month,
+		born_date__day=today.day,
+		enrolment__active=True,
+	).distinct().order_by('name').prefetch_related(
+		Prefetch(
+			'enrolment',
+			queryset=Enrolment.objects.filter(active=True).select_related('group').order_by('group__name'),
+			to_attr='birthday_enrolments',
+		)
+	)
+
+	# The public page deliberately displays only a first name.  Birth dates,
+	# contact details and profile photos remain in the authenticated area.
+	for student in students:
+		student.birthday_name = student.name.strip().split()[0] if student.name.strip() else ''
+
+	quotes = (
+		'Bailar es descubrir que el cuerpo también sabe soñar.',
+		'Cada paso que das al bailar te acerca a quien quieres ser.',
+		'Cuando la música empieza, el corazón encuentra su camino.',
+		'La alegría se multiplica cuando se comparte en movimiento.',
+	)
+	return render(request, 'birthday.html', {'students': students, 'quote': choice(quotes)})
+
+
+def _attendance_ranking(start_date, end_date):
+	"""Return the ten active students with most distinct attended classes."""
+	students = Student.objects.filter(enrolment__active=True).filter(
+		enrolment__enrolemnts__date__range=(start_date, end_date),
+	).annotate(
+		points=Count('enrolment__enrolemnts', distinct=True),
+	).order_by('-points', 'name').distinct()[:10]
+
+	for position, student in enumerate(students, start=1):
+		student.ranking_name = student.name.strip().split()[0] if student.name.strip() else ''
+		student.position = position
+	return students
+
+
+def ranking(request):
+	"""Public, privacy-conscious attendance rankings for the current month and course."""
+	today = date.today()
+	month_start = today.replace(day=1)
+	course_start_year = today.year if today.month >= 9 else today.year - 1
+	course_start = date(course_start_year, 9, 1)
+	return render(request, 'ranking.html', {
+		'month_ranking': _attendance_ranking(month_start, today),
+		'course_ranking': _attendance_ranking(course_start, today),
+		'course_start': course_start,
+	})
 
 class FederationLicencePaymentManagementForm(forms.ModelForm):
 	"""Manual registration of an annual federation licence payment."""

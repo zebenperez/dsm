@@ -64,6 +64,69 @@ class AdminOperationalAccessTests(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
 
+class PublicBirthdayTests(TestCase):
+    def setUp(self):
+        self.teacher = Teacher.objects.create(code=900, name='Profesora', phone='')
+        self.group = StudioGroup.objects.create(
+            name='Cumpleaños', teacher=self.teacher, ini_time='18:00', end_time='19:00', monday=True,
+        )
+
+    def test_birthday_page_is_public_and_only_shows_active_students_born_today(self):
+        today = date.today()
+        birthday_student = Student.objects.create(
+            code=901, pin='B901', name='Lucía García', phone='', born_date=date(2000, today.month, today.day),
+        )
+        inactive_student = Student.objects.create(
+            code=902, pin='B902', name='Noelia Pérez', phone='', born_date=date(2001, today.month, today.day),
+        )
+        Enrolment.objects.create(student=birthday_student, group=self.group, active=True)
+        Enrolment.objects.create(student=inactive_student, group=self.group, active=False)
+
+        response = self.client.get(reverse('birthday'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '¡Felicidades, Lucía!')
+        self.assertContains(response, 'Grupo:')
+        self.assertContains(response, 'Cumpleaños')
+        self.assertNotContains(response, 'García')
+        self.assertNotContains(response, 'Noelia')
+
+    def test_birthday_page_shows_only_a_quote_when_nobody_has_a_birthday(self):
+        response = self.client.get(reverse('birthday'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Hoy no cumple ninguna de nuestras alumnas.')
+        self.assertNotContains(response, '🎉 🎂 🎈')
+        self.assertContains(response, response.context['quote'])
+
+
+class PublicRankingTests(TestCase):
+    def setUp(self):
+        self.teacher = Teacher.objects.create(code=910, name='Profesora ranking', phone='')
+        self.group = StudioGroup.objects.create(
+            name='Urban dance', teacher=self.teacher, ini_time='18:00', end_time='19:00', monday=True,
+        )
+
+    def test_ranking_is_public_and_counts_one_point_per_attended_class(self):
+        leading_student = Student.objects.create(code=911, pin='R911', name='Clara López', phone='')
+        other_student = Student.objects.create(code=912, pin='R912', name='Nora Pérez', phone='')
+        leading_enrolment = Enrolment.objects.create(student=leading_student, group=self.group, active=True)
+        other_enrolment = Enrolment.objects.create(student=other_student, group=self.group, active=True)
+        first_class = Assistance.objects.create(date=date.today(), group=self.group)
+        first_class.enrolments.add(leading_enrolment, other_enrolment)
+        second_class = Assistance.objects.create(date=date.today(), group=self.group)
+        second_class.enrolments.add(leading_enrolment)
+
+        response = self.client.get(reverse('ranking'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Top 10 del mes')
+        self.assertContains(response, 'Top 10 del curso')
+        self.assertContains(response, 'Clara')
+        self.assertContains(response, '2 puntos')
+        self.assertNotContains(response, 'López')
+
+
 class StudentManagementTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='admin', password='secret')

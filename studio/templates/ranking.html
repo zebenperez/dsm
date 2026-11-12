@@ -1,0 +1,79 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ranking de baile</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #fff1c9, #ffd5b1 48%, #f5bfd3);
+            color: #382a3c;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            padding: 28px 18px;
+        }
+        main { margin: auto; max-width: 1060px; }
+        .brand {
+            align-items: center;
+            background: linear-gradient(115deg, #d75171, #ec7246);
+            border: 3px solid rgba(255, 255, 255, .9);
+            border-radius: 22px;
+            box-shadow: 0 8px 18px rgba(137, 71, 73, .18);
+            display: flex;
+            justify-content: center;
+            margin: 0 auto 16px;
+            padding: 10px 22px;
+            width: fit-content;
+        }
+        .brand img { max-height: 94px; max-width: 150px; }
+        .intro { margin: 0 auto 28px; max-width: 680px; text-align: center; }
+        h1 { color: #d6534f; font-size: clamp(2rem, 6vw, 3.4rem); line-height: 1; margin: 0 0 10px; }
+        .intro p { font-size: 1.08rem; line-height: 1.45; margin: 0; }
+        .rankings { display: grid; gap: 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .ranking {
+            background: rgba(255, 253, 247, .94);
+            border: 4px solid #fff;
+            border-radius: 26px;
+            box-shadow: 0 14px 30px rgba(113, 60, 72, .16);
+            overflow: hidden;
+        }
+        .ranking header { background: linear-gradient(110deg, #d75171, #ec7246); color: #fff; padding: 20px 24px; text-align: center; }
+        .ranking.course header { background: linear-gradient(110deg, #7860b7, #a46abe); }
+        h2 { font-size: 1.5rem; margin: 0; }
+        .period { font-size: .84rem; font-weight: 700; margin: 5px 0 0; opacity: .88; }
+        ol { counter-reset: ranking; list-style: none; margin: 0; padding: 14px; }
+        li { align-items: center; border-bottom: 1px solid #f1e4d3; display: flex; gap: 12px; min-height: 53px; padding: 8px 4px; }
+        li:last-child { border-bottom: 0; }
+        .position { color: #e16b38; font-size: 1.2rem; font-weight: 900; min-width: 32px; text-align: center; }
+        .course .position { color: #7560ad; }
+        .student { flex: 1; font-size: 1.12rem; font-weight: 800; }
+        .points { background: #fff0bf; border-radius: 999px; color: #9a5a23; font-size: .88rem; font-weight: 800; padding: 6px 10px; white-space: nowrap; }
+        .empty { color: #806d69; font-style: italic; justify-content: center; padding: 32px 12px; text-align: center; }
+        footer { color: #725461; font-size: .95rem; font-weight: 600; margin: 24px auto 0; max-width: 620px; text-align: center; }
+        @media (max-width: 700px) { .rankings { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="brand"><img src="{% static 'images/web/logo.png' %}" alt="5db Escuela de Baile"></div>
+        <section class="intro">
+            <h1>¡Cada clase cuenta!</h1>
+            <p>Un punto por cada clase asistida. Sigue bailando, aprendiendo y disfrutando del camino.</p>
+        </section>
+        <div class="rankings">
+            <section class="ranking">
+                <header><h2>Top 10 del mes</h2><p class="period">Asistencia de este mes</p></header>
+                <ol>{% for student in month_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}</span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este mes.</li>{% endfor %}</ol>
+            </section>
+            <section class="ranking course">
+                <header><h2>Top 10 del curso</h2><p class="period">Desde el {{ course_start|date:"d/m/Y" }}</p></header>
+                <ol>{% for student in course_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}</span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este curso.</li>{% endfor %}</ol>
+            </section>
+        </div>
+        <footer>El baile se construye paso a paso. ¡Nos vemos en clase!</footer>
+    </main>
+</body>
+</html>
