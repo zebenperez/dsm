@@ -123,8 +123,9 @@ class PublicRankingTests(TestCase):
         self.assertContains(response, 'Top 10 del mes')
         self.assertContains(response, 'Top 10 del curso')
         self.assertContains(response, 'Clara')
+        self.assertContains(response, 'López')
+        self.assertContains(response, 'Urban dance')
         self.assertContains(response, '2 puntos')
-        self.assertNotContains(response, 'López')
 
 
 class StudentManagementTests(TestCase):

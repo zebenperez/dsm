@@ -50,6 +50,7 @@
         .position { color: #e16b38; font-size: 1.2rem; font-weight: 900; min-width: 32px; text-align: center; }
         .course .position { color: #7560ad; }
         .student { flex: 1; font-size: 1.12rem; font-weight: 800; }
+        .groups { color: #806d69; display: block; font-size: .86rem; font-weight: 600; margin-top: 2px; }
         .points { background: #fff0bf; border-radius: 999px; color: #9a5a23; font-size: .88rem; font-weight: 800; padding: 6px 10px; white-space: nowrap; }
         .empty { color: #806d69; font-style: italic; justify-content: center; padding: 32px 12px; text-align: center; }
         footer { color: #725461; font-size: .95rem; font-weight: 600; margin: 24px auto 0; max-width: 620px; text-align: center; }
@@ -66,11 +67,11 @@
         <div class="rankings">
             <section class="ranking">
                 <header><h2>Top 10 del mes</h2><p class="period">Asistencia de este mes</p></header>
-                <ol>{% for student in month_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}</span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este mes.</li>{% endfor %}</ol>
+                <ol>{% for student in month_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}<span class="groups">{{ student.ranking_groups|join:" · " }}</span></span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este mes.</li>{% endfor %}</ol>
             </section>
             <section class="ranking course">
                 <header><h2>Top 10 del curso</h2><p class="period">Desde el {{ course_start|date:"d/m/Y" }}</p></header>
-                <ol>{% for student in course_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}</span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este curso.</li>{% endfor %}</ol>
+                <ol>{% for student in course_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}<span class="groups">{{ student.ranking_groups|join:" · " }}</span></span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este curso.</li>{% endfor %}</ol>
             </section>
         </div>
         <footer>El baile se construye paso a paso. ¡Nos vemos en clase!</footer>

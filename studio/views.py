@@ -84,10 +84,17 @@ def _attendance_ranking(start_date, end_date):
 		enrolment__enrolemnts__date__range=(start_date, end_date),
 	).annotate(
 		points=Count('enrolment__enrolemnts', distinct=True),
-	).order_by('-points', 'name').distinct()[:10]
+	).order_by('-points', 'name').distinct().prefetch_related(
+		Prefetch(
+			'enrolment',
+			queryset=Enrolment.objects.filter(active=True).select_related('group').order_by('group__name'),
+			to_attr='ranking_enrolments',
+		)
+	)[:10]
 
 	for position, student in enumerate(students, start=1):
-		student.ranking_name = student.name.strip().split()[0] if student.name.strip() else ''
+		student.ranking_name = student.name
+		student.ranking_groups = [enrolment.group.name for enrolment in student.ranking_enrolments]
 		student.position = position
 	return students
 
