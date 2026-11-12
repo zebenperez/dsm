@@ -51,7 +51,9 @@
         .course .position { color: #7560ad; }
         .student { flex: 1; font-size: 1.12rem; font-weight: 800; }
         .groups { color: #806d69; display: block; font-size: .86rem; font-weight: 600; margin-top: 2px; }
+        .score { align-items: flex-end; display: flex; flex-direction: column; gap: 4px; }
         .points { background: #fff0bf; border-radius: 999px; color: #9a5a23; font-size: .88rem; font-weight: 800; padding: 6px 10px; white-space: nowrap; }
+        .breakdown { color: #806d69; font-size: .72rem; font-weight: 700; text-align: right; white-space: nowrap; }
         .empty { color: #806d69; font-style: italic; justify-content: center; padding: 32px 12px; text-align: center; }
         footer { color: #725461; font-size: .95rem; font-weight: 600; margin: 24px auto 0; max-width: 620px; text-align: center; }
         @media (max-width: 700px) { .rankings { grid-template-columns: 1fr; } }
@@ -62,16 +64,16 @@
         <div class="brand"><img src="{% static 'images/web/logo.png' %}" alt="5db Escuela de Baile"></div>
         <section class="intro">
             <h1>¡Cada clase cuenta!</h1>
-            <p>Un punto por cada clase asistida. Sigue bailando, aprendiendo y disfrutando del camino.</p>
+            <p>Un punto por cada clase asistida y puntos extra por publicaciones verificadas. Sigue bailando, aprendiendo y disfrutando del camino.</p>
         </section>
         <div class="rankings">
             <section class="ranking">
-                <header><h2>Top 10 del mes</h2><p class="period">Asistencia de este mes</p></header>
-                <ol>{% for student in month_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}<span class="groups">{{ student.ranking_groups|join:" · " }}</span></span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este mes.</li>{% endfor %}</ol>
+                <header><h2>Top 10 del mes</h2><p class="period">Puntos conseguidos este mes</p></header>
+                <ol>{% for student in month_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}<span class="groups">{{ student.ranking_groups|join:" · " }}</span></span><span class="score"><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span><span class="breakdown">{{ student.attendance_points }} clase{{ student.attendance_points|pluralize:"s" }}{% if student.social_points_total %} · +{{ student.social_points_total }} redes{% endif %}</span></span></li>{% empty %}<li class="empty">Aún no hay puntos este mes.</li>{% endfor %}</ol>
             </section>
             <section class="ranking course">
                 <header><h2>Top 10 del curso</h2><p class="period">Desde el {{ course_start|date:"d/m/Y" }}</p></header>
-                <ol>{% for student in course_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}<span class="groups">{{ student.ranking_groups|join:" · " }}</span></span><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span></li>{% empty %}<li class="empty">Aún no hay asistencias este curso.</li>{% endfor %}</ol>
+                <ol>{% for student in course_ranking %}<li><span class="position">{{ student.position }}</span><span class="student">{{ student.ranking_name }}<span class="groups">{{ student.ranking_groups|join:" · " }}</span></span><span class="score"><span class="points">{{ student.points }} punto{{ student.points|pluralize:"s" }}</span><span class="breakdown">{{ student.attendance_points }} clase{{ student.attendance_points|pluralize:"s" }}{% if student.social_points_total %} · +{{ student.social_points_total }} redes{% endif %}</span></span></li>{% empty %}<li class="empty">Aún no hay puntos este curso.</li>{% endfor %}</ol>
             </section>
         </div>
         <footer>El baile se construye paso a paso. ¡Nos vemos en clase!</footer>

@@ -79,18 +79,34 @@ def birthday(request):
 
 
 def _attendance_ranking(start_date, end_date):
-	"""Return the ten active students with most distinct attended classes."""
-	students = Student.objects.filter(enrolment__active=True).filter(
-		enrolment__enrolemnts__date__range=(start_date, end_date),
-	).annotate(
-		points=Count('enrolment__enrolemnts', distinct=True),
-	).order_by('-points', 'name').distinct().prefetch_related(
+	"""Return the ten active students with attendance and verified social points."""
+	active_students = Student.objects.filter(enrolment__active=True).distinct()
+	active_student_ids = list(active_students.values_list('id', flat=True))
+	attendance = {
+		row['enrolments__student_id']: row['points']
+		for row in Assistance.objects.filter(
+			date__range=(start_date, end_date), enrolments__student_id__in=active_student_ids,
+		).values('enrolments__student_id').annotate(points=Count('id', distinct=True))
+	}
+	social = {
+		row['student_id']: row['points']
+		for row in SocialPoint.objects.filter(
+			awarded_on__range=(start_date, end_date), student_id__in=active_student_ids,
+		).values('student_id').annotate(points=Sum('points'))
+	}
+	student_ids = set(attendance) | set(social)
+	students = Student.objects.filter(id__in=student_ids).prefetch_related(
 		Prefetch(
 			'enrolment',
 			queryset=Enrolment.objects.filter(active=True).select_related('group').order_by('group__name'),
 			to_attr='ranking_enrolments',
 		)
-	)[:10]
+	)
+	for student in students:
+		student.attendance_points = attendance.get(student.id, 0)
+		student.social_points_total = social.get(student.id, 0)
+		student.points = student.attendance_points + student.social_points_total
+	students = sorted(students, key=lambda student: (-student.points, student.name))[:10]
 
 	for position, student in enumerate(students, start=1):
 		student.ranking_name = student.name
@@ -1143,6 +1159,33 @@ def federation_licence_payment_delete(request, student_id, payment_id):
 
 
 @group_required("admins")
+def social_point_add(request, student_id):
+	student = get_object_or_404(Student, pk=student_id)
+	if request.method != 'POST':
+		return redirect('student-update', student_id=student.id)
+	form = SocialPointForm(request.POST)
+	if form.is_valid():
+		point = form.save(commit=False)
+		point.student = student
+		point.awarded_by = request.user
+		point.save()
+		messages.success(request, _('Puntos de redes añadidos.'))
+	else:
+		messages.error(request, _('No se han podido añadir los puntos de redes. Revisa los datos.'))
+	return redirect('student-update', student_id=student.id)
+
+
+@group_required("admins")
+def social_point_delete(request, student_id, point_id):
+	student = get_object_or_404(Student, pk=student_id)
+	if request.method == 'POST':
+		point = get_object_or_404(SocialPoint, pk=point_id, student=student)
+		point.delete()
+		messages.success(request, _('Puntos de redes eliminados.'))
+	return redirect('student-update', student_id=student.id)
+
+
+@group_required("admins")
 def student_update(request, student_id):
 	student = get_object_or_404(Student, pk=student_id)
 	student_age = None
@@ -1156,6 +1199,13 @@ def student_update(request, student_id):
 		form.save()
 		messages.success(request, _('Datos del alumno actualizados.'))
 		return redirect('student-update', student_id=student.id)
+	# The federation section is displayed after enrolments, outside the form's
+	# markup, but its controls still belong to the main student form.
+	for field_name in (
+		'dni', 'dni_expiry_date', 'sex', 'nationality', 'address', 'postal_code',
+		'municipality', 'province', 'autonomous_community', 'dni_front', 'dni_back',
+	):
+		form.fields[field_name].widget.attrs['form'] = 'student-edit-form'
 	enrolment_form = EnrolmentManagementForm()
 	enrolment_form.fields['group'].queryset = Group.objects.filter(active=True)
 	return render(request, 'students/student_form.html', {
@@ -1169,6 +1219,8 @@ def student_update(request, student_id):
 		'enrolment_forms': [(enrolment, EnrolmentManagementForm(instance=enrolment)) for enrolment in student.enrolment.all()],
 		'licence_payment_form': FederationLicencePaymentManagementForm(initial={'year': date.today().year, 'paid_on': date.today()}),
 		'licence_payments': student.federation_licence_payments.select_related('confirmed_by', 'bank_transaction').order_by('-year', '-paid_on', '-id'),
+		'social_point_form': SocialPointForm(),
+		'social_points': student.social_points.select_related('awarded_by').all(),
 	})
 
 

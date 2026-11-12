@@ -18,7 +18,7 @@ from pwa.models import DocumentTemplate, StudentDocument
 
 from studio.models import (
     Article, ArticlePayment, Assistance, Concept, Enrolment, Group as StudioGroup,
-    InsufficientWalletBalance, Payment, Student, Teacher, WalletMovement,
+    InsufficientWalletBalance, Payment, SocialPoint, Student, Teacher, WalletMovement,
 )
 from studio.views import calculate_amount, calculate_cash_summary, calculate_wallet_payments
 
@@ -116,6 +116,7 @@ class PublicRankingTests(TestCase):
         first_class.enrolments.add(leading_enrolment, other_enrolment)
         second_class = Assistance.objects.create(date=date.today(), group=self.group)
         second_class.enrolments.add(leading_enrolment)
+        SocialPoint.objects.create(student=leading_student, points=3, awarded_on=date.today())
 
         response = self.client.get(reverse('ranking'))
 
@@ -125,7 +126,29 @@ class PublicRankingTests(TestCase):
         self.assertContains(response, 'Clara')
         self.assertContains(response, 'López')
         self.assertContains(response, 'Urban dance')
-        self.assertContains(response, '2 puntos')
+        self.assertContains(response, '5 puntos')
+        self.assertContains(response, '+3 redes')
+
+    def test_admin_can_add_and_remove_social_points(self):
+        user = User.objects.create_user(username='social-admin', password='secret')
+        admins, _ = Group.objects.get_or_create(name='admins')
+        user.groups.add(admins)
+        self.client.force_login(user)
+        student = Student.objects.create(code=913, pin='R913', name='Sara Social', phone='')
+
+        response = self.client.post(reverse('social-point-add', args=[student.id]), {
+            'points': 2, 'link': 'https://example.com/video', 'note': 'Vídeo revisado',
+        })
+
+        point = SocialPoint.objects.get(student=student)
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        self.assertEqual(point.points, 2)
+        self.assertEqual(point.awarded_by, user)
+
+        response = self.client.post(reverse('social-point-delete', args=[student.id, point.id]))
+
+        self.assertRedirects(response, reverse('student-update', args=[student.id]))
+        self.assertFalse(SocialPoint.objects.filter(pk=point.id).exists())
 
 
 class StudentManagementTests(TestCase):

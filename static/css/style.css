@@ -331,6 +331,17 @@ body {
 .student-federation-card h2 { margin: 0 0 16px; padding-bottom: 8px; border-bottom: 1px solid #e7ecef; color: #405565; font-size: 16px; font-weight: 700; text-transform: uppercase; }
 .student-documents-card { margin-top: 22px; padding: 20px 24px; border: 1px solid #dce3e8; border-radius: 8px; background: #fff; box-shadow: 0 2px 9px rgba(31, 51, 65, .08); }
 .student-documents-card h2 { margin: 0 0 14px; color: #405565; font-size: 16px; font-weight: 700; text-transform: uppercase; }
+.student-collapsible { padding: 0; }
+.student-collapsible > summary { cursor: pointer; list-style: none; padding: 20px 24px; position: relative; }
+.student-collapsible > summary::-webkit-details-marker { display: none; }
+.student-collapsible > summary::after { color: #6c7e8b; content: '\25be'; font-size: 18px; position: absolute; right: 24px; top: 18px; }
+.student-collapsible[open] > summary { border-bottom: 1px solid #e7ecef; }
+.student-collapsible[open] > summary::after { content: '\25b4'; }
+.student-collapsible > summary h2 { display: inline; margin: 0; padding: 0; }
+.student-collapsible-content { padding: 20px 24px; }
+.student-federation-card.student-collapsible > summary { padding: 26px 30px 16px; }
+.student-federation-card.student-collapsible > summary::after { right: 30px; top: 25px; }
+.student-federation-content { padding: 26px 30px 8px; }
 .student-licence-payment-form { display: flex; width: 100%; align-items: end; gap: 12px; margin-bottom: 16px; }
 .student-licence-payment-form label { display: block; margin-bottom: 4px; font-size: 12px; color: #52636f; }
 .student-licence-payment-form .form-group { flex: 1 1 0; }
@@ -343,7 +354,7 @@ body {
 .student-documents-table small { display: block; margin-top: 3px; color: #74818c; font-size: 12px; overflow-wrap: anywhere; }
 .student-documents-empty { margin: 0; color: #74818c; }
 .student-enrolments { margin-top: 22px; overflow: hidden; border-radius: 8px; }
-@media (max-width: 650px) { .student-edit-header { align-items: flex-start; flex-direction: column; } .student-edit-header-actions .btn { margin-left: 0; margin-right: 6px; } .student-edit-card { grid-template-columns: 1fr; } .student-edit-photo { display: flex; align-items: center; gap: 18px; text-align: left; } .student-edit-photo > img, .student-edit-photo > .glyphicon { flex: 0 0 76px; width: 76px; height: 76px; margin: 0; } .student-edit-photo > .glyphicon { padding-top: 21px; font-size: 31px; } .student-photo-field { flex: 1; } .student-edit-fields, .student-federation-card { padding: 24px 20px 5px; } }
+@media (max-width: 650px) { .student-edit-header { align-items: flex-start; flex-direction: column; } .student-edit-header-actions .btn { margin-left: 0; margin-right: 6px; } .student-edit-card { grid-template-columns: 1fr; } .student-edit-photo { display: flex; align-items: center; gap: 18px; text-align: left; } .student-edit-photo > img, .student-edit-photo > .glyphicon { flex: 0 0 76px; width: 76px; height: 76px; margin: 0; } .student-edit-photo > .glyphicon { padding-top: 21px; font-size: 31px; } .student-photo-field { flex: 1; } .student-edit-fields { padding: 24px 20px 5px; } .student-federation-card.student-collapsible > summary { padding: 20px; } .student-federation-card.student-collapsible > summary::after { right: 20px; top: 19px; } .student-federation-content { padding: 20px 20px 5px; } }
 
 .studio-user-menu button {
 	padding: 0;

@@ -24,9 +24,12 @@
                 <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.phone %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.email %}</div></div>
             </section>
         </div>
-        {% if student %}
-            <section class="student-federation-card" aria-labelledby="student-federation-title">
-                <h2 id="student-federation-title">{% trans "Datos federativos" %}</h2>
+    </form>
+    {% if student %}{% include "students/_enrolments.html" %}{% endif %}
+    {% if student %}
+            <details class="student-federation-card student-collapsible">
+                <summary><h2>{% trans "Datos federativos" %}</h2></summary>
+                <div class="student-collapsible-content student-federation-content">
                 <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.dni %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.dni_expiry_date %}</div></div>
                 <div class="row"><div class="col-sm-6">{% include "students/_field.html" with field=form.sex %}</div><div class="col-sm-6">{% include "students/_field.html" with field=form.nationality %}</div></div>
                 <div class="row"><div class="col-sm-12">{% include "students/_field.html" with field=form.address %}</div></div>
@@ -36,12 +39,13 @@
                     <div class="col-sm-6">{% include "students/_field.html" with field=form.dni_front %}{% if student.dni_front %}<p><a href="{{ student.dni_front.url }}" target="_blank" rel="noopener">{% trans "Ver anverso actual" %}</a></p>{% endif %}</div>
                     <div class="col-sm-6">{% include "students/_field.html" with field=form.dni_back %}{% if student.dni_back %}<p><a href="{{ student.dni_back.url }}" target="_blank" rel="noopener">{% trans "Ver reverso actual" %}</a></p>{% endif %}</div>
                 </div>
-            </section>
+                </div>
+            </details>
         {% endif %}
-    </form>
     {% if student %}
-        <section class="student-documents-card" aria-labelledby="licence-payments-title">
-            <h2 id="licence-payments-title"><span class="glyphicon glyphicon-certificate" aria-hidden="true"></span> {% trans "Pagos de licencia federativa" %}</h2>
+        <details class="student-documents-card student-collapsible">
+            <summary><h2><span class="glyphicon glyphicon-certificate" aria-hidden="true"></span> {% trans "Pagos de licencia federativa" %}</h2></summary>
+            <div class="student-collapsible-content">
             <form method="post" action="{% url 'federation-licence-payment-add' student.id %}" class="form-inline student-licence-payment-form">
                 {% csrf_token %}
                 <div class="form-group"><label for="{{ licence_payment_form.year.id_for_label }}">{% trans "Año" %}</label> {{ licence_payment_form.year }}</div>
@@ -55,9 +59,30 @@
                     <tbody>{% for payment in licence_payments %}<tr><td>{{ payment.year }}</td><td>{{ payment.paid_on|date:"d/m/Y" }}</td><td>{{ payment.amount }} €</td><td class="text-right"><form method="post" action="{% url 'federation-licence-payment-delete' student.id payment.id %}" onsubmit="return confirm('{% trans "¿Eliminar este pago de licencia?" %}');">{% csrf_token %}<button class="btn btn-danger btn-xs" type="submit"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> {% trans "Eliminar" %}</button></form></td></tr>{% endfor %}</tbody>
                 </table>
             {% else %}<p class="student-documents-empty">{% trans "No hay pagos de licencia federativa registrados." %}</p>{% endif %}
-        </section>
-        <section class="student-documents-card" aria-labelledby="student-documents-title">
-            <h2 id="student-documents-title"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span> {% trans "Documentos subidos" %}</h2>
+            </div>
+        </details>
+        <details class="student-documents-card student-collapsible">
+            <summary><h2><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span> Puntos de redes</h2></summary>
+            <div class="student-collapsible-content">
+            <p class="text-muted">Registra los puntos después de comprobar la publicación etiquetada en redes.</p>
+            <form method="post" action="{% url 'social-point-add' student.id %}" class="form-inline student-licence-payment-form">
+                {% csrf_token %}
+                <div class="form-group"><label for="{{ social_point_form.points.id_for_label }}">Puntos</label> {{ social_point_form.points }}</div>
+                <div class="form-group"><label for="{{ social_point_form.link.id_for_label }}">Enlace</label> {{ social_point_form.link }}</div>
+                <div class="form-group"><label for="{{ social_point_form.note.id_for_label }}">Nota</label> {{ social_point_form.note }}</div>
+                <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Añadir puntos</button>
+            </form>
+            {% if social_points %}
+                <table class="table table-condensed student-documents-table student-licence-payments-table">
+                    <thead><tr><th>Fecha</th><th>Puntos</th><th>Publicación</th><th>Nota</th><th></th></tr></thead>
+                    <tbody>{% for point in social_points %}<tr><td>{{ point.awarded_on|date:"d/m/Y" }}</td><td><strong>+{{ point.points }}</strong></td><td>{% if point.link %}<a href="{{ point.link }}" target="_blank" rel="noopener">Ver vídeo</a>{% else %}<span class="text-muted">—</span>{% endif %}</td><td>{{ point.note|default:"—" }}</td><td class="text-right"><form method="post" action="{% url 'social-point-delete' student.id point.id %}" onsubmit="return confirm('¿Eliminar estos puntos de redes?');">{% csrf_token %}<button class="btn btn-danger btn-xs" type="submit"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> Eliminar</button></form></td></tr>{% endfor %}</tbody>
+                </table>
+            {% else %}<p class="student-documents-empty">Todavía no hay puntos de redes registrados.</p>{% endif %}
+            </div>
+        </details>
+        <details class="student-documents-card student-collapsible">
+            <summary><h2><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span> {% trans "Documentos subidos" %}</h2></summary>
+            <div class="student-collapsible-content">
             {% if student_documents %}
                 <table class="table table-condensed student-documents-table">
                     <thead><tr><th>{% trans "Documento" %}</th><th>{% trans "Subido el" %}</th><th></th></tr></thead>
@@ -74,8 +99,8 @@
             {% else %}
                 <p class="student-documents-empty">{% trans "Esta alumna todavía no ha subido documentos." %}</p>
             {% endif %}
-        </section>
+            </div>
+        </details>
     {% endif %}
-    {% if student %}{% include "students/_enrolments.html" %}{% endif %}
 </div>
 {% endblock %}

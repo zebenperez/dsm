@@ -430,6 +430,21 @@ class Assistance(models.Model):
 		verbose_name_plural = "Asistenciass"
 
 
+class SocialPoint(models.Model):
+	"""Manual reward for a student's verified social-media publication."""
+	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='social_points', verbose_name='Alumno')
+	points = models.PositiveSmallIntegerField(verbose_name='Puntos')
+	link = models.URLField(blank=True, verbose_name='Enlace de la publicación')
+	note = models.CharField(max_length=500, blank=True, verbose_name='Nota')
+	awarded_on = models.DateField(default=datetime.date.today, verbose_name='Fecha')
+	awarded_by = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, verbose_name='Registrado por')
+
+	class Meta:
+		verbose_name = 'Punto de redes'
+		verbose_name_plural = 'Puntos de redes'
+		ordering = ['-awarded_on', '-id']
+
+
 class Notification(models.Model):
 	date = models.DateField(verbose_name="Fecha", auto_now_add=True)
 	msg = models.TextField(verbose_name="Mensaje", default="")

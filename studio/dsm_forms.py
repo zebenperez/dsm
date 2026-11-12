@@ -88,6 +88,18 @@ class EnrolmentManagementForm(forms.ModelForm):
 		model = Enrolment
 		fields = ['group', 'price', 'active']
 
+
+class SocialPointForm(forms.ModelForm):
+	points = forms.IntegerField(min_value=1, initial=1, widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 1}))
+
+	class Meta:
+		model = SocialPoint
+		fields = ['points', 'link', 'note']
+		widgets = {
+			'link': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://…'}),
+			'note': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Vídeo revisado en redes'}),
+		}
+
 class TeacherPaymentForm(forms.ModelForm):
 	date = forms.DateField(input_formats=settings.DATE_INPUT_FORMATS) 
 	#def __init__(self, *args, **kwargs):

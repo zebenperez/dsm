@@ -213,10 +213,16 @@ class CashAdmin(admin.ModelAdmin):
 class NotificationAdmin (admin.ModelAdmin):
 	list_display = ('date', 'msg')
 
+class SocialPointAdmin(admin.ModelAdmin):
+	list_display = ('student', 'points', 'awarded_on', 'awarded_by')
+	list_filter = ('awarded_on',)
+	search_fields = ('student__name', 'student__code', 'note')
+
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(ArticlePayment, ArticlePaymentAdmin)
 admin.site.register(WalletMovement, WalletMovementAdmin)
 admin.site.register(Assistance)
+admin.site.register(SocialPoint, SocialPointAdmin)
 admin.site.register(Cash, CashAdmin)
 admin.site.register(Concept, ConceptAdmin)
 admin.site.register(Enrolment, EnrolmentAdmin)
