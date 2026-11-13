@@ -551,6 +551,12 @@ $(document).ready(()=>{
 
     $("body").on("click", ".ark-validate", function(e){
         var obj = $(this);
+        // Read values directly from modal fields. This remains reliable when
+        // dynamically loaded modal scripts are not evaluated by the browser.
+        if (obj.data("amount-input"))
+            obj.data("amount", $(obj.data("amount-input")).val());
+        if (obj.data("companion-input"))
+            obj.data("companion_id", $(obj.data("companion-input")).val());
         var validate_check_in = true;
         if (obj.data("check_in"))
             validate_check_in = validateCheckIn();

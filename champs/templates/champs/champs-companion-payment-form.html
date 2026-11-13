@@ -21,7 +21,7 @@
             </div>
         {% else %}<p class="text-danger">{% trans "No se ha encontrado una inscripción con acompañantes." %}</p>{% endif %}
     </div>
-    <div class="panel-footer"><div class="row"><div class="col-sm-6 text-center"><button type="button" class="btn btn-sm btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button></div><div class="col-sm-6 text-center">{% if registration and companions %}<button type="button" id="assign-champ-registration-payment-btn" class="btn btn-sm btn-info ark-validate" data-url="{% url 'assign-champ-registration-payment-to-companion' %}" data-target="champ-detail-content" data-modal="common-modal" data-validate="champ-companion-assignment-required" data-champ_id="{{ champ.id }}" data-registration_id="{{ registration.id }}">{% trans "Asignar pago" %}</button>{% endif %}</div></div></div>
+    <div class="panel-footer"><div class="row"><div class="col-sm-6 text-center"><button type="button" class="btn btn-sm btn-default" data-dismiss="modal">{% trans "Cancelar" %}</button></div><div class="col-sm-6 text-center">{% if registration and companions %}<button type="button" id="assign-champ-registration-payment-btn" class="btn btn-sm btn-info ark-validate" data-url="{% url 'assign-champ-registration-payment-to-companion' %}" data-target="champ-detail-content" data-modal="common-modal" data-validate="champ-companion-assignment-required" data-amount-input="#champ-companion-assignment-amount" data-companion-input="#champ-companion-assignment" data-champ_id="{{ champ.id }}" data-registration_id="{{ registration.id }}">{% trans "Asignar pago" %}</button>{% endif %}</div></div></div>
 </div>
 <script type="text/javascript">
     $('#assign-champ-registration-payment-btn').on('click', function() {
@@ -57,6 +57,7 @@
                         data-target="champ-detail-content"
                         data-modal="common-modal"
                         data-validate="champ-companion-payment-required"
+                        data-amount-input="#champ-companion-payment-amount"
                         data-champ_id="{{ champ.id }}"
                         data-companion_id="{{ companion.id }}">
                     {% if edit_payment %}{% trans "Guardar cambios" %}{% else %}{% trans "Guardar pago" %}{% endif %}
