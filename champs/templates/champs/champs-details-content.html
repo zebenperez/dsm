@@ -111,6 +111,7 @@
     .champ-summary-total { background: #e8f4fb; border-color: #bce8f1; }
     .champ-summary-paid { background: #dff0d8; border-color: #d6e9c6; }
     .champ-summary-pending { background: #f2dede; border-color: #ebccd1; }
+    .champ-payment-overpaid { color: #337ab7; }
 </style>
 
 <div class="page-header">
@@ -471,7 +472,7 @@
                                                     {{ registration.paid_amount }} €
                                                 </td>
                                                 <td class="text-right">
-                                                    <span id="pending-{{ registration.id }}-{{ item.champ_category.id }}"{% if registration.pending_amount < 0 %} class="text-danger"{% endif %}>{% if registration.pending_amount < 0 %}<strong>{{ registration.pending_amount }} €</strong>{% else %}{{ registration.pending_amount }} €{% endif %}</span>
+                                                    <span id="pending-{{ registration.id }}-{{ item.champ_category.id }}"{% if registration.pending_amount < 0 %} class="champ-payment-overpaid"{% elif registration.pending_amount > 0 %} class="text-danger"{% endif %}>{% if registration.pending_amount != 0 %}<strong>{{ registration.pending_amount }} €</strong>{% else %}{{ registration.pending_amount }} €{% endif %}</span>
                                                 </td>
                                                 <td class="text-right text-nowrap">
                                                     {% if registration.travel_companions.all %}
@@ -585,7 +586,7 @@
                                         <td>{{ companion.dni }}</td>
                                         <td class="text-right">{{ companion.total_amount }} €</td>
                                         <td class="text-right">{{ companion.paid_amount }} €</td>
-                                        <td class="text-right{% if companion.pending_amount < 0 %} text-danger{% endif %}">{% if companion.pending_amount < 0 %}<strong>{{ companion.pending_amount }} €</strong>{% else %}{{ companion.pending_amount }} €{% endif %}</td>
+                                        <td class="text-right{% if companion.pending_amount < 0 %} champ-payment-overpaid{% elif companion.pending_amount > 0 %} text-danger{% endif %}">{% if companion.pending_amount != 0 %}<strong>{{ companion.pending_amount }} €</strong>{% else %}{{ companion.pending_amount }} €{% endif %}</td>
                                         <td class="text-right">
                                             <button type="button"
                                                     class="btn btn-xs btn-success ark"
