@@ -4,6 +4,7 @@ from decimal import Decimal
 from io import StringIO
 
 from django.contrib.auth.models import Group, User
+from django.db.models import Sum
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -162,6 +163,29 @@ class ChampionshipPaymentEditingTests(TestCase):
 
         self.registration.refresh_from_db()
         self.assertEqual(self.registration.paid_amount, Decimal('15.00'))
+
+    def test_admin_can_assign_a_registration_payment_to_its_companion(self):
+        transaction = BankTransaction.objects.create(
+            external_id='ASSIGN-PAYMENT-1', booking_date=date.today(), amount='15.00', payer='Cliente', reference='Viaje',
+        )
+        PaymentAllocation.objects.create(
+            transaction=transaction, registration=self.registration, amount='15.00', confirmed_by=self.user,
+        )
+
+        response = self.client.get(reverse('assign-champ-registration-payment-to-companion'), {
+            'champ_id': self.championship.id,
+            'registration_id': self.registration.id,
+            'companion_id': self.companion.id,
+            'amount': '10.00',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.registration.refresh_from_db()
+        self.companion.refresh_from_db()
+        self.assertEqual(self.registration.paid_amount, Decimal('5.00'))
+        self.assertEqual(self.companion.paid_amount, Decimal('20.00'))
+        self.assertEqual(self.registration.bank_allocations.aggregate(total=Sum('amount'))['total'], Decimal('5.00'))
+        self.assertEqual(self.companion.bank_allocations.aggregate(total=Sum('amount'))['total'], Decimal('10.00'))
 
 
 class FederationLicenceReconciliationTests(TestCase):

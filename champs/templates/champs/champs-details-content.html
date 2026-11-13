@@ -489,6 +489,18 @@
                                                         <span class="glyphicon glyphicon-pencil"></span>
                                                         {% trans "Editar" %}
                                                     </button>
+                                                    {% if registration.travel_companions.all %}
+                                                        <button type="button"
+                                                                class="btn btn-xs btn-info ark"
+                                                                data-url="{% url 'champs-registration-companion-payment-form' %}"
+                                                                data-target-modal="common-modal"
+                                                                data-champ_id="{{ obj.id }}"
+                                                                data-registration_id="{{ registration.id }}"
+                                                                title="{% trans 'Asignar pago a acompañante' %}">
+                                                            <span class="glyphicon glyphicon-transfer"></span>
+                                                            {% trans "Asignar a acompañante" %}
+                                                        </button>
+                                                    {% endif %}
                                                     <button type="button"
                                                             class="btn btn-xs btn-danger ark"
                                                             data-url="{% url 'champs-registration-delete-form' %}"

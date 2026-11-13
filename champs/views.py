@@ -69,7 +69,7 @@ def get_champ_list_context(publish_filter='all'):
 
 
 def get_champ_details_context(obj):
-    registrations = Registration.objects.filter(champ=obj).select_related('student').prefetch_related('categories').order_by('student__name') if obj else []
+    registrations = Registration.objects.filter(champ=obj).select_related('student').prefetch_related('categories', 'travel_companions').order_by('student__name') if obj else []
     registrations_count = registrations.count() if obj else 0
     categories = list(obj.categories.select_related('category').order_by('category__name')) if obj else []
     cost_list = list(obj.costs.select_related('cost', 'category__category').order_by('category__category__name', 'cost__name')) if obj else []
@@ -803,6 +803,83 @@ def edit_champ_companion_payment(request):
             if paid_amount >= allocated_amount and paid_amount >= 0:
                 companion.paid_amount = paid_amount
                 companion.save(update_fields=['paid_amount'])
+        return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
+
+@group_required("admins")
+def champ_registration_companion_payment_form(request):
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        registration = get_or_none(Registration, get_param(request.GET, "registration_id"))
+        if not registration or registration.champ_id != getattr(champ, 'id', None):
+            registration = None
+            companions = []
+        else:
+            context = get_champ_details_context(champ)
+            companions = [
+                companion for companion in context['companion_list']
+                if companion.registration_id == registration.id
+            ]
+        return render(request, "champs/champs-registration-companion-payment-form.html", {
+            'champ': champ, 'registration': registration, 'companions': companions,
+        })
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
+
+@group_required("admins")
+def assign_champ_registration_payment_to_companion(request):
+    """Move part of a competitor's recorded payment to one of their companions."""
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        registration_id = get_param(request.GET, "registration_id")
+        companion_id = get_param(request.GET, "companion_id")
+        amount = get_param(request.GET, "amount", "0").replace(",", ".")
+        if not champ:
+            raise ValueError
+        try:
+            transfer_amount = Decimal(amount)
+        except InvalidOperation:
+            raise ValueError
+
+        with transaction.atomic():
+            registration = Registration.objects.select_for_update().get(pk=registration_id, champ=champ)
+            companion = TravelCompanion.objects.select_for_update().get(
+                pk=companion_id, registration=registration,
+            )
+            if transfer_amount <= 0 or transfer_amount > registration.paid_amount:
+                raise ValueError
+
+            # Move reconciled portions too, so the bank reconciliation remains
+            # aligned with the amounts now shown for each traveller.
+            remaining_allocation = transfer_amount
+            for allocation in registration.bank_allocations.select_for_update().order_by('id'):
+                if remaining_allocation <= 0:
+                    break
+                moved_amount = min(allocation.amount, remaining_allocation)
+                if moved_amount == allocation.amount:
+                    allocation.registration = None
+                    allocation.companion = companion
+                    allocation.save(update_fields=['registration', 'companion'])
+                else:
+                    allocation.amount -= moved_amount
+                    allocation.save(update_fields=['amount'])
+                    PaymentAllocation.objects.create(
+                        transaction=allocation.transaction,
+                        companion=companion,
+                        amount=moved_amount,
+                        confirmed_by=allocation.confirmed_by,
+                    )
+                remaining_allocation -= moved_amount
+
+            registration.paid_amount -= transfer_amount
+            companion.paid_amount += transfer_amount
+            registration.save(update_fields=['paid_amount'])
+            companion.save(update_fields=['paid_amount'])
+        return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
+    except (ValueError, Registration.DoesNotExist, TravelCompanion.DoesNotExist):
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
