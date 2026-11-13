@@ -112,6 +112,12 @@
     .champ-summary-paid { background: #dff0d8; border-color: #d6e9c6; }
     .champ-summary-pending { background: #f2dede; border-color: #ebccd1; }
     .champ-payment-overpaid { color: #337ab7; }
+    .champ-payment-controls { display: inline-block; position: relative; text-align: left; }
+    .champ-payment-controls > summary { cursor: pointer; list-style: none; }
+    .champ-payment-controls > summary::-webkit-details-marker { display: none; }
+    .champ-payment-form { background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 3px 10px rgba(0, 0, 0, .2); min-width: 240px; padding: 10px; position: absolute; right: 0; top: 28px; z-index: 5; }
+    .champ-payment-form label { display: block; font-size: 12px; margin-bottom: 3px; }
+    .champ-payment-form .form-control { margin-bottom: 8px; }
 </style>
 
 <div class="page-header">
@@ -476,38 +482,9 @@
                                                 </td>
                                                 <td class="text-right text-nowrap">
                                                     {% if registration.travel_companions.all %}
-                                                        <button type="button"
-                                                                class="btn btn-xs btn-info ark"
-                                                                data-url="{% url 'champs-registration-companion-payment-form' %}"
-                                                                data-target-modal="common-modal"
-                                                                data-champ_id="{{ obj.id }}"
-                                                                data-registration_id="{{ registration.id }}"
-                                                                title="{% trans 'Asignar pago' %}">
-                                                            <span class="glyphicon glyphicon-transfer"></span>
-                                                            {% trans "Asignar pago" %}
-                                                        </button>
+                                                        <details class="champ-payment-controls"><summary class="btn btn-xs btn-info"><span class="glyphicon glyphicon-transfer"></span> {% trans "Asignar pago" %}</summary><form method="post" action="{% url 'assign-champ-registration-payment-to-companion' %}" class="champ-payment-form">{% csrf_token %}<input type="hidden" name="champ_id" value="{{ obj.id }}"><input type="hidden" name="registration_id" value="{{ registration.id }}"><label>{% trans "Acompañante" %}</label><select name="companion_id" class="form-control" required>{% for companion in registration.travel_companions.all %}<option value="{{ companion.id }}">{{ companion.full_name }}</option>{% endfor %}</select><label>{% trans "Importe a asignar" %}</label><input type="number" name="amount" value="{{ registration.paid_amount }}" step="0.01" min="0.01" max="{{ registration.paid_amount }}" class="form-control" required><button type="submit" class="btn btn-info btn-xs">{% trans "Guardar" %}</button></form></details>
                                                     {% endif %}
-                                                    <button type="button"
-                                                            class="btn btn-xs btn-success ark"
-                                                            data-url="{% url 'champs-registration-payment-form' %}"
-                                                            data-target-modal="common-modal"
-                                                            data-champ_id="{{ obj.id }}"
-                                                            data-registration_id="{{ registration.id }}"
-                                                            title="{% trans 'Añadir pago' %}">
-                                                        <span class="glyphicon glyphicon-plus"></span>
-                                                        {% trans "Pago" %}
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-xs btn-default ark"
-                                                            data-url="{% url 'champs-registration-payment-form' %}"
-                                                            data-target-modal="common-modal"
-                                                            data-champ_id="{{ obj.id }}"
-                                                            data-registration_id="{{ registration.id }}"
-                                                            data-mode="edit"
-                                                            title="{% trans 'Editar pago' %}">
-                                                        <span class="glyphicon glyphicon-pencil"></span>
-                                                        {% trans "Editar" %}
-                                                    </button>
+                                                    <details class="champ-payment-controls"><summary class="btn btn-xs btn-success"><span class="glyphicon glyphicon-pencil"></span> {% trans "Editar pago" %}</summary><form method="post" action="{% url 'edit-champ-registration-payment' %}" class="champ-payment-form">{% csrf_token %}<input type="hidden" name="champ_id" value="{{ obj.id }}"><input type="hidden" name="registration_id" value="{{ registration.id }}"><label>{% trans "Total pagado" %}</label><input type="number" name="amount" value="{{ registration.paid_amount }}" step="0.01" min="{{ registration.minimum_editable_amount }}" class="form-control" required><p class="help-block">{% trans "Mínimo conciliado" %}: {{ registration.minimum_editable_amount }} €</p><button type="submit" class="btn btn-success btn-xs">{% trans "Guardar" %}</button></form></details>
                                                     <button type="button"
                                                             class="btn btn-xs btn-danger ark"
                                                             data-url="{% url 'champs-registration-delete-form' %}"
@@ -588,27 +565,7 @@
                                         <td class="text-right">{{ companion.paid_amount }} €</td>
                                         <td class="text-right{% if companion.pending_amount < 0 %} champ-payment-overpaid{% elif companion.pending_amount > 0 %} text-danger{% endif %}">{% if companion.pending_amount != 0 %}<strong>{{ companion.pending_amount }} €</strong>{% else %}{{ companion.pending_amount }} €{% endif %}</td>
                                         <td class="text-right">
-                                            <button type="button"
-                                                    class="btn btn-xs btn-success ark"
-                                                    data-url="{% url 'champs-companion-payment-form' %}"
-                                                    data-target-modal="common-modal"
-                                                    data-champ_id="{{ obj.id }}"
-                                                    data-companion_id="{{ companion.id }}"
-                                                    title="{% trans 'Añadir pago' %}">
-                                                <span class="glyphicon glyphicon-plus"></span>
-                                                {% trans "Pago" %}
-                                            </button>
-                                            <button type="button"
-                                                    class="btn btn-xs btn-default ark"
-                                                    data-url="{% url 'champs-companion-payment-form' %}"
-                                                    data-target-modal="common-modal"
-                                                    data-champ_id="{{ obj.id }}"
-                                                    data-companion_id="{{ companion.id }}"
-                                                    data-mode="edit"
-                                                    title="{% trans 'Editar pago' %}">
-                                                <span class="glyphicon glyphicon-pencil"></span>
-                                                {% trans "Editar" %}
-                                            </button>
+                                            <details class="champ-payment-controls"><summary class="btn btn-xs btn-success"><span class="glyphicon glyphicon-pencil"></span> {% trans "Editar pago" %}</summary><form method="post" action="{% url 'edit-champ-companion-payment' %}" class="champ-payment-form">{% csrf_token %}<input type="hidden" name="champ_id" value="{{ obj.id }}"><input type="hidden" name="companion_id" value="{{ companion.id }}"><label>{% trans "Total pagado" %}</label><input type="number" name="amount" value="{{ companion.paid_amount }}" step="0.01" min="{{ companion.minimum_editable_amount }}" class="form-control" required><p class="help-block">{% trans "Mínimo conciliado" %}: {{ companion.minimum_editable_amount }} €</p><button type="submit" class="btn btn-success btn-xs">{% trans "Guardar" %}</button></form></details>
                                         </td>
                                     </tr>
                                 {% endfor %}

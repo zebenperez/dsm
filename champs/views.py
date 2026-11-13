@@ -127,6 +127,7 @@ def get_champ_details_context(obj):
         )
         reg.total_amount = registration_costs[reg.id] + category_fees
         reg.pending_amount = reg.total_amount - reg.paid_amount
+        reg.minimum_editable_amount = reg.bank_allocations.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
         champ_total_amount += reg.total_amount
         champ_paid_amount += reg.paid_amount
         champ_pending_amount += reg.pending_amount
@@ -169,6 +170,7 @@ def get_champ_details_context(obj):
     for companion in companion_list:
         companion.total_amount = companion_costs[companion.id]
         companion.pending_amount = companion.total_amount - companion.paid_amount
+        companion.minimum_editable_amount = companion.bank_allocations.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
         companion_total_amount += companion.total_amount
         companion_paid_amount += companion.paid_amount
         companion_pending_amount += companion.pending_amount
@@ -738,9 +740,10 @@ def add_champ_registration_payment(request):
 @group_required("admins")
 def edit_champ_registration_payment(request):
     try:
-        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
-        registration = get_or_none(Registration, get_param(request.GET, "registration_id"))
-        amount = get_param(request.GET, "amount", "0").replace(",", ".")
+        params = request.POST if request.method == 'POST' else request.GET
+        champ = get_or_none(Championship, get_param(params, "champ_id"))
+        registration = get_or_none(Registration, get_param(params, "registration_id"))
+        amount = get_param(params, "amount", "0").replace(",", ".")
         if registration and registration.champ_id == getattr(champ, 'id', None):
             try:
                 paid_amount = Decimal(amount)
@@ -753,6 +756,8 @@ def edit_champ_registration_payment(request):
                 messages.success(request, 'Pago de %s actualizado.' % registration.student.name)
             else:
                 messages.error(request, 'El total pagado no puede ser inferior a %s €, ya conciliados con el banco.' % allocated_amount)
+        if request.method == 'POST':
+            return redirect('champs-details', obj_id=getattr(champ, 'id', None))
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
@@ -798,9 +803,10 @@ def add_champ_companion_payment(request):
 @group_required("admins")
 def edit_champ_companion_payment(request):
     try:
-        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
-        companion = get_or_none(TravelCompanion, get_param(request.GET, "companion_id"))
-        amount = get_param(request.GET, "amount", "0").replace(",", ".")
+        params = request.POST if request.method == 'POST' else request.GET
+        champ = get_or_none(Championship, get_param(params, "champ_id"))
+        companion = get_or_none(TravelCompanion, get_param(params, "companion_id"))
+        amount = get_param(params, "amount", "0").replace(",", ".")
         if companion and companion.registration.champ_id == getattr(champ, 'id', None):
             try:
                 paid_amount = Decimal(amount)
@@ -813,6 +819,8 @@ def edit_champ_companion_payment(request):
                 messages.success(request, 'Pago de %s actualizado.' % companion.full_name)
             else:
                 messages.error(request, 'El total pagado no puede ser inferior a %s €, ya conciliados con el banco.' % allocated_amount)
+        if request.method == 'POST':
+            return redirect('champs-details', obj_id=getattr(champ, 'id', None))
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
@@ -846,10 +854,11 @@ def champ_registration_companion_payment_form(request):
 def assign_champ_registration_payment_to_companion(request):
     """Move part of a competitor's recorded payment to one of their companions."""
     try:
-        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
-        registration_id = get_param(request.GET, "registration_id")
-        companion_id = get_param(request.GET, "companion_id")
-        amount = get_param(request.GET, "amount", "0").replace(",", ".")
+        params = request.POST if request.method == 'POST' else request.GET
+        champ = get_or_none(Championship, get_param(params, "champ_id"))
+        registration_id = get_param(params, "registration_id")
+        companion_id = get_param(params, "companion_id")
+        amount = get_param(params, "amount", "0").replace(",", ".")
         if not champ:
             raise ValueError
         try:
@@ -891,8 +900,14 @@ def assign_champ_registration_payment_to_companion(request):
             companion.paid_amount += transfer_amount
             registration.save(update_fields=['paid_amount'])
             companion.save(update_fields=['paid_amount'])
+        messages.success(request, 'Pago asignado a %s.' % companion.full_name)
+        if request.method == 'POST':
+            return redirect('champs-details', obj_id=champ.id)
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except (ValueError, Registration.DoesNotExist, TravelCompanion.DoesNotExist):
+        if request.method == 'POST':
+            messages.error(request, 'No se ha podido asignar el pago. Revisa el importe disponible.')
+            return redirect('champs-details', obj_id=getattr(champ, 'id', None))
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})

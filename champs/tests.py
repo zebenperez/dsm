@@ -149,6 +149,23 @@ class ChampionshipPaymentEditingTests(TestCase):
         self.companion.refresh_from_db()
         self.assertEqual(self.companion.paid_amount, Decimal('25.00'))
 
+    def test_standard_post_payment_forms_update_totals_and_redirect(self):
+        response = self.client.post(reverse('edit-champ-registration-payment'), {
+            'champ_id': self.championship.id, 'registration_id': self.registration.id, 'amount': '22.00',
+        })
+
+        self.assertRedirects(response, reverse('champs-details', args=[self.championship.id]))
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.paid_amount, Decimal('22.00'))
+
+        response = self.client.post(reverse('edit-champ-companion-payment'), {
+            'champ_id': self.championship.id, 'companion_id': self.companion.id, 'amount': '18.00',
+        })
+
+        self.assertRedirects(response, reverse('champs-details', args=[self.championship.id]))
+        self.companion.refresh_from_db()
+        self.assertEqual(self.companion.paid_amount, Decimal('18.00'))
+
     def test_paid_total_cannot_be_reduced_below_a_reconciled_amount(self):
         transaction = BankTransaction.objects.create(
             external_id='EDIT-PAYMENT-1', booking_date=date.today(), amount='25.00', payer='Cliente', reference='Pago',
@@ -186,6 +203,20 @@ class ChampionshipPaymentEditingTests(TestCase):
         self.assertEqual(self.companion.paid_amount, Decimal('20.00'))
         self.assertEqual(self.registration.bank_allocations.aggregate(total=Sum('amount'))['total'], Decimal('5.00'))
         self.assertEqual(self.companion.bank_allocations.aggregate(total=Sum('amount'))['total'], Decimal('10.00'))
+
+    def test_standard_post_can_assign_a_payment_to_a_companion(self):
+        response = self.client.post(reverse('assign-champ-registration-payment-to-companion'), {
+            'champ_id': self.championship.id,
+            'registration_id': self.registration.id,
+            'companion_id': self.companion.id,
+            'amount': '5.00',
+        })
+
+        self.assertRedirects(response, reverse('champs-details', args=[self.championship.id]))
+        self.registration.refresh_from_db()
+        self.companion.refresh_from_db()
+        self.assertEqual(self.registration.paid_amount, Decimal('10.00'))
+        self.assertEqual(self.companion.paid_amount, Decimal('15.00'))
 
 
 class FederationLicenceReconciliationTests(TestCase):
