@@ -703,6 +703,8 @@ def champ_registration_payment_form(request):
         registration = get_or_none(Registration, get_param(request.GET, "registration_id"))
         if not registration or registration.champ_id != getattr(champ, 'id', None):
             registration = None
+        else:
+            registration.minimum_editable_amount = registration.bank_allocations.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
         return render(request, "champs/champs-registration-payment-form.html", {
             'champ': champ,
             'registration': registration,
@@ -748,6 +750,9 @@ def edit_champ_registration_payment(request):
             if paid_amount >= allocated_amount and paid_amount >= 0:
                 registration.paid_amount = paid_amount
                 registration.save(update_fields=['paid_amount'])
+                messages.success(request, 'Pago de %s actualizado.' % registration.student.name)
+            else:
+                messages.error(request, 'El total pagado no puede ser inferior a %s €, ya conciliados con el banco.' % allocated_amount)
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
@@ -759,6 +764,8 @@ def champ_companion_payment_form(request):
         companion = get_or_none(TravelCompanion, get_param(request.GET, "companion_id"))
         if not companion or companion.registration.champ_id != getattr(champ, 'id', None):
             companion = None
+        else:
+            companion.minimum_editable_amount = companion.bank_allocations.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
         return render(request, "champs/champs-companion-payment-form.html", {
             'champ': champ,
             'companion': companion,
@@ -803,6 +810,9 @@ def edit_champ_companion_payment(request):
             if paid_amount >= allocated_amount and paid_amount >= 0:
                 companion.paid_amount = paid_amount
                 companion.save(update_fields=['paid_amount'])
+                messages.success(request, 'Pago de %s actualizado.' % companion.full_name)
+            else:
+                messages.error(request, 'El total pagado no puede ser inferior a %s €, ya conciliados con el banco.' % allocated_amount)
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
@@ -822,8 +832,11 @@ def champ_registration_companion_payment_form(request):
                 companion for companion in context['companion_list']
                 if companion.registration_id == registration.id
             ]
-        return render(request, "champs/champs-registration-companion-payment-form.html", {
+        # Reuse the established companion-payment template so this modal is
+        # available in deployments that predate the new assignment template.
+        return render(request, "champs/champs-companion-payment-form.html", {
             'champ': champ, 'registration': registration, 'companions': companions,
+            'assign_payment': True,
         })
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
