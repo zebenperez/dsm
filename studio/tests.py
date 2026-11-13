@@ -85,10 +85,9 @@ class PublicBirthdayTests(TestCase):
         response = self.client.get(reverse('birthday'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '¡Felicidades, Lucía!')
+        self.assertContains(response, '¡Felicidades, Lucía García!')
         self.assertContains(response, 'Grupo:')
         self.assertContains(response, 'Cumpleaños')
-        self.assertNotContains(response, 'García')
         self.assertNotContains(response, 'Noelia')
 
     def test_birthday_page_shows_only_a_quote_when_nobody_has_a_birthday(self):
@@ -98,6 +97,23 @@ class PublicBirthdayTests(TestCase):
         self.assertNotContains(response, 'Hoy no cumple ninguna de nuestras alumnas.')
         self.assertNotContains(response, '🎉 🎂 🎈')
         self.assertContains(response, response.context['quote'])
+
+    def test_birthday_page_shows_other_birthdays_from_the_same_week(self):
+        today = date.today()
+        week_start = today - timedelta(days=today.weekday())
+        birthday_date = week_start + timedelta(days=1 if today == week_start else 0)
+        student = Student.objects.create(
+            code=903, pin='B903', name='Marta Semanal', phone='',
+            born_date=date(2002, birthday_date.month, birthday_date.day),
+        )
+        Enrolment.objects.create(student=student, group=self.group, active=True)
+
+        response = self.client.get(reverse('birthday'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Cumpleaños de esta semana')
+        self.assertContains(response, 'Marta')
+        self.assertContains(response, 'Cumpleaños')
 
 
 class PublicRankingTests(TestCase):

@@ -3,7 +3,7 @@
 from studio.models import *
 from champs.models import FederationLicencePayment
 from studio.dsm_forms import *
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal, InvalidOperation
 from collections import defaultdict
@@ -50,12 +50,14 @@ def _normalise_student_search_text(value):
 
 
 def birthday(request):
-	"""Public celebration page for currently enrolled students born today."""
+	"""Public celebration page for this week's birthdays, highlighting today."""
 	today = date.today()
+	week_start = today - timedelta(days=today.weekday())
+	week_dates = [week_start + timedelta(days=offset) for offset in range(7)]
+	week_dates_by_birthday = {(day.month, day.day): day for day in week_dates}
+	weekday_names = ('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')
 	students = Student.objects.filter(
-		born_date__month=today.month,
-		born_date__day=today.day,
-		enrolment__active=True,
+		born_date__isnull=False, enrolment__active=True,
 	).distinct().order_by('name').prefetch_related(
 		Prefetch(
 			'enrolment',
@@ -64,10 +66,19 @@ def birthday(request):
 		)
 	)
 
-	# The public page deliberately displays only a first name.  Birth dates,
-	# contact details and profile photos remain in the authenticated area.
+	# Birth dates, contact details and profile photos remain in the authenticated
+	# area; the public celebration needs the full name to distinguish students.
+	week_birthdays = []
 	for student in students:
-		student.birthday_name = student.name.strip().split()[0] if student.name.strip() else ''
+		birthday_date = week_dates_by_birthday.get((student.born_date.month, student.born_date.day))
+		if birthday_date:
+			student.birthday_name = student.name
+			student.birthday_date = birthday_date
+			student.birthday_day_name = weekday_names[birthday_date.weekday()]
+			week_birthdays.append(student)
+	week_birthdays.sort(key=lambda student: (student.birthday_date, student.name))
+	today_birthdays = [student for student in week_birthdays if student.birthday_date == today]
+	other_week_birthdays = [student for student in week_birthdays if student.birthday_date != today]
 
 	quotes = (
 		'Bailar es descubrir que el cuerpo también sabe soñar.',
@@ -75,7 +86,11 @@ def birthday(request):
 		'Cuando la música empieza, el corazón encuentra su camino.',
 		'La alegría se multiplica cuando se comparte en movimiento.',
 	)
-	return render(request, 'birthday.html', {'students': students, 'quote': choice(quotes)})
+	return render(request, 'birthday.html', {
+		'students': today_birthdays,
+		'week_birthdays': other_week_birthdays,
+		'quote': choice(quotes),
+	})
 
 
 def _attendance_ranking(start_date, end_date):
