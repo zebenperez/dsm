@@ -6,6 +6,7 @@ from io import TextIOWrapper
 
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils.text import slugify
@@ -705,6 +706,7 @@ def champ_registration_payment_form(request):
         return render(request, "champs/champs-registration-payment-form.html", {
             'champ': champ,
             'registration': registration,
+            'edit_payment': get_param(request.GET, 'mode') == 'edit',
         })
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
@@ -730,6 +732,26 @@ def add_champ_registration_payment(request):
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
 
+
+@group_required("admins")
+def edit_champ_registration_payment(request):
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        registration = get_or_none(Registration, get_param(request.GET, "registration_id"))
+        amount = get_param(request.GET, "amount", "0").replace(",", ".")
+        if registration and registration.champ_id == getattr(champ, 'id', None):
+            try:
+                paid_amount = Decimal(amount)
+            except InvalidOperation:
+                paid_amount = Decimal("-1.00")
+            allocated_amount = registration.bank_allocations.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+            if paid_amount >= allocated_amount and paid_amount >= 0:
+                registration.paid_amount = paid_amount
+                registration.save(update_fields=['paid_amount'])
+        return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
 @group_required("admins")
 def champ_companion_payment_form(request):
     try:
@@ -737,7 +759,11 @@ def champ_companion_payment_form(request):
         companion = get_or_none(TravelCompanion, get_param(request.GET, "companion_id"))
         if not companion or companion.registration.champ_id != getattr(champ, 'id', None):
             companion = None
-        return render(request, "champs/champs-companion-payment-form.html", {'champ': champ, 'companion': companion})
+        return render(request, "champs/champs-companion-payment-form.html", {
+            'champ': champ,
+            'companion': companion,
+            'edit_payment': get_param(request.GET, 'mode') == 'edit',
+        })
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})
 
@@ -757,6 +783,26 @@ def add_champ_companion_payment(request):
                 companion.paid_amount += payment_amount
                 companion.save(update_fields=['paid_amount'])
 
+        return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
+    except Exception as e:
+        return render(request, 'error_exception.html', {'exc':show_exc(e)})
+
+
+@group_required("admins")
+def edit_champ_companion_payment(request):
+    try:
+        champ = get_or_none(Championship, get_param(request.GET, "champ_id"))
+        companion = get_or_none(TravelCompanion, get_param(request.GET, "companion_id"))
+        amount = get_param(request.GET, "amount", "0").replace(",", ".")
+        if companion and companion.registration.champ_id == getattr(champ, 'id', None):
+            try:
+                paid_amount = Decimal(amount)
+            except InvalidOperation:
+                paid_amount = Decimal("-1.00")
+            allocated_amount = companion.bank_allocations.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+            if paid_amount >= allocated_amount and paid_amount >= 0:
+                companion.paid_amount = paid_amount
+                companion.save(update_fields=['paid_amount'])
         return render(request, "champs/champs-details-content.html", get_champ_details_context(champ))
     except Exception as e:
         return render(request, 'error_exception.html', {'exc':show_exc(e)})

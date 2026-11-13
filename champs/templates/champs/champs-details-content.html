@@ -479,6 +479,17 @@
                                                         {% trans "Pago" %}
                                                     </button>
                                                     <button type="button"
+                                                            class="btn btn-xs btn-default ark"
+                                                            data-url="{% url 'champs-registration-payment-form' %}"
+                                                            data-target-modal="common-modal"
+                                                            data-champ_id="{{ obj.id }}"
+                                                            data-registration_id="{{ registration.id }}"
+                                                            data-mode="edit"
+                                                            title="{% trans 'Editar pago' %}">
+                                                        <span class="glyphicon glyphicon-pencil"></span>
+                                                        {% trans "Editar" %}
+                                                    </button>
+                                                    <button type="button"
                                                             class="btn btn-xs btn-danger ark"
                                                             data-url="{% url 'champs-registration-delete-form' %}"
                                                             data-target-modal="common-modal"
@@ -567,6 +578,17 @@
                                                     title="{% trans 'Añadir pago' %}">
                                                 <span class="glyphicon glyphicon-plus"></span>
                                                 {% trans "Pago" %}
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-xs btn-default ark"
+                                                    data-url="{% url 'champs-companion-payment-form' %}"
+                                                    data-target-modal="common-modal"
+                                                    data-champ_id="{{ obj.id }}"
+                                                    data-companion_id="{{ companion.id }}"
+                                                    data-mode="edit"
+                                                    title="{% trans 'Editar pago' %}">
+                                                <span class="glyphicon glyphicon-pencil"></span>
+                                                {% trans "Editar" %}
                                             </button>
                                         </td>
                                     </tr>

@@ -1,13 +1,14 @@
 {% load i18n %}
 
 <div class="panel panel-success">
-    <div class="panel-heading"><strong>{% trans "Añadir pago de acompañante" %}</strong></div>
+    <div class="panel-heading"><strong>{% if edit_payment %}{% trans "Editar pago de acompañante" %}{% else %}{% trans "Añadir pago de acompañante" %}{% endif %}</strong></div>
     <div class="panel-body">
         <p><strong>{{ companion.full_name }}</strong></p>
         <div class="form-group">
-            <label for="champ-companion-payment-amount">{% trans "Importe" %}</label>
-            <input type="number" step="0.01" min="0.01" id="champ-companion-payment-amount" class="form-control champ-companion-payment-required" required>
+            <label for="champ-companion-payment-amount">{% if edit_payment %}{% trans "Total pagado" %}{% else %}{% trans "Importe" %}{% endif %}</label>
+            <input type="number" step="0.01" min="{% if edit_payment %}0{% else %}0.01{% endif %}" value="{% if edit_payment %}{{ companion.paid_amount }}{% endif %}" id="champ-companion-payment-amount" class="form-control champ-companion-payment-required" required>
             <span id="champ-companion-payment-amount__msg"></span>
+            {% if edit_payment %}<p class="help-block">{% trans "No puede ser inferior a los pagos conciliados con el banco." %}</p>{% endif %}
         </div>
     </div>
     <div class="panel-footer">
@@ -15,15 +16,15 @@
             <div class="col-sm-6 text-center"><button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">{% trans "Cancelar" %}</button></div>
             <div class="col-sm-6 text-center">
                 <button type="button"
-                        id="add-champ-companion-payment-btn"
+                        id="save-champ-companion-payment-btn"
                         class="btn btn-sm btn-success ark-validate"
-                        data-url="{% url "add-champ-companion-payment" %}"
+                        data-url="{% if edit_payment %}{% url 'edit-champ-companion-payment' %}{% else %}{% url 'add-champ-companion-payment' %}{% endif %}"
                         data-target="champ-detail-content"
                         data-modal="common-modal"
                         data-validate="champ-companion-payment-required"
                         data-champ_id="{{ champ.id }}"
                         data-companion_id="{{ companion.id }}">
-                    {% trans "Guardar pago" %}
+                    {% if edit_payment %}{% trans "Guardar cambios" %}{% else %}{% trans "Guardar pago" %}{% endif %}
                 </button>
             </div>
         </div>
@@ -31,7 +32,7 @@
 </div>
 
 <script type="text/javascript">
-    $('#add-champ-companion-payment-btn').on('click', function() {
+    $('#save-champ-companion-payment-btn').on('click', function() {
         $(this).data('amount', $('#champ-companion-payment-amount').val());
     });
 </script>

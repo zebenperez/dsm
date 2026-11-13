@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from champs.models import BankTransaction, Category, Championship, FederationLicencePayment, Registration, TravelCompanion
+from champs.models import BankTransaction, Category, Championship, FederationLicencePayment, PaymentAllocation, Registration, TravelCompanion
 from champs.views import get_champ_list_context, suggested_licence_student, suggested_registration
 from studio.models import Student
 
@@ -113,6 +113,55 @@ class ChampionshipTravelersExportTests(TestCase):
             ['Acompañante', 'Ana Pérez García', 'La Laguna', '87654321B', '01/02/1980', 'Dúo juvenil', 'María Pérez García'],
             rows,
         )
+
+
+class ChampionshipPaymentEditingTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='payment-admin', password='secret')
+        admins, _ = Group.objects.get_or_create(name='admins')
+        self.user.groups.add(admins)
+        self.client.force_login(self.user)
+        self.championship = Championship.objects.create(name='Campeonato de pagos')
+        self.student = Student.objects.create(code=904, pin='P904', name='Pago editable', phone='')
+        self.registration = Registration.objects.create(
+            student=self.student, champ=self.championship, paid_amount='15.00',
+        )
+        self.companion = TravelCompanion.objects.create(
+            registration=self.registration, full_name='Acompañante editable',
+            birth_date=date(1980, 1, 1), dni='12345678Z', paid_amount='10.00',
+        )
+
+    def test_admin_can_edit_registration_and_companion_paid_totals(self):
+        response = self.client.get(reverse('edit-champ-registration-payment'), {
+            'champ_id': self.championship.id, 'registration_id': self.registration.id, 'amount': '30.00',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.paid_amount, Decimal('30.00'))
+
+        response = self.client.get(reverse('edit-champ-companion-payment'), {
+            'champ_id': self.championship.id, 'companion_id': self.companion.id, 'amount': '25.00',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.companion.refresh_from_db()
+        self.assertEqual(self.companion.paid_amount, Decimal('25.00'))
+
+    def test_paid_total_cannot_be_reduced_below_a_reconciled_amount(self):
+        transaction = BankTransaction.objects.create(
+            external_id='EDIT-PAYMENT-1', booking_date=date.today(), amount='25.00', payer='Cliente', reference='Pago',
+        )
+        PaymentAllocation.objects.create(
+            transaction=transaction, registration=self.registration, amount='25.00', confirmed_by=self.user,
+        )
+
+        self.client.get(reverse('edit-champ-registration-payment'), {
+            'champ_id': self.championship.id, 'registration_id': self.registration.id, 'amount': '20.00',
+        })
+
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.paid_amount, Decimal('15.00'))
 
 
 class FederationLicenceReconciliationTests(TestCase):
