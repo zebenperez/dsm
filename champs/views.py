@@ -126,7 +126,7 @@ def get_champ_details_context(obj):
             Decimal("0.00"),
         )
         reg.total_amount = registration_costs[reg.id] + category_fees
-        reg.pending_amount = max(reg.total_amount - reg.paid_amount, Decimal("0.00"))
+        reg.pending_amount = reg.total_amount - reg.paid_amount
         champ_total_amount += reg.total_amount
         champ_paid_amount += reg.paid_amount
         champ_pending_amount += reg.pending_amount
@@ -168,7 +168,7 @@ def get_champ_details_context(obj):
     companion_pending_amount = Decimal("0.00")
     for companion in companion_list:
         companion.total_amount = companion_costs[companion.id]
-        companion.pending_amount = max(companion.total_amount - companion.paid_amount, Decimal("0.00"))
+        companion.pending_amount = companion.total_amount - companion.paid_amount
         companion_total_amount += companion.total_amount
         companion_paid_amount += companion.paid_amount
         companion_pending_amount += companion.pending_amount

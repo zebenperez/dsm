@@ -471,9 +471,21 @@
                                                     {{ registration.paid_amount }} €
                                                 </td>
                                                 <td class="text-right">
-                                                    <span id="pending-{{ registration.id }}-{{ item.champ_category.id }}">{{ registration.pending_amount }} €</span>
+                                                    <span id="pending-{{ registration.id }}-{{ item.champ_category.id }}"{% if registration.pending_amount < 0 %} class="text-danger"{% endif %}>{% if registration.pending_amount < 0 %}<strong>{{ registration.pending_amount }} €</strong>{% else %}{{ registration.pending_amount }} €{% endif %}</span>
                                                 </td>
                                                 <td class="text-right text-nowrap">
+                                                    {% if registration.travel_companions.all %}
+                                                        <button type="button"
+                                                                class="btn btn-xs btn-info ark"
+                                                                data-url="{% url 'champs-registration-companion-payment-form' %}"
+                                                                data-target-modal="common-modal"
+                                                                data-champ_id="{{ obj.id }}"
+                                                                data-registration_id="{{ registration.id }}"
+                                                                title="{% trans 'Asignar pago' %}">
+                                                            <span class="glyphicon glyphicon-transfer"></span>
+                                                            {% trans "Asignar pago" %}
+                                                        </button>
+                                                    {% endif %}
                                                     <button type="button"
                                                             class="btn btn-xs btn-success ark"
                                                             data-url="{% url 'champs-registration-payment-form' %}"
@@ -495,18 +507,6 @@
                                                         <span class="glyphicon glyphicon-pencil"></span>
                                                         {% trans "Editar" %}
                                                     </button>
-                                                    {% if registration.travel_companions.all %}
-                                                        <button type="button"
-                                                                class="btn btn-xs btn-info ark"
-                                                                data-url="{% url 'champs-registration-companion-payment-form' %}"
-                                                                data-target-modal="common-modal"
-                                                                data-champ_id="{{ obj.id }}"
-                                                                data-registration_id="{{ registration.id }}"
-                                                                title="{% trans 'Asignar pago' %}">
-                                                            <span class="glyphicon glyphicon-transfer"></span>
-                                                            {% trans "Asignar pago" %}
-                                                        </button>
-                                                    {% endif %}
                                                     <button type="button"
                                                             class="btn btn-xs btn-danger ark"
                                                             data-url="{% url 'champs-registration-delete-form' %}"
@@ -585,7 +585,7 @@
                                         <td>{{ companion.dni }}</td>
                                         <td class="text-right">{{ companion.total_amount }} €</td>
                                         <td class="text-right">{{ companion.paid_amount }} €</td>
-                                        <td class="text-right">{{ companion.pending_amount }} €</td>
+                                        <td class="text-right{% if companion.pending_amount < 0 %} text-danger{% endif %}">{% if companion.pending_amount < 0 %}<strong>{{ companion.pending_amount }} €</strong>{% else %}{{ companion.pending_amount }} €{% endif %}</td>
                                         <td class="text-right">
                                             <button type="button"
                                                     class="btn btn-xs btn-success ark"

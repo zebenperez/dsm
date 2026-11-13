@@ -28,6 +28,11 @@
         $(this).data('companion_id', $('#champ-companion-assignment').val());
         $(this).data('amount', $('#champ-companion-assignment-amount').val());
     });
+    $('#champ-companion-assignment').on('change', function() {
+        if ($(this).val()) {
+            $('#champ-companion-assignment-amount').val('{{ registration.paid_amount }}');
+        }
+    });
 </script>
 {% else %}
 <div class="panel panel-success">
