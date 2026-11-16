@@ -11,7 +11,7 @@
                 <label for="champ-companion-assignment">{% trans "Acompañante" %}</label>
                 <select id="champ-companion-assignment" class="form-control champ-companion-assignment-required" required>
                     <option value="">{% trans "Selecciona un acompañante" %}</option>
-                    {% for companion in companions %}<option value="{{ companion.id }}">{{ companion.full_name }} · {% trans "Pendiente" %}: {{ companion.pending_amount }} €</option>{% endfor %}
+                    {% for companion in companions %}<option value="{{ companion.id }}" data-suggested-amount="{{ companion.assignment_suggested_amount }}">{{ companion.full_name }} · {% trans "Pendiente" %}: {{ companion.pending_amount }} €</option>{% endfor %}
                 </select>
             </div>
             <div class="form-group">
@@ -30,7 +30,7 @@
     });
     $('#champ-companion-assignment').on('change', function() {
         if ($(this).val()) {
-            $('#champ-companion-assignment-amount').val('{{ registration.paid_amount }}');
+            $('#champ-companion-assignment-amount').val($(this).find('option:selected').data('suggested-amount'));
         }
     });
 </script>

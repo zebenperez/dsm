@@ -167,13 +167,32 @@ def get_champ_details_context(obj):
     companion_total_amount = Decimal("0.00")
     companion_paid_amount = Decimal("0.00")
     companion_pending_amount = Decimal("0.00")
+    companions_by_id = {}
     for companion in companion_list:
         companion.total_amount = companion_costs[companion.id]
         companion.pending_amount = companion.total_amount - companion.paid_amount
         companion.minimum_editable_amount = companion.bank_allocations.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        # A payment can only be moved from the competitor up to the amount
+        # they have actually paid.  Keep a ready-to-use suggestion for the
+        # assignment control in the registration table.
+        companion.assignment_suggested_amount = min(
+            max(Decimal('0.00'), companion.pending_amount),
+            companion.registration.paid_amount,
+        )
+        companions_by_id[companion.id] = companion
         companion_total_amount += companion.total_amount
         companion_paid_amount += companion.paid_amount
         companion_pending_amount += companion.pending_amount
+
+    # ``travel_companions`` was prefetched with each registration and contains
+    # different Python instances from ``companion_list``. Copy the calculated
+    # values so both sections of the page show the same pending amount.
+    for registration in registrations:
+        for companion in registration.travel_companions.all():
+            calculated_companion = companions_by_id.get(companion.id)
+            if calculated_companion:
+                companion.pending_amount = calculated_companion.pending_amount
+                companion.assignment_suggested_amount = calculated_companion.assignment_suggested_amount
 
     champ_total_amount += companion_total_amount
     champ_paid_amount += companion_paid_amount
