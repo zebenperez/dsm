@@ -98,6 +98,23 @@
                                     {% else %}
                                         <span class="label label-success">{% trans "Conciliado" %}</span>
                                     {% endif %}
+                                    {% if bank_transaction.allocations.all %}
+                                        <ul class="list-unstyled small" style="margin: 8px 0 0;">
+                                            {% for allocation in bank_transaction.allocations.all %}
+                                                <li style="margin-top: 4px;">
+                                                    {% if allocation.registration %}
+                                                        {{ allocation.amount }} € · {{ allocation.registration.student.name }} · {{ allocation.registration.champ.name }}
+                                                    {% else %}
+                                                        {{ allocation.amount }} € · {{ allocation.companion.full_name }} · {{ allocation.companion.registration.champ.name }}
+                                                    {% endif %}
+                                                    <form method="post" action="{% url 'undo-bank-allocation' allocation.id %}" class="form-inline" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button class="btn btn-link btn-xs text-danger" type="submit" title="{% trans 'Deshacer esta conciliación' %}">{% trans "Deshacer" %}</button>
+                                                    </form>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

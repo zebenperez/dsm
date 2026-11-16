@@ -63,6 +63,38 @@ class BankReconciliationDiscardTests(TestCase):
         self.assertRedirects(response, reverse('bank-reconciliation'))
 
 
+class BankReconciliationUndoTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='reception-undo', password='secret')
+        reception, _ = Group.objects.get_or_create(name='reception')
+        self.user.groups.add(reception)
+        self.client.force_login(self.user)
+        self.student = Student.objects.create(code=905, pin='U905', name='Pago erróneo', phone='')
+        self.championship = Championship.objects.create(name='Campeonato de prueba')
+        self.registration = Registration.objects.create(student=self.student, champ=self.championship)
+        self.transaction = BankTransaction.objects.create(
+            external_id='UNDO-PAYMENT-1', booking_date=date.today(), amount='25.00',
+            payer='Cliente', reference='Pago erróneo',
+        )
+
+    def test_reception_can_undo_an_allocation_and_restore_the_pending_amount(self):
+        self.client.post(reverse('confirm-bank-allocation', args=[self.transaction.id]), {
+            'target': 'registration:%s' % self.registration.id,
+            'amount': '25.00',
+        })
+        allocation = PaymentAllocation.objects.get(transaction=self.transaction)
+
+        response = self.client.post(reverse('undo-bank-allocation', args=[allocation.id]))
+
+        self.assertRedirects(response, reverse('bank-reconciliation'))
+        self.assertFalse(PaymentAllocation.objects.filter(pk=allocation.id).exists())
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.paid_amount, Decimal('0.00'))
+        response = self.client.get(reverse('bank-reconciliation'))
+        self.assertContains(response, '25.00 €')
+        self.assertContains(response, 'Deshacer')
+
+
 class BankReferenceSuggestionTests(TestCase):
     def setUp(self):
         student = Student.objects.create(code=901, pin='R901', name='Referencia', phone='')

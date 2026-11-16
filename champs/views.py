@@ -6,7 +6,7 @@ from io import TextIOWrapper
 
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Prefetch, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils.text import slugify
@@ -331,7 +331,11 @@ def parse_bank_date(value):
 
 @group_required("admins", "reception")
 def bank_reconciliation(request):
-    transactions = list(BankTransaction.objects.filter(discarded_at__isnull=True).select_related('federation_licence_payment').prefetch_related('allocations'))
+    allocations = PaymentAllocation.objects.select_related(
+        'registration__student', 'registration__champ',
+        'companion__registration__student', 'companion__registration__champ',
+    )
+    transactions = list(BankTransaction.objects.filter(discarded_at__isnull=True).select_related('federation_licence_payment').prefetch_related(Prefetch('allocations', queryset=allocations)))
     registrations = list(Registration.objects.select_related('student', 'champ').order_by('-champ__date', 'student__name'))
     companions = list(TravelCompanion.objects.select_related('registration__student', 'registration__champ').order_by('registration__student__name', 'full_name'))
     licence_students = list(Student.objects.order_by('name'))
@@ -487,6 +491,41 @@ def confirm_bank_allocation(request, transaction_id):
         messages.success(request, message)
     except (ValueError, InvalidOperation) as error:
         messages.error(request, 'No se ha conciliado el movimiento: %s' % error)
+    return redirect('bank-reconciliation')
+
+
+@group_required("admins", "reception")
+def undo_bank_allocation(request, allocation_id):
+    """Remove a mistaken bank allocation and reverse its recorded payment."""
+    if request.method != 'POST':
+        return redirect('bank-reconciliation')
+
+    with transaction.atomic():
+        allocation = get_object_or_404(
+            PaymentAllocation.objects.select_for_update().select_related(
+                'transaction', 'registration__student', 'companion',
+            ),
+            pk=allocation_id,
+        )
+        if allocation.registration_id:
+            recipient = allocation.registration
+            recipient_name = recipient.student.name if recipient.student else 'la competidora'
+        elif allocation.companion_id:
+            recipient = allocation.companion
+            recipient_name = recipient.full_name
+        else:
+            messages.error(request, 'La imputación no tiene un destinatario válido.')
+            return redirect('bank-reconciliation')
+
+        # Conciliation adds this amount to ``paid_amount``.  Reversing both
+        # values keeps the screen aligned with the bank movement, while any
+        # unrelated manual amount is preserved.
+        recipient.paid_amount = max(Decimal('0.00'), recipient.paid_amount - allocation.amount)
+        recipient.save(update_fields=['paid_amount'])
+        amount = allocation.amount
+        allocation.delete()
+
+    messages.success(request, 'Conciliación de %s € para %s deshecha.' % (amount, recipient_name))
     return redirect('bank-reconciliation')
 
 
