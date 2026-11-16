@@ -502,16 +502,17 @@ def undo_bank_allocation(request, allocation_id):
 
     with transaction.atomic():
         allocation = get_object_or_404(
-            PaymentAllocation.objects.select_for_update().select_related(
-                'transaction', 'registration__student', 'companion',
-            ),
+            # Do not use select_related here: registration and companion are
+            # nullable, and PostgreSQL cannot lock the nullable side of the
+            # resulting OUTER JOIN.
+            PaymentAllocation.objects.select_for_update(),
             pk=allocation_id,
         )
         if allocation.registration_id:
-            recipient = allocation.registration
+            recipient = Registration.objects.select_for_update().get(pk=allocation.registration_id)
             recipient_name = recipient.student.name if recipient.student else 'la competidora'
         elif allocation.companion_id:
-            recipient = allocation.companion
+            recipient = TravelCompanion.objects.select_for_update().get(pk=allocation.companion_id)
             recipient_name = recipient.full_name
         else:
             messages.error(request, 'La imputación no tiene un destinatario válido.')
