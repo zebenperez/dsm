@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Calendario | DSM{% endblock %}
 
@@ -35,7 +36,10 @@
         <h2 id="upcoming-events-title">Próximos eventos</h2>
         <p class="upcoming-events__intro">Todo lo que no te quieres perder.</p>
       </div>
-      <span class="upcoming-events__count">{{ upcoming_events|length }} próximos</span>
+      <div class="upcoming-events__brand">
+        <span class="upcoming-events__count">{{ upcoming_events|length }} próximos</span>
+        <img class="upcoming-events__logo" src="{% static 'images/logo_5db_96.png' %}" alt="5db Escuela de Baile">
+      </div>
     </header>
     {% if upcoming_events %}
       <ul class="upcoming-events__list">
@@ -78,7 +82,9 @@
 .upcoming-events__eyebrow { margin:0 0 4px; font-size:12px; font-weight:bold; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }
 .upcoming-events h2 { margin:0; font-size:27px; font-weight:bold; }
 .upcoming-events__intro { margin:3px 0 0; font-size:15px; opacity:.9; }
+.upcoming-events__brand { display:flex; align-items:center; gap:12px; }
 .upcoming-events__count { flex:none; padding:5px 9px; border:1px solid rgba(255,255,255,.45); border-radius:20px; font-size:12px; white-space:nowrap; }
+.upcoming-events__logo { width:76px; height:76px; padding:4px; border-radius:7px; background:#fff; object-fit:contain; }
 .upcoming-events__list { list-style:none; margin:0; padding:0; }
 .upcoming-events__item { display:flex; gap:16px; padding:16px 20px; border-bottom:1px solid #e8edf1; }
 .upcoming-events__item:last-child { border-bottom:0; }
@@ -90,7 +96,7 @@
 .upcoming-events__title { display:block; color:#254f70; font-size:17px; font-weight:bold; line-height:1.25; }
 .upcoming-events__description { margin:5px 0 0; color:#53636e; font-size:14px; line-height:1.35; }
 .upcoming-events__empty { margin:0; padding:22px 24px; color:#667; }
-@media (max-width: 767px) { .upcoming-events { margin-top:26px; border-radius:7px; } .upcoming-events__header { padding:18px; } .upcoming-events h2 { font-size:23px; } .upcoming-events__count { display:none; } .upcoming-events__item { padding:14px; gap:12px; } }
+@media (max-width: 767px) { .upcoming-events { margin-top:26px; border-radius:7px; } .upcoming-events__header { padding:18px; } .upcoming-events h2 { font-size:23px; } .upcoming-events__count { display:none; } .upcoming-events__logo { width:62px; height:62px; } .upcoming-events__item { padding:14px; gap:12px; } }
 @media (max-width: 767px) { .calendar-weekday { font-size:11px; padding:7px 1px; } .calendar-day { min-height:78px; padding:4px; } .calendar-event { font-size:10px; padding:2px; } .calendar-toolbar h1 { order:-1; flex-basis:100%; } }
 </style>
 {% endblock %}
