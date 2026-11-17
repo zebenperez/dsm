@@ -27,6 +27,24 @@
       {% endfor %}
     {% endfor %}
   </div>
+
+  <section class="upcoming-events" aria-labelledby="upcoming-events-title">
+    <h2 id="upcoming-events-title">Próximos eventos</h2>
+    {% if upcoming_events %}
+      <ul class="upcoming-events__list">
+        {% for event in upcoming_events %}
+          <li class="upcoming-events__item">
+            <time datetime="{{ event.starts_at|date:'c' }}">
+              {{ event.starts_at|date:'d/m/Y' }}{% if event.starts_at_has_time %} · {{ event.starts_at|date:'H:i' }}{% endif %}
+            </time>
+            <a href="{% url 'events:event_edit' event.pk %}">{{ event.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="upcoming-events__empty">No hay eventos próximos.</p>
+    {% endif %}
+  </section>
 </div>
 
 <style>
@@ -43,6 +61,13 @@
 .calendar-event__edit:hover, .calendar-event__edit:focus { color:white; text-decoration:underline; }
 .calendar-event__delete { color:white; font-size:16px; line-height:1; padding:1px 5px 3px; }
 .calendar-event__delete:hover, .calendar-event__delete:focus { color:white; text-decoration:none; }
+.upcoming-events { margin-top:30px; max-width:720px; }
+.upcoming-events h2 { font-size:21px; margin:0 0 10px; }
+.upcoming-events__list { list-style:none; margin:0; padding:0; border-top:1px solid #ddd; }
+.upcoming-events__item { display:flex; gap:14px; padding:9px 4px; border-bottom:1px solid #ddd; }
+.upcoming-events__item time { color:#666; min-width:125px; }
+.upcoming-events__empty { color:#666; }
+@media (max-width: 767px) { .upcoming-events__item { display:block; } .upcoming-events__item time { display:block; margin-bottom:2px; } }
 @media (max-width: 767px) { .calendar-weekday { font-size:11px; padding:7px 1px; } .calendar-day { min-height:78px; padding:4px; } .calendar-event { font-size:10px; padding:2px; } .calendar-toolbar h1 { order:-1; flex-basis:100%; } }
 </style>
 {% endblock %}

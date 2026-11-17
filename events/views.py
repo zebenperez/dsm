@@ -37,6 +37,9 @@ def month(request, year=None, month=None):
     events = Event.objects.filter(
         Q(starts_at__date__gte=grid_start, starts_at__date__lt=grid_end)
     )
+    upcoming_events = Event.objects.filter(
+        starts_at__date__gte=today
+    ).order_by('starts_at', 'title')[:10]
     events_by_day = {}
     for event in events:
         events_by_day.setdefault(event.starts_at.date(), []).append(event)
@@ -64,6 +67,7 @@ def month(request, year=None, month=None):
         'following': following,
         'weekday_names': WEEKDAY_NAMES,
         'today': today,
+        'upcoming_events': upcoming_events,
     })
 
 
