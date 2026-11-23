@@ -39,7 +39,7 @@
         <div>
           <p class="upcoming-events__eyebrow"><span class="glyphicon glyphicon-calendar"></span> Agenda DSM</p>
           <h2 id="upcoming-events-title">Próximos eventos</h2>
-          <p class="upcoming-events__intro">Todo lo que no te quieres perder.</p>
+          <p class="upcoming-events__intro">Todo lo que no te quieres perder. <a class="upcoming-events__public-link" href="{% url 'public_events' %}" target="_blank" rel="noopener">Abrir página pública</a></p>
         </div>
         <div class="upcoming-events__brand">
           <span class="upcoming-events__count">{{ upcoming_events|length }} próximos</span>
@@ -91,6 +91,8 @@
 .upcoming-events__eyebrow { margin:0 0 4px; font-size:12px; font-weight:bold; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }
 .upcoming-events h2 { margin:0; font-size:27px; font-weight:bold; }
 .upcoming-events__intro { margin:3px 0 0; font-size:15px; opacity:.9; }
+.upcoming-events__public-link { color:#fff; font-weight:bold; text-decoration:underline; }
+.upcoming-events__public-link:hover, .upcoming-events__public-link:focus { color:#fff; }
 .upcoming-events__brand { display:flex; align-items:center; gap:14px; }
 .upcoming-events__count { flex:none; padding:5px 9px; border:1px solid rgba(255,255,255,.45); border-radius:20px; font-size:12px; white-space:nowrap; }
 .upcoming-events__logo { width:140px; height:78px; object-fit:contain; }

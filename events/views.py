@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from .forms import EventForm
-from .models import Event
+from .models import Event, PublicDisplaySettings
 
 MONTH_NAMES = (
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -18,6 +18,20 @@ WEEKDAY_NAMES = ('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
 def _add_months(year, month, offset):
     absolute_month = year * 12 + (month - 1) + offset
     return absolute_month // 12, absolute_month % 12 + 1
+
+
+def _upcoming_events():
+    return Event.objects.filter(
+        starts_at__date__gte=date.today()
+    ).order_by('starts_at', 'title')[:10]
+
+
+def public_upcoming_events(request):
+    """Public list of the next calendar events."""
+    return render(request, 'calendar/upcoming_public.html', {
+        'upcoming_events': _upcoming_events(),
+        'public_display_settings': PublicDisplaySettings.current(),
+    })
 
 
 @login_required
@@ -37,9 +51,7 @@ def month(request, year=None, month=None):
     events = Event.objects.filter(
         Q(starts_at__date__gte=grid_start, starts_at__date__lt=grid_end)
     )
-    upcoming_events = Event.objects.filter(
-        starts_at__date__gte=today
-    ).order_by('starts_at', 'title')[:10]
+    upcoming_events = _upcoming_events()
     events_by_day = {}
     for event in events:
         events_by_day.setdefault(event.starts_at.date(), []).append(event)

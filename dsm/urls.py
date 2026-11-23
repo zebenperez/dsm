@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from django.views.generic.base import RedirectView
 from studio import views as studio_views
+from events import views as event_views
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -15,6 +16,7 @@ urlpatterns = [
 	#url(r'^i18n/', include('django.conf.urls.i18n')),
 	path('', RedirectView.as_view(url='app/')),
 	path('birthday/', studio_views.birthday, name='birthday'),
+	path('events/', event_views.public_upcoming_events, name='public_events'),
 	path('ranking/', studio_views.ranking, name='ranking'),
 	path('studio/', include('studio.urls')),
 	path('champs/', include('champs.urls')),

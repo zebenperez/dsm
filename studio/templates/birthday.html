@@ -152,4 +152,10 @@
         </section>
     </main>
 </body>
+{% if public_display_settings.rotation_enabled %}<script>
+    window.setTimeout(function () {
+        window.location.replace('{% url "public_events" %}');
+    }, {{ public_display_settings.rotation_interval_seconds }}000);
+</script>
+{% endif %}
 </html>

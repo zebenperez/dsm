@@ -39,6 +39,7 @@ from fcm_django.models import FCMDevice
 from registration_forms.models import Form as RegistrationForm, FormSubmission
 from kiosk.models import KioskPayment
 from pwa.models import StudentDocument
+from events.models import PublicDisplaySettings
 
 
 def _normalise_student_search_text(value):
@@ -90,6 +91,7 @@ def birthday(request):
 		'students': today_birthdays,
 		'week_birthdays': other_week_birthdays,
 		'quote': choice(quotes),
+		'public_display_settings': PublicDisplaySettings.current(),
 	})
 
 

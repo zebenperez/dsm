@@ -89,6 +89,7 @@ class PublicBirthdayTests(TestCase):
         self.assertContains(response, 'Grupo:')
         self.assertContains(response, 'Cumpleaños')
         self.assertNotContains(response, 'Noelia')
+        self.assertContains(response, "window.location.replace('/events/')")
 
     def test_birthday_page_shows_only_a_quote_when_nobody_has_a_birthday(self):
         response = self.client.get(reverse('birthday'))
