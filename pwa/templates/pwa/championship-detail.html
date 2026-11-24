@@ -131,8 +131,22 @@
                         <div class="pwa-list-body">
                             <strong>{{ companion.full_name }}</strong>
                             <span class="pwa-companion-identification">{{ companion.dni }} · {{ companion.birth_date|date:"d-m-Y" }}</span>
+                            {% if companion.dni_expiry_date %}<span>{% trans "Caducidad del DNI" %}: {{ companion.dni_expiry_date|date:"d-m-Y" }}</span>{% endif %}
                             {% if companion.municipality %}<span>{% trans "Municipio" %}: {{ companion.municipality }}</span>{% endif %}
                         </div>
+                        <details class="pwa-companion-edit">
+                            <summary class="pwa-icon-edit-button" aria-label="{% trans "Editar acompañante" %}" title="{% trans "Editar" %}"><i class="fas fa-pen" aria-hidden="true"></i></summary>
+                            <form method="post" class="pwa-companion-form" action="{% url 'pwa-championship-companion-edit' registration.id companion.id %}">
+                                {% csrf_token %}
+                                <div class="pwa-form-field"><label for="companion-{{ companion.id }}-full-name">{% trans "Nombre completo" %}</label><input id="companion-{{ companion.id }}-full-name" name="full_name" type="text" class="form-control" value="{{ companion.full_name }}" required></div>
+                                <div class="pwa-form-field"><label for="companion-{{ companion.id }}-birth-date">{% trans "Fecha de nacimiento" %}</label><input id="companion-{{ companion.id }}-birth-date" name="birth_date" type="date" class="form-control" value="{{ companion.birth_date|date:"Y-m-d" }}" required></div>
+                                <div class="pwa-form-field"><label for="companion-{{ companion.id }}-dni">{% trans "DNI" %}</label><input id="companion-{{ companion.id }}-dni" name="dni" type="text" class="form-control" value="{{ companion.dni }}" autocapitalize="characters" required></div>
+                                <div class="pwa-form-field"><label for="companion-{{ companion.id }}-dni-expiry-date">{% trans "Fecha de caducidad del DNI" %}</label><input id="companion-{{ companion.id }}-dni-expiry-date" name="dni_expiry_date" type="date" class="form-control" value="{{ companion.dni_expiry_date|date:"Y-m-d" }}"></div>
+                                <div class="pwa-form-field"><label for="companion-{{ companion.id }}-municipality">{% trans "Municipio de residencia" %}</label><input id="companion-{{ companion.id }}-municipality" name="municipality" type="text" class="form-control" value="{{ companion.municipality }}" required></div>
+                                <div class="pwa-resident-check"><label for="companion-{{ companion.id }}-canary-resident"><input id="companion-{{ companion.id }}-canary-resident" name="is_canary_resident" type="checkbox"{% if companion.is_canary_resident %} checked{% endif %}> <span>{% trans "Residente en Canarias" %}</span></label></div>
+                                <button type="submit" class="pwa-primary-button">{% trans "Guardar cambios" %}</button>
+                            </form>
+                        </details>
                         <form method="post" action="{% url 'pwa-championship-companion-delete' registration.id companion.id %}">
                             {% csrf_token %}
                             <button type="submit" class="pwa-icon-danger-button" aria-label="{% trans "Eliminar acompañante" %}" title="{% trans "Eliminar" %}"><i class="fas fa-trash" aria-hidden="true"></i></button>
@@ -154,6 +168,8 @@
                     <div class="pwa-form-field"><label for="companion-birth-date">{% trans "Fecha de nacimiento" %}</label><input id="companion-birth-date" name="birth_date" type="date" class="form-control" required></div>
 
                     <div class="pwa-form-field"><label for="companion-dni">{% trans "DNI" %}</label><input id="companion-dni" name="dni" type="text" class="form-control" autocapitalize="characters" required></div>
+
+                    <div class="pwa-form-field"><label for="companion-dni-expiry-date">{% trans "Fecha de caducidad del DNI" %}</label><input id="companion-dni-expiry-date" name="dni_expiry_date" type="date" class="form-control"></div>
 
                     <div class="pwa-form-field"><label for="companion-municipality">{% trans "Municipio de residencia" %}</label><input id="companion-municipality" name="municipality" type="text" class="form-control" autocomplete="address-level2" required></div>
 

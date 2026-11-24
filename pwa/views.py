@@ -534,11 +534,13 @@ def add_championship_companion(request, registration_id):
 	if request.method == 'POST':
 		full_name = request.POST.get('full_name', '').strip()
 		birth_date = request.POST.get('birth_date', '')
+		dni_expiry_date = request.POST.get('dni_expiry_date', '')
 		dni = request.POST.get('dni', '').strip().upper()
 		is_canary_resident = request.POST.get('is_canary_resident') == 'on'
 		municipality = request.POST.get('municipality', '').strip()
 		try:
 			birth_date = datetime.strptime(birth_date, '%Y-%m-%d').date()
+			dni_expiry_date = datetime.strptime(dni_expiry_date, '%Y-%m-%d').date() if dni_expiry_date else None
 			if full_name and dni and municipality:
 				TravelCompanion.objects.create(
 					registration=registration,
@@ -547,7 +549,42 @@ def add_championship_companion(request, registration_id):
 					municipality=municipality,
 					birth_date=birth_date,
 					dni=dni,
+					dni_expiry_date=dni_expiry_date,
 				)
+		except (TypeError, ValueError):
+			pass
+	return redirect('%s#companions' % reverse('pwa-championship-detail', args=[registration.id]))
+
+
+def edit_championship_companion(request, registration_id, companion_id):
+	if not check_student(request):
+		return redirect(login)
+	student = get_current_student(request)
+	registration = get_object_or_404(
+		Registration,
+		pk=registration_id,
+		student=student,
+		champ__in=Championship.objects.for_student(student),
+	)
+	companion = get_object_or_404(TravelCompanion, pk=companion_id, registration=registration)
+	if request.method == 'POST':
+		full_name = request.POST.get('full_name', '').strip()
+		birth_date = request.POST.get('birth_date', '')
+		dni = request.POST.get('dni', '').strip().upper()
+		dni_expiry_date = request.POST.get('dni_expiry_date', '')
+		is_canary_resident = request.POST.get('is_canary_resident') == 'on'
+		municipality = request.POST.get('municipality', '').strip()
+		try:
+			birth_date = datetime.strptime(birth_date, '%Y-%m-%d').date()
+			dni_expiry_date = datetime.strptime(dni_expiry_date, '%Y-%m-%d').date() if dni_expiry_date else None
+			if full_name and dni and municipality:
+				companion.full_name = full_name
+				companion.birth_date = birth_date
+				companion.dni = dni
+				companion.dni_expiry_date = dni_expiry_date
+				companion.is_canary_resident = is_canary_resident
+				companion.municipality = municipality
+				companion.save()
 		except (TypeError, ValueError):
 			pass
 	return redirect('%s#companions' % reverse('pwa-championship-detail', args=[registration.id]))

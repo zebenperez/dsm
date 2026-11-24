@@ -456,6 +456,42 @@ class ChampionshipSignupTests(TestCase):
         self.assertContains(response, 'Selecciona al menos una categoría para mantener la inscripción.')
         self.assertQuerySetEqual(registration.categories.all(), [self.category])
 
+    def test_student_can_add_and_edit_a_companion_dni_expiry_date(self):
+        registration = Registration.objects.create(student=self.student, champ=self.available_championship)
+
+        response = self.client.post(
+            reverse('pwa-championship-companion-add', args=[registration.id]),
+            {
+                'full_name': 'Ana Pérez García',
+                'birth_date': '1980-02-01',
+                'dni': '87654321b',
+                'dni_expiry_date': '2031-06-19',
+                'municipality': 'La Laguna',
+            },
+        )
+
+        self.assertRedirects(response, '%s#companions' % reverse('pwa-championship-detail', args=[registration.id]))
+        companion = TravelCompanion.objects.get(registration=registration)
+        self.assertEqual(companion.dni, '87654321B')
+        self.assertEqual(companion.dni_expiry_date, date(2031, 6, 19))
+
+        response = self.client.post(
+            reverse('pwa-championship-companion-edit', args=[registration.id, companion.id]),
+            {
+                'full_name': companion.full_name,
+                'birth_date': '1980-02-01',
+                'dni': companion.dni,
+                'dni_expiry_date': '2032-07-20',
+                'municipality': companion.municipality,
+                'is_canary_resident': 'on',
+            },
+        )
+
+        self.assertRedirects(response, '%s#companions' % reverse('pwa-championship-detail', args=[registration.id]))
+        companion.refresh_from_db()
+        self.assertEqual(companion.dni_expiry_date, date(2032, 7, 20))
+        self.assertTrue(companion.is_canary_resident)
+
     def test_companion_costs_are_included_in_the_student_total(self):
         registration = Registration.objects.create(
             student=self.student, champ=self.available_championship,

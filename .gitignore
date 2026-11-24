@@ -161,3 +161,4 @@ champs/migrations/0015_bank_reconciliation.py
 champs/migrations/0016_championship_target_groups.py
 !champs/migrations/0017_banktransaction_discarded.py
 !champs/migrations/0018_federationlicencepayment.py
+!champs/migrations/0019_travelcompanion_dni_expiry_date.py

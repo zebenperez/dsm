@@ -161,6 +161,7 @@ class TravelCompanion(models.Model):
     municipality = models.CharField(max_length=200, blank=True, default="", verbose_name="Municipio de residencia")
     birth_date = models.DateField(verbose_name="Fecha de nacimiento")
     dni = models.CharField(max_length=20, verbose_name="DNI")
+    dni_expiry_date = models.DateField(verbose_name="Fecha de caducidad del DNI", blank=True, null=True)
     paid_amount = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Importe pagado", default=0)
 
     class Meta:

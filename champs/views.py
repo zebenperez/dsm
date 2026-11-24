@@ -260,7 +260,7 @@ def export_champ_travelers(request, obj_id):
             companion.full_name,
             companion.municipality,
             companion.dni,
-            '',
+            companion.dni_expiry_date.strftime('%d/%m/%Y') if companion.dni_expiry_date else '',
             companion.birth_date.strftime('%d/%m/%Y'),
             registration_category_names(registration),
             registration.student.name if registration.student else '',

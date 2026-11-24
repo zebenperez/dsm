@@ -125,7 +125,7 @@ class ChampionshipTravelersExportTests(TestCase):
         self.registration.categories.add(self.category)
         TravelCompanion.objects.create(
             registration=self.registration, full_name='Ana Pérez García', municipality='La Laguna',
-            dni='87654321B', birth_date=date(1980, 2, 1),
+            dni='87654321B', dni_expiry_date=date(2031, 6, 19), birth_date=date(1980, 2, 1),
         )
 
     def test_export_contains_competitors_and_companions(self):
@@ -144,7 +144,7 @@ class ChampionshipTravelersExportTests(TestCase):
             rows,
         )
         self.assertIn(
-            ['Acompañante', 'Ana Pérez García', 'La Laguna', '87654321B', '', '01/02/1980', 'Dúo juvenil', 'María Pérez García'],
+            ['Acompañante', 'Ana Pérez García', 'La Laguna', '87654321B', '19/06/2031', '01/02/1980', 'Dúo juvenil', 'María Pérez García'],
             rows,
         )
 
