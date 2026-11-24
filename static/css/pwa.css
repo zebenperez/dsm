@@ -937,7 +937,8 @@ body {
 .pwa-registration-category + .pwa-registration-category { margin-top: 8px; }
 .pwa-registration-edit-link { margin-top: 12px; }
 .pwa-companion-list { display: grid; gap: 10px; }
-.pwa-companion-list .pwa-companion-item { align-items: flex-start; flex-wrap: wrap; padding: 14px; border: 1px solid #e1e6ea; border-radius: 13px; background: #fff; }
+.pwa-companion-list .pwa-companion-item { align-items: flex-start; flex-wrap: wrap; gap: 0; padding: 14px; border: 1px solid #e1e6ea; border-radius: 13px; background: #fff; }
+.pwa-companion-item .pwa-list-body { min-width: 0; }
 .pwa-companion-identification { color: #71808e !important; }
 .pwa-companion-finances { margin-top: 11px; overflow: hidden; border: 1px solid #e3e8eb; border-radius: 9px; background: #fafbfc; }
 .pwa-companion-finances p { display: flex; align-items: center; justify-content: space-between; margin: 0; padding: 9px 10px; }
@@ -946,13 +947,18 @@ body {
 .pwa-companion-finances strong { color: #344454; font-size: 14px; white-space: nowrap; }
 .pwa-companion-finances p:nth-child(2) strong { color: #287348; }
 .pwa-companion-finances p:last-child strong { color: #b35a20; }
-.pwa-icon-danger-button { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; margin-left: 4px; padding: 0; border: 1px solid #f2c7c3; border-radius: 11px; background: #fff8f7; color: #bd4d46; }
-.pwa-icon-edit-button { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; margin-left: 4px; list-style: none; border: 1px solid #cdd9ed; border-radius: 11px; background: #f5f8fd; color: #3867a8; cursor: pointer; }
+.pwa-companion-actions { display: flex; align-items: flex-start; gap: 7px; margin-left: 10px; }
+.pwa-icon-danger-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 1px solid #f2c7c3; border-radius: 11px; background: #fff8f7; color: #bd4d46; }
+.pwa-icon-edit-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 12px; list-style: none; border: 1px solid #cdd9ed; border-radius: 11px; background: #f5f8fd; color: #3867a8; cursor: pointer; font-size: 13px; font-weight: 700; }
 .pwa-icon-edit-button::-webkit-details-marker { display: none; }
-.pwa-companion-edit { margin-left: 4px; }
-.pwa-companion-edit[open] { flex-basis: 100%; order: 4; margin: 14px 0 0; }
-.pwa-companion-edit[open] .pwa-icon-edit-button { float: right; }
-.pwa-companion-edit .pwa-companion-form { clear: both; padding-top: 10px; }
+.pwa-companion-actions:has(.pwa-companion-edit[open]) { flex-basis: 100%; order: 4; display: block; margin: 14px 0 0; }
+.pwa-companion-actions:has(.pwa-companion-edit[open]) > form { display: none; }
+.pwa-companion-edit[open] { padding: 14px; border: 1px solid #d5dfec; border-radius: 13px; background: #fff; box-shadow: 0 8px 20px rgba(44, 67, 93, .10); }
+.pwa-companion-edit[open] .pwa-icon-edit-button { float: right; margin-top: -58px; }
+.pwa-companion-edit .pwa-companion-form { clear: both; padding-top: 2px; }
+.pwa-companion-edit-heading { display: flex; flex-direction: column; margin: 0 0 3px; }
+.pwa-companion-edit-heading strong { color: #344454; font-size: 16px; }
+.pwa-companion-edit-heading span { margin-top: 2px; color: #71808e; font-size: 12px; }
 .pwa-companion-form-card { display: block; min-height: 0; padding: 18px; }
 .pwa-companion-form-card:hover, .pwa-companion-form-card:focus { background: #fff; }
 .pwa-companion-form-card h2 { margin-bottom: 6px; }
@@ -960,6 +966,7 @@ body {
 .pwa-companion-form .pwa-form-field { margin-top: 15px; }
 .pwa-companion-form .pwa-form-field label { margin-top: 0; }
 .pwa-companion-form .form-control { min-height: 48px; border-radius: 10px; font-size: 16px; }
+.pwa-companion-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .pwa-resident-check { margin-top: 18px; }
 .pwa-resident-check label { display: flex !important; align-items: center; gap: 10px; min-height: 48px; margin: 0 !important; padding: 11px 12px; border: 1px solid #e1e6ea; border-radius: 10px; background: #fafbfc; cursor: pointer; }
 .pwa-resident-check input { width: 20px; height: 20px; accent-color: #e89900; }
@@ -970,7 +977,14 @@ body {
 	.pwa-registration-status-icon { flex-basis: 34px; width: 34px; height: 34px; }
 	.pwa-registration-status > div:nth-child(2) span { display: none; }
 	.pwa-companion-list .pwa-companion-item { padding: 12px; }
+	.pwa-companion-actions { gap: 4px; margin-left: 6px; }
+	.pwa-icon-edit-button { width: 44px; padding: 0; }
+	.pwa-icon-edit-button span { display: none; }
 	.pwa-companion-finances p { padding: 8px 9px; }
+}
+
+@media (max-width: 480px) {
+	.pwa-companion-form-grid { grid-template-columns: 1fr; gap: 0; }
 }
 
 .pwa-home {
