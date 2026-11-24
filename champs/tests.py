@@ -119,7 +119,7 @@ class ChampionshipTravelersExportTests(TestCase):
         self.category = Category.objects.create(name='Dúo juvenil')
         self.student = Student.objects.create(
             code=903, pin='V903', name='María Pérez García', phone='', municipality='La Laguna',
-            dni='12345678A', born_date=date(2010, 4, 3),
+            dni='12345678A', dni_expiry_date=date(2030, 5, 18), born_date=date(2010, 4, 3),
         )
         self.registration = Registration.objects.create(student=self.student, champ=self.championship)
         self.registration.categories.add(self.category)
@@ -136,14 +136,15 @@ class ChampionshipTravelersExportTests(TestCase):
         rows = list(csv.reader(StringIO(response.content.decode('utf-8-sig'))))
         self.assertEqual(rows[0], [
             'Tipo', 'Nombre y apellidos', 'Municipio', 'Número de DNI',
+            'Fecha de caducidad del DNI',
             'Fecha de nacimiento', 'Categoría', 'Competidora a la que acompaña',
         ])
         self.assertIn(
-            ['Competidora', 'María Pérez García', 'La Laguna', '12345678A', '03/04/2010', 'Dúo juvenil', ''],
+            ['Competidora', 'María Pérez García', 'La Laguna', '12345678A', '18/05/2030', '03/04/2010', 'Dúo juvenil', ''],
             rows,
         )
         self.assertIn(
-            ['Acompañante', 'Ana Pérez García', 'La Laguna', '87654321B', '01/02/1980', 'Dúo juvenil', 'María Pérez García'],
+            ['Acompañante', 'Ana Pérez García', 'La Laguna', '87654321B', '', '01/02/1980', 'Dúo juvenil', 'María Pérez García'],
             rows,
         )
 

@@ -235,7 +235,7 @@ def export_champ_travelers(request, obj_id):
     )
 
     headers = [
-        'Tipo', 'Nombre y apellidos', 'Municipio', 'Número de DNI',
+        'Tipo', 'Nombre y apellidos', 'Municipio', 'Número de DNI', 'Fecha de caducidad del DNI',
         'Fecha de nacimiento', 'Categoría', 'Competidora a la que acompaña',
     ]
     rows = [headers]
@@ -247,6 +247,7 @@ def export_champ_travelers(request, obj_id):
             student.name if student else '',
             student.municipality if student else '',
             student.dni if student else '',
+            student.dni_expiry_date.strftime('%d/%m/%Y') if student and student.dni_expiry_date else '',
             student.born_date.strftime('%d/%m/%Y') if student and student.born_date else '',
             registration_category_names(registration),
             '',
@@ -259,6 +260,7 @@ def export_champ_travelers(request, obj_id):
             companion.full_name,
             companion.municipality,
             companion.dni,
+            '',
             companion.birth_date.strftime('%d/%m/%Y'),
             registration_category_names(registration),
             registration.student.name if registration.student else '',
