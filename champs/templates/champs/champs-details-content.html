@@ -459,6 +459,7 @@
                                     <thead>
                                         <tr>
                                             <th>{% trans "Competidora" %}</th>
+                                            <th>{% trans "N.º de licencia" %}</th>
                                             <th>{% trans "Nacimiento" %}</th>
                                             <th>{% trans "Teléfono" %}</th>
                                             <th>{% trans "Email" %}</th>
@@ -471,6 +472,7 @@
                                         {% for registration in item.registrations %}
                                             <tr>
                                                 <td>{{ registration.student.name }}</td>
+                                                <td>{{ registration.student.licence|default:"-" }}</td>
                                                 <td>
                                                     {% if registration.birth_year %}
                                                         {{ registration.birth_year }} ({{ registration.current_age }} {% trans "años" %})
